@@ -17,17 +17,21 @@ use Symfony\Component\Uid\Uuid;
  * donne plusieurs lignes, regroupées en une seule demande (F-44). Lecture seule côté API.
  */
 #[ORM\Entity(repositoryClass: MailRepository::class)]
-#[ORM\UniqueConstraint(name: 'mail_position', columns: ['account', 'folder', 'uid'])]
+#[ORM\UniqueConstraint(name: 'mail_position', columns: ['account_id', 'folder', 'uid'])]
 #[ORM\Index(columns: ['message_id'])]
 #[ApiResource(operations: [new GetCollection(), new Get()], formats: ['json' => ['application/json']], order: ['date' => 'DESC'])]
-class Mail
+class Mail implements OwnedInterface
 {
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?User $owner = null;
+
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
     private string $id;
 
     public function __construct(
-        #[ORM\Column(length: 120)] private string $account,
+        #[ORM\ManyToOne] #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')] private MailAccount $account,
         #[ORM\Column(length: 60)] private string $folder,
         #[ORM\Column] private int $uid,
         #[ORM\Column(length: 255)] private string $messageId,
@@ -45,9 +49,9 @@ class Mail
         $this->id = Uuid::v7()->toRfc4122();
     }
 
-    public static function fromHeader(string $account, MailHeader $h): self
+    public static function fromHeader(MailAccount $account, MailHeader $h): self
     {
-        return new self($account, $h->folder, $h->uid ?? 0, $h->messageId, $h->inReplyTo, $h->references, $h->fromName, $h->fromAddress, $h->to, mb_substr($h->subject, 0, 500), $h->date, $h->autoSubmitted);
+        return (new self($account, $h->folder, $h->uid ?? 0, $h->messageId, $h->inReplyTo, $h->references, $h->fromName, $h->fromAddress, $h->to, mb_substr($h->subject, 0, 500), $h->date, $h->autoSubmitted))->setOwner($account->getOwner());
     }
 
     #[Ignore]
@@ -57,7 +61,11 @@ class Mail
     }
 
     public function getId(): string { return $this->id; }
-    public function getAccount(): string { return $this->account; }
+    #[Ignore]
+    public function getOwner(): ?User { return $this->owner; }
+    public function setOwner(User $owner): static { $this->owner = $owner; return $this; }
+    #[Ignore] public function getAccount(): MailAccount { return $this->account; }
+    public function getAccountId(): string { return $this->account->getId(); }
     public function getFolder(): string { return $this->folder; }
     public function getUid(): int { return $this->uid; }
     public function getMessageId(): string { return $this->messageId; }

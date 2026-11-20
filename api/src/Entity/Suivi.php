@@ -15,6 +15,7 @@ use App\State\CloseSuiviProcessor;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -44,8 +45,12 @@ use Symfony\Component\Validator\Constraints as Assert;
     formats: ['json' => ['application/json']],
     order: ['dueAt' => 'ASC'],
 )]
-class Suivi
+class Suivi implements OwnedInterface
 {
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?User $owner = null;
+
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
     private string $id;
@@ -111,6 +116,9 @@ class Suivi
     }
 
     public function getId(): string { return $this->id; }
+    #[Ignore]
+    public function getOwner(): ?User { return $this->owner; }
+    public function setOwner(User $owner): static { $this->owner = $owner; return $this; }
     public function getSubject(): string { return $this->subject; }
     public function setSubject(string $v): static { $this->subject = $v; return $this; }
     public function getContact(): string { return $this->contact; }

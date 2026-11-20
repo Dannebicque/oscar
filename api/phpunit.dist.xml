@@ -17,6 +17,9 @@
         <server name="SHELL_VERBOSITY" value="-1" />
         <!-- Base jetable : les tests ne touchent jamais var/data.db. -->
         <server name="DATABASE_URL" value="sqlite:///:memory:" force="true" />
+        <!-- Clé de test uniquement (jamais utilisée ailleurs). -->
+        <server name="APP_VAULT_KEY" value="base64:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=" force="true" />
+        <server name="CAS_BASE_URL" value="https://cas.test/cas" force="true" />
         <server name="IMAP_HOST" value="127.0.0.1" />
         <server name="IMAP_PORT" value="1143" />
         <server name="IMAP_USER" value="david" />

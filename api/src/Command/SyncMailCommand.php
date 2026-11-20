@@ -2,35 +2,57 @@
 
 namespace App\Command;
 
-use App\Mail\MailSynchronizer;
+use App\Entity\MailAccount;
 use App\Mail\MailboxReaderFactory;
+use App\Mail\MailSynchronizer;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'app:mail:sync', description: 'Synchronise la boîte IMAP configurée (incrémental, par UID) et signale les réponses.')]
+#[AsCommand(name: 'app:mail:sync', description: 'Synchronise les comptes IMAP (incrémental, par UID) et signale les réponses.')]
 final class SyncMailCommand extends Command
 {
-    public function __construct(private readonly MailSynchronizer $sync, private readonly MailboxReaderFactory $factory)
-    {
+    public function __construct(
+        private readonly MailSynchronizer $sync,
+        private readonly MailboxReaderFactory $factory,
+        private readonly EntityManagerInterface $em,
+    ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption('user', null, InputOption::VALUE_REQUIRED, 'Se limiter à un utilisateur (identifiant)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        try {
-            $r = $this->sync->sync($this->factory->account(), $this->factory->create());
-        } catch (\Throwable $e) {
-            // Message clair, jamais un code technique seul (F-79).
-            $io->error(sprintf('Je n’ai pas pu joindre le serveur de messagerie (%s). Vérifie qu’il tourne et que les identifiants sont bons.', $e->getMessage()));
+        $criteria = $input->getOption('user') ? ['owner' => $this->em->getRepository(\App\Entity\User::class)->findOneBy(['username' => $input->getOption('user')])] : [];
+        $accounts = $this->em->getRepository(MailAccount::class)->findBy($criteria);
+        if ($accounts === []) {
+            $io->warning('Aucun compte de messagerie. Ajoute-en un (php bin/console app:dev:setup en local).');
 
-            return Command::FAILURE;
+            return Command::SUCCESS;
         }
-        $io->success(sprintf('%d nouveaux messages, %d suivi(s) avec une réponse reçue.', $r['fetched'], $r['replies']));
+        $failed = 0;
+        foreach ($accounts as $a) {
+            try {
+                $r = $this->sync->sync($a, $this->factory->create($a));
+                $io->success(sprintf('%s : %d nouveaux messages, %d suivi(s) avec une réponse reçue.', $a->getLabel(), $r['fetched'], $r['replies']));
+            } catch (\Throwable $e) {
+                ++$failed;
+                $a->markFailed($e->getMessage());
+                $this->em->flush();
+                // Message clair, jamais un code technique seul (F-79).
+                $io->error(sprintf('%s : je n’ai pas pu joindre le serveur de messagerie (%s). Vérifie qu’il tourne et que les identifiants sont bons.', $a->getLabel(), $e->getMessage()));
+            }
+        }
 
-        return Command::SUCCESS;
+        return $failed === 0 ? Command::SUCCESS : Command::FAILURE;
     }
 }

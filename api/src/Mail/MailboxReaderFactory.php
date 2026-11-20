@@ -2,29 +2,18 @@
 
 namespace App\Mail;
 
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Entity\MailAccount;
+use App\Security\CredentialVault;
 
-/** Construit le lecteur IMAP du compte configuré (un seul compte pour l'instant). */
+/** Construit le lecteur IMAP d'un compte : le mot de passe n'est déchiffré qu'ici, au moment de se connecter. */
 final class MailboxReaderFactory
 {
-    public function __construct(
-        #[Autowire('%env(IMAP_HOST)%')] private readonly string $host,
-        #[Autowire('%env(int:IMAP_PORT)%')] private readonly int $port,
-        #[Autowire('%env(IMAP_USER)%')] private readonly string $user,
-        #[Autowire('%env(IMAP_PASSWORD)%')] private readonly string $password,
-        #[Autowire('%env(default::IMAP_ENCRYPTION)%')] private readonly ?string $encryption = null,
-    ) {
+    public function __construct(private readonly CredentialVault $vault)
+    {
     }
 
-    public function account(): string
+    public function create(MailAccount $a): MailboxReader
     {
-        return $this->user;
-    }
-
-    public function create(): MailboxReader
-    {
-        $enc = $this->encryption ?: 'none';
-
-        return new WebklexMailboxReader($this->host, $this->port, $this->user, $this->password, $enc, $enc !== 'none');
+        return new WebklexMailboxReader($a->getImapHost(), $a->getImapPort(), $a->getUsername(), $this->vault->decrypt($a->getPasswordEncrypted()), $a->getImapEncryption(), $a->getImapEncryption() !== 'none');
     }
 }

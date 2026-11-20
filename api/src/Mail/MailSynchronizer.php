@@ -3,6 +3,8 @@
 namespace App\Mail;
 
 use App\Entity\Mail;
+use App\Entity\MailAccount;
+use App\Entity\User;
 use App\Entity\Suivi;
 use App\Enum\SuiviDirection;
 use App\Enum\SuiviStatus;
@@ -27,7 +29,7 @@ final class MailSynchronizer
     }
 
     /** @return array{fetched: int, replies: int} */
-    public function sync(string $account, MailboxReader $reader): array
+    public function sync(MailAccount $account, MailboxReader $reader): array
     {
         $fetched = 0;
         foreach (self::FOLDERS as $folder) {
@@ -36,18 +38,19 @@ final class MailSynchronizer
                 ++$fetched;
             }
         }
+        $account->markSynced();
         $this->em->flush();
 
-        return ['fetched' => $fetched, 'replies' => $this->markReplies($account)];
+        return ['fetched' => $fetched, 'replies' => $this->markReplies($account->getOwner())];
     }
 
     /** Un suivi « en attente » dont le fil a reçu une vraie réponse passe en « réponse reçue ». */
-    public function markReplies(string $account): int
+    public function markReplies(User $owner): int
     {
-        $inbound = array_map(static fn (Mail $m) => $m->toHeader(), $this->mails->inbound($account));
+        $inbound = array_map(static fn (Mail $m) => $m->toHeader(), $this->mails->inbound($owner));
         $marked = 0;
         /** @var list<Suivi> $open */
-        $open = $this->suivis->findBy(['direction' => SuiviDirection::Waiting, 'replyReceived' => false]);
+        $open = $this->suivis->findBy(['owner' => $owner, 'direction' => SuiviDirection::Waiting, 'replyReceived' => false]);
         foreach ($open as $s) {
             if ($s->getStatus() === SuiviStatus::Done || $s->getMailId() === null) {
                 continue;

@@ -21,3 +21,15 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Security\CasClient:
+        arguments:
+            $baseUrl: '%env(CAS_BASE_URL)%'
+
+    App\Security\TokenService:
+        arguments:
+            $ttlSeconds: 43200
+
+    App\Security\CredentialVault:
+        arguments:
+            $base64Key: '%env(APP_VAULT_KEY)%'

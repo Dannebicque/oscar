@@ -1,4 +1,5 @@
 api_platform:
+    path_segment_name_generator: api_platform.metadata.path_segment_name_generator.dash
     title: Oscar API
     version: 1.0.0
     defaults:

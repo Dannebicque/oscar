@@ -2,7 +2,9 @@
 
 namespace App\Tests\Mail;
 
+use App\Entity\MailAccount;
 use App\Entity\Suivi;
+use App\Entity\User;
 use App\Enum\SuiviDirection;
 use App\Enum\SuiviStatus;
 use App\Mail\MailboxReader;
@@ -16,6 +18,8 @@ final class MailSynchronizerTest extends KernelTestCase
 {
     private EntityManagerInterface $em;
     private MailSynchronizer $sync;
+    private User $user;
+    private MailAccount $account;
 
     protected function setUp(): void
     {
@@ -24,6 +28,11 @@ final class MailSynchronizerTest extends KernelTestCase
         $this->em->getConfiguration()->setUseSchemaEditorApi(true);
         (new SchemaTool($this->em))->createSchema($this->em->getMetadataFactory()->getAllMetadata());
         $this->sync = self::getContainer()->get(MailSynchronizer::class);
+        $this->user = new User('david');
+        $this->account = (new MailAccount())->setOwner($this->user)->setLabel('t')->setAddress('david@x.fr')->setImapHost('h')->setSmtpHost('h')->setUsername('david');
+        $this->em->persist($this->user);
+        $this->em->persist($this->account);
+        $this->em->flush();
     }
 
     private static function header(string $id, string $folder, int $uid, ?string $inReplyTo = null, bool $auto = false): MailHeader
@@ -33,7 +42,7 @@ final class MailSynchronizerTest extends KernelTestCase
 
     private function suivi(string $mailId, SuiviStatus $status = SuiviStatus::Waiting): Suivi
     {
-        $s = (new Suivi())->setSubject('Devis')->setContact('Marc')->setDirection(SuiviDirection::Waiting)->setStatus($status)->setMailId($mailId);
+        $s = (new Suivi())->setSubject('Devis')->setContact('Marc')->setDirection(SuiviDirection::Waiting)->setStatus($status)->setMailId($mailId)->setOwner($this->user);
         $this->em->persist($s);
         $this->em->flush();
 
@@ -61,16 +70,16 @@ final class MailSynchronizerTest extends KernelTestCase
     public function testSyncIsIncrementalByUid(): void
     {
         $reader = $this->reader([self::header('<a>', 'INBOX', 1), self::header('<b>', 'INBOX', 2)]);
-        self::assertSame(2, $this->sync->sync('david', $reader)['fetched']);
-        self::assertSame(0, $this->sync->sync('david', $reader)['fetched'], 'rien de nouveau : pas de doublon');
+        self::assertSame(2, $this->sync->sync($this->account, $reader)['fetched']);
+        self::assertSame(0, $this->sync->sync($this->account, $reader)['fetched'], 'rien de nouveau : pas de doublon');
         $reader2 = $this->reader([self::header('<a>', 'INBOX', 1), self::header('<b>', 'INBOX', 2), self::header('<c>', 'INBOX', 3)]);
-        self::assertSame(1, $this->sync->sync('david', $reader2)['fetched']);
+        self::assertSame(1, $this->sync->sync($this->account, $reader2)['fetched']);
     }
 
     public function testRealReplyFlagsTheSuiviButNeverClosesIt(): void
     {
         $s = $this->suivi('<sent-1>');
-        $r = $this->sync->sync('david', $this->reader([self::header('<r>', 'INBOX', 1, '<sent-1>')]));
+        $r = $this->sync->sync($this->account, $this->reader([self::header('<r>', 'INBOX', 1, '<sent-1>')]));
         self::assertSame(1, $r['replies']);
         $this->em->refresh($s);
         self::assertTrue($s->isReplyReceived());
@@ -80,7 +89,7 @@ final class MailSynchronizerTest extends KernelTestCase
     public function testAutoReplyAndOtherThreadsDoNotCount(): void
     {
         $s = $this->suivi('<sent-1>');
-        $r = $this->sync->sync('david', $this->reader([self::header('<auto>', 'INBOX', 1, '<sent-1>', true), self::header('<other>', 'INBOX', 2, '<ailleurs>')]));
+        $r = $this->sync->sync($this->account, $this->reader([self::header('<auto>', 'INBOX', 1, '<sent-1>', true), self::header('<other>', 'INBOX', 2, '<ailleurs>')]));
         self::assertSame(0, $r['replies']);
         $this->em->refresh($s);
         self::assertFalse($s->isReplyReceived());
@@ -89,7 +98,7 @@ final class MailSynchronizerTest extends KernelTestCase
     public function testClosedSuiviIsLeftAlone(): void
     {
         $s = $this->suivi('<sent-1>', SuiviStatus::Done);
-        self::assertSame(0, $this->sync->sync('david', $this->reader([self::header('<r>', 'INBOX', 1, '<sent-1>')]))['replies']);
+        self::assertSame(0, $this->sync->sync($this->account, $this->reader([self::header('<r>', 'INBOX', 1, '<sent-1>')]))['replies']);
         $this->em->refresh($s);
         self::assertFalse($s->isReplyReceived());
     }
@@ -97,6 +106,6 @@ final class MailSynchronizerTest extends KernelTestCase
     public function testSentFolderIsNotTreatedAsAReply(): void
     {
         $this->suivi('<sent-1>');
-        self::assertSame(0, $this->sync->sync('david', $this->reader([self::header('<mine>', 'Sent', 1, '<sent-1>')]))['replies']);
+        self::assertSame(0, $this->sync->sync($this->account, $this->reader([self::header('<mine>', 'Sent', 1, '<sent-1>')]))['replies']);
     }
 }
