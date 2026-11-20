@@ -18,7 +18,7 @@ npm test        # unitaires, composants et audit d'accessibilité (axe-core)
 npm run build
 ```
 
-Pour brancher les suivis sur l'API Symfony, copier `web/.env.example` en `web/.env.local` et définir `VITE_API_URL`.
+Pour brancher suivis et mails sur l'API Symfony (agenda, tâches et alertes restent simulés), copier `web/.env.example` en `web/.env.local` et définir `VITE_API_URL`.
 
 ## Démarrer l'API
 

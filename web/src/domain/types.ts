@@ -81,6 +81,10 @@ export interface MailTaskHint {
 
 export interface Mail {
   id: string
+  /** Message-ID IMAP : identifie la demande même reçue dans plusieurs boîtes (F-44). Absent des données simulées. */
+  messageId?: string
+  /** Identifiants des messages auxquels celui-ci répond (In-Reply-To, References) : rattache une réponse à son fil. */
+  parents?: string[]
   /** 'personal' ou id d'une boîte partagée. */
   mailbox: string
   folder: MailFolder

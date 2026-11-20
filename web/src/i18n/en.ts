@@ -92,6 +92,7 @@ const en: typeof fr = {
     empty: 'No messages here.', selectOne: 'Pick a message to read it.',
     reply: 'Reply', replyAll: 'Reply all', forward: 'Forward', archive: 'Archive', move: 'Move', delete: 'Delete',
     actionDone: '{action}: “{subject}”. (mockup: nothing is actually moved)',
+    bodyLoading: 'Loading the message…', bodyError: 'I couldn’t read this message.', bodyEmpty: 'This message has no text.',
     compact: 'Compact mode',
     suivi: 'Follow-up', banner: {
       reply: 'Reply received', replyText: '{who} replied. Close the request, or keep it open if something remains.',
@@ -133,6 +134,7 @@ const en: typeof fr = {
     directory: 'Institution directory', directoryHelp: 'Start typing a name: suggestions come from the directory.',
     follow: 'Follow the reply', followAi: 'Oscar ticked it: this mail clearly expects a reply.', followDelay: 'Warn me if no reply within',
     followInfo: 'If nobody replies, I’ll warn you on {date}.', send: 'Send', sent: 'Message sent to {to}.', sentFollow: 'Message sent. I’ll warn you on {date} if nobody replies.',
+    notAvailable: 'Sending isn’t connected to the server yet: your message was not sent and no follow-up was created. It stays here, nothing is lost.',
     required: 'Enter at least one recipient and a subject.', suggestTask: 'Suggested task: “Review {who}’s reply”', draftSaved: 'Draft saved.', saveDraft: 'Save draft',
     attach: 'Attach a file', delays: { h24: '24 hours', h48: '48 hours', d3: '3 days', d7: '1 week' },
   },

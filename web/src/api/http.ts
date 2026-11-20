@@ -1,5 +1,5 @@
-import type { Suivi } from '../domain/types'
-import type { SuivisApi } from './types'
+import type { Mail, MailFolder, Suivi } from '../domain/types'
+import type { MailApi, SuivisApi } from './types'
 
 /** Valeurs par défaut pour les champs que l'API ne fournit pas encore (journal, responsable, …). */
 function hydrate(raw: Partial<Suivi>): Suivi {
@@ -38,5 +38,50 @@ export function createHttpSuivisApi(baseUrl: string): SuivisApi {
       const res = await fetch(`${root}/api/suivis/${encodeURIComponent(id)}/close`, { method: 'POST' })
       if (!res.ok) throw new Error(`POST /api/suivis/${id}/close : ${res.status}`)
     },
+  }
+}
+
+interface RawMail {
+  id: string
+  folder: string
+  messageId: string
+  inReplyTo?: string | null
+  references?: string[]
+  fromName: string
+  fromAddress: string
+  toAddresses: string[]
+  subject: string
+  date: string
+}
+
+const FOLDERS: Record<string, MailFolder> = { INBOX: 'inbox', Sent: 'sent', Drafts: 'drafts', Archive: 'archive', Trash: 'trash' }
+
+const unsupported = (what: string) => Promise.reject(new Error(`unsupported:${what}`))
+
+/**
+ * Mails lus sur l'API (en-têtes synchronisés par IMAP). Pas encore côté serveur : envoi SMTP, boîtes partagées,
+ * notes et suggestions de l'IA ; ces actions échouent clairement au lieu de faire semblant.
+ */
+export function createHttpMailApi(baseUrl: string): MailApi {
+  const root = baseUrl.replace(/\/$/, '')
+  return {
+    async list() {
+      const rows = await json<RawMail[]>(await fetch(`${root}/api/mails`, { headers: { Accept: 'application/json' } }), 'GET /api/mails')
+      return rows.map((r): Mail => ({
+        id: r.id, messageId: r.messageId, parents: [...(r.references ?? []), ...(r.inReplyTo ? [r.inReplyTo] : [])], mailbox: 'personal', folder: FOLDERS[r.folder] ?? 'inbox',
+        from: { name: r.fromName || r.fromAddress, address: r.fromAddress }, to: r.toAddresses.map((a) => ({ name: a, address: a })),
+        subject: r.subject, paragraphs: [], at: r.date, unread: false, attachments: [], suivi: null, claim: null, composing: null,
+        notes: [], activity: [], hints: {},
+      }))
+    },
+    async body(id) {
+      const res = await json<{ paragraphs: string[] }>(await fetch(`${root}/api/mails/${encodeURIComponent(id)}/body`, { headers: { Accept: 'application/json' } }), 'GET body')
+      return res.paragraphs
+    },
+    async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
+    async linkSuivi() { /* le lien se déduit du Message-ID du suivi */ },
+    setClaim: () => unsupported('claim'),
+    addNote: () => unsupported('note'),
+    send: () => unsupported('send'),
   }
 }

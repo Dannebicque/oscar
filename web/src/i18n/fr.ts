@@ -92,6 +92,7 @@ export default {
     empty: 'Aucun message ici.', selectOne: 'Choisis un message pour le lire.',
     reply: 'Répondre', replyAll: 'Répondre à tous', forward: 'Transférer', archive: 'Archiver', move: 'Déplacer', delete: 'Supprimer',
     actionDone: '{action} : « {subject} ». (maquette : rien n’est réellement déplacé)',
+    bodyLoading: 'Chargement du message…', bodyError: 'Je n’ai pas pu lire ce message.', bodyEmpty: 'Ce message n’a pas de texte.',
     compact: 'Mode compact',
     suivi: 'Suivi', banner: {
       reply: 'Réponse reçue', replyText: '{who} a répondu. Tu clos la demande ou tu la gardes ouverte s’il reste une action.',
@@ -133,6 +134,7 @@ export default {
     directory: 'Annuaire de l’établissement', directoryHelp: 'Commence à taper un nom : les suggestions viennent de l’annuaire.',
     follow: 'Suivre la réponse', followAi: 'Oscar l’a coché : ce mail attend visiblement une réponse.', followDelay: 'Me prévenir si pas de réponse sous',
     followInfo: 'Si personne ne répond, je te préviens le {date}.', send: 'Envoyer', sent: 'Message envoyé à {to}.', sentFollow: 'Message envoyé. Je te préviens le {date} si personne ne répond.',
+    notAvailable: 'L’envoi n’est pas encore branché sur le serveur : ton message n’est pas parti et aucun suivi n’a été créé. Il reste ici, rien n’est perdu.',
     required: 'Indique au moins un destinataire et un objet.', suggestTask: 'Tâche suggérée : « Relire la réponse de {who} »', draftSaved: 'Brouillon enregistré.', saveDraft: 'Enregistrer le brouillon',
     attach: 'Joindre un fichier', delays: { h24: '24 heures', h48: '48 heures', d3: '3 jours', d7: '1 semaine' },
   },

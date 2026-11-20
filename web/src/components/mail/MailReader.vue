@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { ME } from '../../api'
@@ -40,6 +40,9 @@ const showDraft = ref(false)
 const showAvail = ref(false)
 const showCollision = ref(false)
 const dismissed = ref<Set<string>>(new Set())
+onMounted(() => mails.loadBody(props.mail.id))
+const bodyLoading = computed(() => mails.loadingBody.has(props.mail.id))
+const bodyFailed = computed(() => mails.bodyError.has(props.mail.id))
 
 const suivi = computed(() => (props.mail.suivi ? suivis.byId(props.mail.suivi) : undefined))
 const shared = computed(() => props.mail.claim !== null)
@@ -138,6 +141,9 @@ function sendAvailability() {
       <div class="content">
         <div class="body">
           <p v-for="(p, i) in mail.paragraphs" :key="i">{{ p }}</p>
+          <p v-if="bodyLoading" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
+          <p v-else-if="bodyFailed" class="error-text" role="alert">{{ t('mail.bodyError') }} <BaseButton :label="t('common.retry')" @click="mails.loadBody(mail.id)" /></p>
+          <p v-else-if="mail.paragraphs.length === 0" class="muted">{{ t('mail.bodyEmpty') }}</p>
           <p v-if="mail.attachments.length" class="attach">
             <span v-for="a in mail.attachments" :key="a.name" class="file">{{ a.name }} · {{ a.size }}</span>
           </p>

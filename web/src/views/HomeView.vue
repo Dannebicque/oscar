@@ -62,7 +62,8 @@ const doneSteps = computed(() => steps.value.filter((s) => s.done).length)
 function open(i: PriorityItem) {
   if (i.kind === 'mail') {
     const s = suivis.byId(i.refId)
-    return router.push(s?.mailId ? { name: 'mails', params: { id: s.mailId } } : { name: 'mails' })
+    const m = mails.find(s?.mailId)
+    return router.push(m ? { name: 'mails', params: { id: m.id } } : { name: 'mails' })
   }
   return router.push({ name: i.route.name })
 }

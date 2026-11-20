@@ -108,6 +108,7 @@ export function createMockApi(now: Date = new Date()): Api {
     },
     mails: {
       async list() { return clone(mails) },
+      async body(id) { return clone(mails.find((x) => x.id === id)?.paragraphs ?? []) },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
       async setClaim(id, c, e, composing) {
         mails = mails.map((x) => (x.id === id ? { ...x, claim: c, composing: composing === undefined ? x.composing : composing, activity: [...x.activity, e] } : x))

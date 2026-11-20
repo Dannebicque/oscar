@@ -16,6 +16,8 @@ export interface SuivisApi {
 
 export interface MailApi {
   list(): Promise<Mail[]>
+  /** Corps en texte brut, lu à la demande (jamais de HTML). */
+  body(id: string): Promise<string[]>
   markRead(id: string): Promise<void>
   setClaim(id: string, claim: Claim, entry: JournalEntry, composing?: string | null): Promise<Mail>
   addNote(id: string, note: Note): Promise<Mail>

@@ -62,7 +62,13 @@ const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { 
 async function send() {
   submitted.value = true
   if (!to.value.trim() || !subject.value.trim()) return
-  await api.mails.send({ to: to.value, subject: subject.value, body: body.value, follow: follow.value })
+  try {
+    await api.mails.send({ to: to.value, subject: subject.value, body: body.value, follow: follow.value })
+  } catch {
+    // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour (§5).
+    ui.notify(t('compose.notAvailable'), { tone: 'error' })
+    return
+  }
   if (follow.value) {
     await suivis.create({ subject: subject.value.replace(/^re\s*:\s*/i, ''), contact: who.value, direction: 'waiting', dueAt: dueDate.value, relanceAt: dueDate.value, suggestedByAi: aiPicked.value })
     ui.notify(t('compose.sentFollow', { date: fmt.date(dueDate.value) }))

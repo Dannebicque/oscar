@@ -84,10 +84,14 @@ function teamExtra(i: PriorityItem): string | undefined {
   return `${state} · ${t('suivis.teamAge', { n: age })}`
 }
 
+function openMail(ref: string | null | undefined) {
+  const m = mails.find(ref)
+  return router.push(m ? { name: 'mails', params: { id: m.id } } : { name: 'mails' })
+}
 function open(i: PriorityItem) {
   if (i.kind === 'mail') {
     const s = store.byId(i.refId)
-    return router.push(s?.mailId ? { name: 'mails', params: { id: s.mailId } } : { name: 'mails' })
+    return openMail(s?.mailId)
   }
   return router.push({ name: i.route.name })
 }
@@ -155,7 +159,7 @@ function suggest(accept: boolean) {
           <SuiviRow v-for="(i, n) in shown" :key="i.key" :item="i" :rank="n + 1" :extra="teamExtra(i)" @open="open" @done="done" />
         </ol>
       </template>
-      <SuiviBoard v-else :items="store.inScope" @open="(s) => router.push(s.mailId ? { name: 'mails', params: { id: s.mailId } } : { name: 'mails' })" />
+      <SuiviBoard v-else :items="store.inScope" @open="(s) => openMail(s.mailId)" />
 
       <section v-if="recent.length" aria-labelledby="act-h">
         <h2 id="act-h">{{ t('suivis.activity') }}</h2>
