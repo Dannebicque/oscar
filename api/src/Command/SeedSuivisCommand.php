@@ -3,7 +3,8 @@
 namespace App\Command;
 
 use App\Entity\Suivi;
-use App\Enum\SuiviState;
+use App\Enum\SuiviDirection;
+use App\Enum\SuiviStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -26,17 +27,21 @@ final class SeedSuivisCommand extends Command
             return Command::SUCCESS;
         }
 
+        $today = new \DateTimeImmutable('today');
+        $d = static fn (int $n): \DateTimeImmutable => $today->modify(sprintf('%+d days', $n));
         $rows = [
-            ['Planning des soutenances', 'Sophie Laurent', SuiviState::ToHandle, '2026-11-20', false],
-            ['Devis des affiches', 'Marc Dubois', SuiviState::RelanceDue, '2026-11-19', true],
-            ['Salle B104 pour le jury', 'Scolarité', SuiviState::Late, '2026-11-17', false],
-            ['Convention de stage', 'Claire Petit', SuiviState::Waiting, '2026-11-24', false],
-            ['Matériel de TP', 'Service achats', SuiviState::Done, '2026-11-12', false],
+            // sujet, contact, sens, état, échéance, relance, réponse reçue, IA
+            ['Planning des soutenances', 'Sophie Laurent', SuiviDirection::ToHandle, SuiviStatus::New, $d(2), null, true, false],
+            ['Devis des affiches', 'Marc Dubois', SuiviDirection::Waiting, SuiviStatus::Waiting, $d(3), $d(-1), false, true],
+            ['Salle B104 pour le jury', 'Scolarité', SuiviDirection::ToHandle, SuiviStatus::InProgress, $d(-3), null, false, false],
+            ['Convention de stage', 'Claire Petit', SuiviDirection::Waiting, SuiviStatus::Waiting, $d(6), $d(3), false, false],
+            ['Matériel de TP', 'Service achats', SuiviDirection::Waiting, SuiviStatus::Done, $d(-8), null, false, false],
         ];
-        foreach ($rows as [$subject, $contact, $state, $due, $ai]) {
+        foreach ($rows as [$subject, $contact, $direction, $status, $due, $relance, $reply, $ai]) {
             $this->em->persist(
-                (new Suivi())->setSubject($subject)->setContact($contact)->setState($state)
-                    ->setDueAt(new \DateTimeImmutable($due))->setSuggestedByAi($ai)
+                (new Suivi())->setSubject($subject)->setContact($contact)->setDirection($direction)->setStatus($status)
+                    ->setDueAt($due)->setRelanceAt($relance)->setReplyReceived($reply)->setSuggestedByAi($ai)
+                    ->setResponsible('David')
             );
         }
         $this->em->flush();
