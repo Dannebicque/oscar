@@ -50,6 +50,11 @@ final class MailSynchronizerTest extends KernelTestCase
             {
                 return array_values(array_filter($this->all, static fn (MailHeader $h) => $h->folder === $folder && $h->uid > $afterUid));
             }
+
+            public function fetchBody(string $folder, int $uid): ?string
+            {
+                return null;
+            }
         };
     }
 

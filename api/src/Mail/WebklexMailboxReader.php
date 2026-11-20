@@ -41,6 +41,21 @@ final class WebklexMailboxReader implements MailboxReader
         return $out;
     }
 
+    public function fetchBody(string $folder, int $uid): ?string
+    {
+        $box = $this->client()->getFolderByPath($folder);
+        $m = $box?->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(true)->get()->first();
+        if ($m === null) {
+            return null;
+        }
+        $text = trim((string) $m->getTextBody());
+        if ($text === '') {
+            $text = trim(html_entity_decode(strip_tags((string) preg_replace('#<(script|style)\b.*?</\1>#is', '', (string) $m->getHTMLBody())), ENT_QUOTES | ENT_HTML5));
+        }
+
+        return $text === '' ? null : $text;
+    }
+
     private function client(): \Webklex\PHPIMAP\Client
     {
         if ($this->client === null) {
