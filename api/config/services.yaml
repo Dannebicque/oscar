@@ -33,3 +33,15 @@ services:
     App\Security\CredentialVault:
         arguments:
             $base64Key: '%env(APP_VAULT_KEY)%'
+
+    App\Mail\OutgoingMailer: '@App\Mail\SymfonyOutgoingMailer'
+
+when@test:
+    services:
+        App\Tests\Support\FakeOutgoingMailer:
+            public: true
+        App\Mail\OutgoingMailer: '@App\Tests\Support\FakeOutgoingMailer'
+        App\Mail\MailboxReaderFactory:
+            public: true
+            class: App\Tests\Support\FakeReaderFactory
+            arguments: ['@App\Security\CredentialVault']

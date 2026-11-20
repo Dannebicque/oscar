@@ -12,6 +12,9 @@ use App\Enum\SuiviDirection;
 use App\Enum\SuiviStatus;
 use App\Repository\SuiviRepository;
 use App\State\CloseSuiviProcessor;
+use App\State\SuiviProcessor;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Context;
@@ -29,8 +32,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(),
         new Get(),
-        new Post(),
-        new Patch(inputFormats: ['json' => ['application/merge-patch+json', 'application/json']]),
+        new Post(processor: SuiviProcessor::class),
+        new Patch(inputFormats: ['json' => ['application/merge-patch+json', 'application/json']], processor: SuiviProcessor::class),
         new Post(
             uriTemplate: '/suivis/{id}/close',
             status: 204,
@@ -109,8 +112,14 @@ class Suivi implements OwnedInterface
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $reason = null;
 
+    /** @var Collection<int, JournalEntry> */
+    #[ORM\OneToMany(mappedBy: 'suivi', targetEntity: JournalEntry::class, cascade: ['persist'])]
+    #[ORM\OrderBy(['at' => 'ASC'])]
+    private Collection $journalEntries;
+
     public function __construct()
     {
+        $this->journalEntries = new ArrayCollection();
         $this->id = Uuid::v7()->toRfc4122();
         $this->dueAt = new \DateTimeImmutable('today');
     }
@@ -148,10 +157,28 @@ class Suivi implements OwnedInterface
     public function getReason(): ?string { return $this->reason; }
     public function setReason(?string $v): static { $this->reason = $v; return $this; }
 
+    /**
+     * Journal non modifiable (F-58), en lecture seule dans l'API.
+     *
+     * @return list<array{at: string, author: string, action: string}>
+     */
+    public function getJournal(): array
+    {
+        return array_map(static fn (JournalEntry $e) => $e->toArray(), $this->journalEntries->toArray());
+    }
+
+    public function log(string $author, string $action, ?\DateTimeImmutable $at = null): static
+    {
+        $this->journalEntries->add(new JournalEntry($this, $at ?? new \DateTimeImmutable(), $author, $action));
+
+        return $this;
+    }
+
     public function close(): static
     {
         $this->status = SuiviStatus::Done;
         $this->replyReceived = false;
+        $this->log($this->owner?->getDisplayName() ?? '', 'closed');
 
         return $this;
     }

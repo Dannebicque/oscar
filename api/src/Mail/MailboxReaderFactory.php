@@ -6,13 +6,13 @@ use App\Entity\MailAccount;
 use App\Security\CredentialVault;
 
 /** Construit le lecteur IMAP d'un compte : le mot de passe n'est déchiffré qu'ici, au moment de se connecter. */
-final class MailboxReaderFactory
+class MailboxReaderFactory
 {
     public function __construct(private readonly CredentialVault $vault)
     {
     }
 
-    public function create(MailAccount $a): MailboxReader
+    public function create(MailAccount $a): MailboxReader&MailboxAppender
     {
         return new WebklexMailboxReader($a->getImapHost(), $a->getImapPort(), $a->getUsername(), $this->vault->decrypt($a->getPasswordEncrypted()), $a->getImapEncryption(), $a->getImapEncryption() !== 'none');
     }

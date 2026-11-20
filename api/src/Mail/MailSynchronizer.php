@@ -55,8 +55,9 @@ final class MailSynchronizer
             if ($s->getStatus() === SuiviStatus::Done || $s->getMailId() === null) {
                 continue;
             }
-            if ($this->detector->firstReply($inbound, $s->getMailId()) !== null) {
+            if (($reply = $this->detector->firstReply($inbound, $s->getMailId())) !== null) {
                 $s->setReplyReceived(true);
+                $s->log($reply->fromName !== '' ? $reply->fromName : $reply->fromAddress, 'replyReceived', $reply->date);
                 ++$marked;
             }
         }

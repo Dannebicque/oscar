@@ -6,7 +6,7 @@ use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Message;
 
 /** Lecture IMAP via webklex/php-imap (PHP pur, sans l'extension imap retirée du noyau). */
-final class WebklexMailboxReader implements MailboxReader
+final class WebklexMailboxReader implements MailboxReader, MailboxAppender
 {
     private ?\Webklex\PHPIMAP\Client $client = null;
 
@@ -39,6 +39,12 @@ final class WebklexMailboxReader implements MailboxReader
         usort($out, static fn (MailHeader $a, MailHeader $b) => $a->uid <=> $b->uid);
 
         return $out;
+    }
+
+    public function append(string $folder, string $rawMessage): void
+    {
+        $box = $this->client()->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
+        $box->appendMessage($rawMessage, ['\\Seen']);
     }
 
     public function fetchBody(string $folder, int $uid): ?string
