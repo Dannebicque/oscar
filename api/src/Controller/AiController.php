@@ -35,7 +35,7 @@ final class AiController extends AbstractController
         }
         $settings = $this->settings($user);
         // L'IA est coupée, ou interdite sur cette boîte (confidentielle, RH) : aucune lecture du mail.
-        if (!$mail->getAccount()->isAiAllowed() || ($provider = $this->registry->for((string) $settings['aiMode'])) === null || !$settings['aiSuggestTasks'] && !$settings['aiSuggestFollow']) {
+        if (!$mail->getAccount()->isAiAllowed() || ($mail->getSharedMailbox() !== null && !$mail->getSharedMailbox()->isAiEnabled()) || ($provider = $this->registry->for((string) $settings['aiMode'])) === null || !$settings['aiSuggestTasks'] && !$settings['aiSuggestFollow']) {
             return new JsonResponse(self::NONE);
         }
         try {

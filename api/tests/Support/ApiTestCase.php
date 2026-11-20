@@ -26,7 +26,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function user(string $name): User
     {
-        $u = new User($name);
+        $u = new User($name, ucfirst($name));
         $this->em->persist($u);
         $this->em->flush();
 

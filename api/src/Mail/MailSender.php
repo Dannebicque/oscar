@@ -55,6 +55,10 @@ final class MailSender
 
         $saved = $this->saveToSent($account, $email);
 
+        if ($replyTo !== null && $replyTo->getSharedMailbox() !== null) {
+            $this->recordTeamReply($user, $replyTo, $now);
+        }
+
         $suivi = null;
         if ($r->followHours !== null) {
             $due = $now->modify(sprintf('+%d hours', $r->followHours))->setTime(0, 0);
@@ -68,6 +72,23 @@ final class MailSender
         }
 
         return ['messageId' => $messageId, 'suivi' => $suivi, 'savedToSent' => $saved];
+    }
+
+    /** Réponse envoyée depuis une boîte partagée : journal de la demande et information des autres membres (F-68). */
+    private function recordTeamReply(User $user, Mail $original, \DateTimeImmutable $now): void
+    {
+        $box = $original->getSharedMailbox();
+        $team = $this->em->getRepository(Suivi::class)->findOneBy(['sharedMailbox' => $box, 'mailId' => $original->getMessageId()]);
+        if ($team === null) {
+            return;
+        }
+        $team->log($user->getDisplayName(), 'sent', $now)->setComposing(null);
+        foreach ($box->getMembers() as $member) {
+            if ($member->getUser()->getId() !== $user->getId()) {
+                $this->em->persist((new \App\Entity\Notification('memberReplied', ['who' => $user->getDisplayName(), 'subject' => $team->getSubject()], 'suivis', 'memberreply:'.$team->getId().':'.$now->format('c').':'.$member->getUser()->getId(), $now))->setOwner($member->getUser()));
+            }
+        }
+        $this->em->flush();
     }
 
     /** Une copie dans Envoyés : un échec ne doit pas faire croire que le message n'est pas parti. */

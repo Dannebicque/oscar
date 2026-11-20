@@ -26,6 +26,11 @@ class Mail implements OwnedInterface
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $owner = null;
 
+    /** Alias par lequel ce mail est arrivé, s'il s'agit d'une boîte partagée déclarée (F-44). */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?SharedMailbox $sharedMailbox = null;
+
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
     private string $id;
@@ -65,6 +70,10 @@ class Mail implements OwnedInterface
     public function getOwner(): ?User { return $this->owner; }
     public function setOwner(User $owner): static { $this->owner = $owner; return $this; }
     #[Ignore] public function getAccount(): MailAccount { return $this->account; }
+    #[Ignore] public function getSharedMailbox(): ?SharedMailbox { return $this->sharedMailbox; }
+    public function setSharedMailbox(?SharedMailbox $m): static { $this->sharedMailbox = $m; return $this; }
+    /** Identifiant court de l'alias (« contact »), ou null pour un mail personnel. */
+    public function getMailbox(): string { return $this->sharedMailbox?->getSlug() ?? 'personal'; }
     public function getAccountId(): string { return $this->account->getId(); }
     public function getFolder(): string { return $this->folder; }
     public function getUid(): int { return $this->uid; }

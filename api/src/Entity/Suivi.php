@@ -50,9 +50,31 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 class Suivi implements OwnedInterface
 {
+    /** null pour une demande d'alias : elle appartient à la boîte partagée, pas à une personne (F-67). */
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?User $owner = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?SharedMailbox $sharedMailbox = null;
+
+    /** « Pris par X » : informe les autres membres pour éviter les doublons, ne désigne pas un responsable (F-67). */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $takenBy = null;
+
+    /** Indicateur « X rédige une réponse » (F-68), valable quelques minutes. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $composingBy = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $composingSince = null;
+
+    /** @var Collection<int, SuiviNote> */
+    #[ORM\OneToMany(mappedBy: 'suivi', targetEntity: SuiviNote::class, cascade: ['persist'])]
+    #[ORM\OrderBy(['at' => 'ASC'])]
+    private Collection $notes;
 
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
@@ -120,6 +142,7 @@ class Suivi implements OwnedInterface
     public function __construct()
     {
         $this->journalEntries = new ArrayCollection();
+        $this->notes = new ArrayCollection();
         $this->id = Uuid::v7()->toRfc4122();
         $this->dueAt = new \DateTimeImmutable('today');
     }
@@ -128,6 +151,25 @@ class Suivi implements OwnedInterface
     #[Ignore]
     public function getOwner(): ?User { return $this->owner; }
     public function setOwner(User $owner): static { $this->owner = $owner; return $this; }
+    #[Ignore] public function getSharedMailbox(): ?SharedMailbox { return $this->sharedMailbox; }
+    public function setSharedMailbox(?SharedMailbox $m): static { $this->sharedMailbox = $m; $this->mailbox = $m?->getSlug() ?? 'personal'; return $this; }
+    #[Ignore] public function getTakenBy(): ?User { return $this->takenBy; }
+    public function setTakenBy(?User $u): static { $this->takenBy = $u; return $this; }
+    /** Nom affiché de la personne qui a pris la demande (alias seulement). */
+    public function getTakenByName(): ?string { return $this->takenBy?->getDisplayName(); }
+    #[Ignore] public function getComposingBy(): ?User { return $this->composingBy; }
+    #[Ignore] public function getComposingSince(): ?\DateTimeImmutable { return $this->composingSince; }
+    public function setComposing(?User $u, ?\DateTimeImmutable $at = null): static { $this->composingBy = $u; $this->composingSince = $u === null ? null : ($at ?? new \DateTimeImmutable()); return $this; }
+    /** Personne en train de rédiger, si l'indicateur est encore frais (2 minutes). */
+    public function getComposingName(?\DateTimeImmutable $now = null): ?string
+    {
+        $now ??= new \DateTimeImmutable();
+
+        return $this->composingBy !== null && $this->composingSince !== null && $this->composingSince > $now->modify('-2 minutes') ? $this->composingBy->getDisplayName() : null;
+    }
+    /** Notes internes : réservées aux membres de l'alias, donc vides pour une demande personnelle. @return list<array{id: string, author: string, text: string, at: string}> */
+    public function getNotes(): array { return array_map(static fn (SuiviNote $n) => $n->toArray(), $this->notes->toArray()); }
+    public function addNote(string $author, string $text): static { $this->notes->add(new SuiviNote($this, $author, $text)); return $this; }
     public function getSubject(): string { return $this->subject; }
     public function setSubject(string $v): static { $this->subject = $v; return $this; }
     public function getContact(): string { return $this->contact; }

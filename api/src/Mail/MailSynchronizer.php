@@ -24,6 +24,7 @@ final class MailSynchronizer
         private readonly EntityManagerInterface $em,
         private readonly MailRepository $mails,
         private readonly SuiviRepository $suivis,
+        private readonly AliasRouter $aliases,
         private readonly ReplyDetector $detector = new ReplyDetector(),
     ) {
     }
@@ -34,7 +35,11 @@ final class MailSynchronizer
         $fetched = 0;
         foreach (self::FOLDERS as $folder) {
             foreach ($reader->fetchAfter($folder, $this->mails->lastUid($account, $folder)) as $header) {
-                $this->em->persist(Mail::fromHeader($account, $header));
+                $mail = Mail::fromHeader($account, $header);
+                $this->em->persist($mail);
+                if ($header->folder === 'INBOX') {
+                    $this->aliases->route($account->getOwner(), $mail);
+                }
                 ++$fetched;
             }
         }

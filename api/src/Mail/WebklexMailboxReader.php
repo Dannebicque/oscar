@@ -85,8 +85,10 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender
     {
         $from = $m->getFrom()->first();
         $to = [];
-        foreach ($m->getTo()->all() as $t) {
-            $to[] = (string) ($t->mail ?? '');
+        foreach ([$m->getTo(), $m->getCc()] as $attr) {
+            foreach ($attr->all() as $t) {
+                $to[] = strtolower((string) ($t->mail ?? ''));
+            }
         }
         $date = $m->getDate()->first();
         $raw = $m->getHeader()->raw ?? '';
