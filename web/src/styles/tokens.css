@@ -53,6 +53,9 @@
   --c-success: #067647;
   --c-success-soft: #dcfae6;
   --c-neutral-soft: #eef1f5;
+  --c-cal2: #0b6e6e;
+  --c-cal2-soft: #d8f1ef;
+  --c-on-cal2-soft: #0a4f4f;
   --c-focus: #2457d6;
   --c-overlay: rgb(15 23 42 / 0.5);
   --shadow-1: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.1);

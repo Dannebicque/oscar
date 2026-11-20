@@ -4,5 +4,5 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: { port: 5173, strictPort: true },
-  test: { environment: 'jsdom' },
+  test: { environment: 'jsdom', setupFiles: ['./src/test/setup.ts'] },
 })

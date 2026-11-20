@@ -143,7 +143,7 @@ export default {
     attach: 'Joindre un fichier', delays: { h24: '24 heures', h48: '48 heures', d3: '3 jours', d7: '1 semaine' },
   },
   agenda: {
-    title: 'Agenda', views: 'Vue', week: 'Semaine', day: 'Jour', list: 'Liste', prev: 'Semaine précédente', next: 'Semaine suivante', todayBtn: 'Aujourd’hui',
+    title: 'Agenda', views: 'Vue', week: 'Semaine', day: 'Jour', month: 'Mois', list: 'Liste', when: 'Quand', createFailed: 'Le serveur d’agenda a refusé l’événement. Rien n’a été ajouté, réessaie dans un instant.', prev: 'Semaine précédente', next: 'Semaine suivante', todayBtn: 'Aujourd’hui',
     weekOf: 'Semaine du {date}', noEvents: 'Aucun rendez-vous', sources: 'Agendas', add: 'Nouvel événement', evTitle: 'Titre', evDay: 'Jour', evStart: 'Début', evEnd: 'Fin', evPlace: 'Lieu', evCalendar: 'Agenda',
     created: 'Événement ajouté : « {title} ».', until: 'jusqu’à {time}', private: 'Agenda perso', conflict: 'Chevauche un autre rendez-vous', invitations: 'Invitations',
     freeBusy: 'Pour proposer des créneaux, Oscar ne lit que libre ou occupé : ni titres, ni lieux, ni participants.',

@@ -143,7 +143,7 @@ const en: typeof fr = {
     attach: 'Attach a file', delays: { h24: '24 hours', h48: '48 hours', d3: '3 days', d7: '1 week' },
   },
   agenda: {
-    title: 'Calendar', views: 'View', week: 'Week', day: 'Day', list: 'List', prev: 'Previous week', next: 'Next week', todayBtn: 'Today',
+    title: 'Calendar', views: 'View', week: 'Week', day: 'Day', month: 'Month', list: 'List', when: 'When', createFailed: 'The calendar server refused the event. Nothing was added, try again in a moment.', prev: 'Previous week', next: 'Next week', todayBtn: 'Today',
     weekOf: 'Week of {date}', noEvents: 'No events', sources: 'Calendars', add: 'New event', evTitle: 'Title', evDay: 'Day', evStart: 'Start', evEnd: 'End', evPlace: 'Place', evCalendar: 'Calendar',
     created: 'Event added: “{title}”.', until: 'until {time}', private: 'Personal calendar', conflict: 'Overlaps another event', invitations: 'Invitations',
     freeBusy: 'To suggest slots, Oscar only reads free or busy: no titles, places or attendees.',

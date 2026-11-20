@@ -24,6 +24,9 @@
   --c-success: #4ade80;
   --c-success-soft: #0f3a25;
   --c-neutral-soft: #1f2938;
+  --c-cal2: #4fd1c5;
+  --c-cal2-soft: #0f3b3a;
+  --c-on-cal2-soft: #b5f0ea;
   --c-focus: #93b2ff;
   --c-overlay: rgb(0 0 0 / 0.65);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
@@ -53,6 +56,9 @@
   --c-success: #7dffb0;
   --c-success-soft: #000000;
   --c-neutral-soft: #000000;
+  --c-cal2: #7ff0e6;
+  --c-cal2-soft: #000000;
+  --c-on-cal2-soft: #7ff0e6;
   --c-focus: #ffe14d;
   --c-overlay: rgb(0 0 0 / 0.85);
   --shadow-1: none;

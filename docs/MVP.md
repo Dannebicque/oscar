@@ -15,7 +15,7 @@ contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
 | F-11 | Tâches proposées depuis un mail | 🟡 | Fournisseur local à règles (dates en français « avant mardi », « jeudi à 10h »). Pas de modèle de langage branché : l'interface `AiProvider` l'attend. |
 | F-12 | Relance après 48 h, délai réglable | 🟡 | Délai réglable par utilisateur et par suivi (via l'échéance). Pas par compte ; « jours ouvrés » est enregistré mais **pas encore appliqué** au calcul. |
 | F-16 | Webmail convaincant | 🟡 | Dossiers, liste, lecture (texte brut), répondre, filtres ✅. **Pas encore** : transférer, pièces jointes, brouillons, corbeille/archivage réels, fils de discussion, HTML isolé. Ces boutons annoncent qu'ils ne font rien. |
-| F-20 | Agenda CalDAV, lecture et création | ✅ | Récurrences développées ; création écrite d'abord sur le serveur. Testé contre des réponses CalDAV simulées, **pas contre un vrai serveur CalDAV**. Google : version 2. |
+| F-20 | Agenda CalDAV, lecture et création | ✅ | Récurrences développées ; création écrite d'abord sur le serveur. Affichage par FullCalendar 6 (MIT, maintenu) : semaine, jour, mois, liste, glisser pour créer, événements focalisables au clavier. Un événement existant se consulte mais ne se modifie ni ne se supprime pas encore. Testé contre des réponses CalDAV simulées, **pas contre un vrai serveur CalDAV**. Google : version 2. |
 | F-30 à F-35 | To-do globale, tri, filtres, « traité », « à confirmer » | ✅ | |
 | F-36 | Réponse reçue → tâche de relance liée | 🟡 | Il n'y a pas de tâche de relance liée ; c'est le suivi qui porte le signal. |
 | F-50 à F-56 | Suivi : création, états, réponse, relance, échéance | ✅ | Sens + état stockés, signaux calculés, aucune clôture ni relance automatique. |

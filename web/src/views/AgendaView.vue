@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import CalendarGrid, { type GridView } from '../components/agenda/CalendarGrid.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseDialog from '../components/ui/BaseDialog.vue'
 import BaseIcon from '../components/ui/BaseIcon.vue'
-import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
 import ToneChip from '../components/ui/ToneChip.vue'
 import { useFormat } from '../composables/useFormat'
 import { conflictIds } from '../domain/agenda'
-import { clock } from '../domain/clock'
-import { addDays, atTime, isoDay, sameDay, startOfWeek } from '../domain/dates'
-import type { CalEvent } from '../domain/types'
+import { isoDay } from '../domain/dates'
 import { useAgendaStore } from '../stores/agenda'
 import { useUiStore } from '../stores/ui'
 
@@ -23,80 +21,86 @@ const store = useAgendaStore()
 const ui = useUiStore()
 onMounted(() => store.load())
 
-type View = 'week' | 'day' | 'list'
-const view = ref<View>('week')
-const anchor = ref(clock.now())
-const viewOptions = computed(() => (['week', 'day', 'list'] as View[]).map((v) => ({ value: v, label: t(`agenda.${v}`) })))
-
-const days = computed(() => {
-  if (view.value === 'day') return [anchor.value]
-  if (view.value === 'list') return Array.from({ length: 14 }, (_, i) => addDays(anchor.value, i))
-  const s = startOfWeek(anchor.value)
-  return Array.from({ length: 7 }, (_, i) => addDays(s, i))
-})
+const narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches
+const view = ref<GridView>(narrow ? 'timeGridDay' : 'timeGridWeek')
+const grid = ref<InstanceType<typeof CalendarGrid> | null>(null)
+const title = ref('')
+const viewOptions = computed(() => ([['timeGridWeek', 'week'], ['timeGridDay', 'day'], ['dayGridMonth', 'month'], ['listWeek', 'list']] as const).map(([value, k]) => ({ value: value as GridView, label: t(`agenda.${k}`) })))
 const conflicts = computed(() => conflictIds(store.events))
-const forDay = (d: Date) => store.events.filter((e) => sameDay(new Date(e.start), d)).sort((a, b) => a.start.localeCompare(b.start))
-const columns = computed(() => days.value.map((d) => ({ d, key: isoDay(d), events: forDay(d) })).filter((c) => view.value !== 'list' || c.events.length))
-const heading = computed(() => t('agenda.weekOf', { date: fmt.dateLong(startOfWeek(anchor.value)) }))
-const step = computed(() => (view.value === 'day' ? 1 : 7))
-const move = (dir: -1 | 1) => { anchor.value = addDays(anchor.value, dir * step.value) }
-const label = (e: CalEvent) => store.sourceOf(e.calendar)
+
+function setView(v: GridView) {
+  view.value = v
+  grid.value?.changeView(v)
+}
+
+/** Détail d'un événement (lecture seule : l'API ne modifie pas encore les événements existants). */
+const openId = ref<string | null>(null)
+const opened = computed(() => store.events.find((e) => e.id === openId.value) ?? null)
+const openedSource = computed(() => (opened.value ? store.sourceOf(opened.value.calendar) : undefined))
 
 const showNew = ref(false)
-const form = ref({ title: '', day: isoDay(clock.now()), start: '09:00', end: '10:00', location: '', calendar: 'iut' })
+const form = ref({ title: '', day: isoDay(new Date()), start: '09:00', end: '10:00', location: '', calendar: '' })
+const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+/** Un glisser sur la grille préremplit le jour et les heures ; le bouton « Nouvel événement » reste le chemin clavier. */
+function startCreate(range?: { start: Date; end: Date }) {
+  const first = store.sources.find((s) => !s.personal) ?? store.sources[0]
+  form.value = {
+    title: '', day: isoDay(range?.start ?? new Date()), start: range ? hhmm(range.start) : '09:00',
+    end: range && range.end.getTime() - range.start.getTime() >= 15 * 60_000 ? hhmm(range.end) : '10:00', location: '', calendar: first?.id ?? '',
+  }
+  showNew.value = true
+}
 async function create() {
-  if (!form.value.title.trim()) return
-  const [sh, sm] = form.value.start.split(':').map(Number)
-  const [eh, em] = form.value.end.split(':').map(Number)
+  if (!form.value.title.trim() || !form.value.calendar) return
   const [y, mo, d] = form.value.day.split('-').map(Number)
-  const base = new Date(y, mo - 1, d)
-  await store.add({ calendar: form.value.calendar, title: form.value.title.trim(), start: atTime(base, sh, sm).toISOString(), end: atTime(base, eh, em).toISOString(), location: form.value.location.trim() || null })
-  showNew.value = false
-  ui.notify(t('agenda.created', { title: form.value.title }))
-  form.value.title = ''
+  const at = (hm: string) => { const [h, m] = hm.split(':').map(Number); return new Date(y, mo - 1, d, h, m).toISOString() }
+  try {
+    await store.add({ calendar: form.value.calendar, title: form.value.title.trim(), start: at(form.value.start), end: at(form.value.end), location: form.value.location.trim() || null })
+    ui.notify(t('agenda.created', { title: form.value.title }))
+    showNew.value = false
+  } catch {
+    ui.notify(t('agenda.createFailed'), { tone: 'error' })
+  }
 }
 </script>
 
 <template>
   <PageHeader :title="t('agenda.title')">
-    <BaseButton variant="primary" icon="plus" :label="t('agenda.add')" @click="showNew = true" />
+    <BaseButton variant="primary" icon="plus" :label="t('agenda.add')" @click="startCreate()" />
   </PageHeader>
   <ErrorState v-if="store.error" @retry="store.load()" />
   <template v-else>
     <div class="bar">
-      <SegmentedControl v-model="view" :options="viewOptions" :label="t('agenda.views')" />
+      <SegmentedControl :model-value="view" :options="viewOptions" :label="t('agenda.views')" @update:model-value="setView" />
       <div class="nav">
-        <BaseButton icon="chevronLeft" icon-only :label="t('agenda.prev')" @click="move(-1)" />
-        <BaseButton :label="t('agenda.todayBtn')" @click="anchor = clock.now()" />
-        <BaseButton icon="chevronRight" icon-only :label="t('agenda.next')" @click="move(1)" />
+        <BaseButton icon="chevronLeft" icon-only :label="t('agenda.prev')" @click="grid?.prev()" />
+        <BaseButton :label="t('agenda.todayBtn')" @click="grid?.today()" />
+        <BaseButton icon="chevronRight" icon-only :label="t('agenda.next')" @click="grid?.next()" />
       </div>
-      <h2 class="when" aria-live="polite">{{ view === 'day' ? fmt.dateLong(anchor) : heading }}</h2>
+      <h2 class="when" aria-live="polite">{{ title }}</h2>
     </div>
     <ul class="sources" :aria-label="t('agenda.sources')">
-      <li v-for="s in store.sources" :key="s.id"><ToneChip :tone="s.personal ? 'ai' : 'info'" :icon="s.personal ? 'user' : 'calendar'" :label="`${s.label} · ${s.kind === 'google' ? 'Google' : 'CalDAV'}`" /></li>
+      <li v-for="s in store.sources" :key="s.id"><ToneChip :tone="s.personal ? 'neutral' : 'info'" :icon="s.personal ? 'user' : 'calendar'" :label="`${s.label} · ${s.kind === 'google' ? 'Google' : 'CalDAV'}${s.personal ? ' · ' + t('agenda.private') : ''}`" /></li>
     </ul>
-
     <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
-    <EmptyState v-else-if="columns.length === 0" icon="calendar" :text="t('agenda.noEvents')" />
-    <div v-else class="grid" :class="view">
-      <section v-for="c in columns" :key="c.key" class="day" :class="{ today: sameDay(c.d, clock.now()) }" :aria-labelledby="`d-${c.key}`">
-        <h3 :id="`d-${c.key}`">{{ fmt.dateLong(c.d) }}<span v-if="sameDay(c.d, clock.now())" class="today-tag"> · {{ t('common.today') }}</span></h3>
-        <ul v-if="c.events.length">
-          <li v-for="e in c.events" :key="e.id" class="event" :class="{ personal: label(e)?.personal }">
-            <p class="time"><BaseIcon name="clock" :size="14" /> {{ fmt.time(e.start) }} – {{ fmt.time(e.end) }}</p>
-            <p class="title">{{ e.title }}</p>
-            <p v-if="e.location" class="muted"><BaseIcon name="mapPin" :size="14" /> {{ e.location }}</p>
-            <p class="chips">
-              <ToneChip :tone="label(e)?.personal ? 'ai' : 'info'" :icon="label(e)?.personal ? 'user' : 'calendar'" :label="label(e)?.label ?? ''" />
-              <ToneChip v-if="conflicts.has(e.id)" tone="warn" icon="alert" :label="t('agenda.conflict')" />
-            </p>
-          </li>
-        </ul>
-        <p v-else class="muted">{{ t('agenda.noEvents') }}</p>
-      </section>
-    </div>
+    <CalendarGrid
+      ref="grid" :events="store.events" :sources="store.sources" :view="view" :conflicts="conflicts"
+      @open="openId = $event" @select="startCreate" @dates="title = $event.title"
+    />
     <p class="hint note">{{ t('agenda.freeBusy') }}</p>
   </template>
+
+  <BaseDialog :open="opened !== null" :title="opened?.title ?? ''" @close="openId = null">
+    <dl v-if="opened" class="detail">
+      <dt>{{ t('agenda.when') }}</dt>
+      <dd><BaseIcon name="clock" :size="14" /> {{ fmt.dateLong(opened.start) }}, {{ fmt.time(opened.start) }} – {{ fmt.time(opened.end) }}</dd>
+      <template v-if="opened.location"><dt>{{ t('agenda.evPlace') }}</dt><dd><BaseIcon name="mapPin" :size="14" /> {{ opened.location }}</dd></template>
+      <dt>{{ t('agenda.evCalendar') }}</dt>
+      <dd><ToneChip :tone="openedSource?.personal ? 'neutral' : 'info'" :icon="openedSource?.personal ? 'user' : 'calendar'" :label="openedSource?.label ?? ''" /></dd>
+    </dl>
+    <p v-if="opened && conflicts.has(opened.id)" class="conflict"><ToneChip tone="warn" icon="alert" :label="t('agenda.conflict')" /></p>
+    <template #footer><BaseButton :label="t('common.close')" @click="openId = null" /></template>
+  </BaseDialog>
 
   <BaseDialog :open="showNew" :title="t('agenda.add')" @close="showNew = false">
     <form id="new-event" class="form" @submit.prevent="create">
@@ -109,7 +113,7 @@ async function create() {
       <div class="field"><label for="ev-p">{{ t('agenda.evPlace') }}</label><input id="ev-p" v-model="form.location" class="input" autocomplete="off" /></div>
       <div class="field">
         <label for="ev-c">{{ t('agenda.evCalendar') }}</label>
-        <select id="ev-c" v-model="form.calendar" class="input"><option v-for="s in store.sources" :key="s.id" :value="s.id">{{ s.label }}</option></select>
+        <select id="ev-c" v-model="form.calendar" class="input" required><option v-for="s in store.sources" :key="s.id" :value="s.id">{{ s.label }}</option></select>
       </div>
     </form>
     <template #footer>
@@ -124,22 +128,10 @@ async function create() {
 .nav { display: flex; gap: var(--space-1); }
 .when { font-size: var(--fs-md); flex: 1; min-width: 200px; text-transform: capitalize; }
 .sources { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
-.grid { display: grid; gap: var(--space-3); }
-.grid.week { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: start; }
-.grid.list, .grid.day { grid-template-columns: minmax(0, 1fr); max-width: 720px; }
-.day { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: var(--space-3); display: grid; gap: var(--space-2); align-content: start; }
-.day.today { border-color: var(--c-primary); box-shadow: inset 0 3px 0 var(--c-primary); }
-.day h3 { font-size: var(--fs-sm); text-transform: capitalize; }
-.today-tag { color: var(--c-primary); }
-ul { display: grid; gap: var(--space-2); }
-.event { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--c-primary-soft); color: var(--c-on-primary-soft); display: grid; gap: 2px; border-left: 4px solid var(--c-primary); }
-.event.personal { background: var(--c-ai-soft); color: var(--c-ai); border-left-color: var(--c-ai); }
-.event p { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-.time { font-size: var(--fs-sm); font-weight: 700; }
-.title { font-weight: 800; color: var(--c-text); }
-.event .muted { color: inherit; opacity: 0.9; font-size: var(--fs-sm); }
-.chips { gap: var(--space-1); }
 .note { margin-top: var(--space-4); }
+.detail { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: 0; }
+.detail dt { color: var(--c-text-muted); }
+.detail dd { margin: 0; display: flex; gap: var(--space-2); align-items: center; }
 .form { display: grid; gap: var(--space-3); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 </style>

@@ -100,13 +100,15 @@ main { grid-area: main; padding: var(--space-5) var(--space-6); min-width: 0; ma
 :root[data-theme='contrast'] .badge { background: #fff; color: #000; }
 
 @media (max-width: 720px) {
-  .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto auto; grid-template-areas: 'top' 'main' 'nav' 'status'; }
+  /* La barre du bas et la barre d'état restent visibles : seule la zone centrale défile (U-01). */
+  .shell { height: 100dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: 'top' 'main' 'nav' 'status'; }
+  main { overflow-y: auto; }
   .topbar { grid-area: top; display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-4); background: var(--c-surface); border-bottom: 1px solid var(--c-border); }
   .top-actions { display: flex; gap: var(--space-1); }
   .icon-link { position: relative; width: var(--target); height: var(--target); display: inline-flex; align-items: center; justify-content: center; color: var(--c-text); border-radius: var(--radius-sm); }
   .icon-link .badge { top: 2px; right: 0; }
   .word { font-size: var(--fs-lg); }
-  .nav { position: sticky; bottom: 0; top: auto; height: auto; flex-direction: row; justify-content: space-around; padding: var(--space-1) var(--space-2); border-right: 0; border-top: 1px solid var(--c-border); }
+  .nav { position: static; height: auto; flex-direction: row; justify-content: space-around; padding: var(--space-1) var(--space-2); border-right: 0; border-top: 1px solid var(--c-border); }
   .rail-brand, .wide { display: none; }
   .link { flex: 1; min-height: var(--target); }
   .link.center { margin-top: -14px; background: var(--c-primary); color: var(--c-on-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); }
