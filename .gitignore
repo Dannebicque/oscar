@@ -1,6 +1,21 @@
+# Dépendances et builds
 node_modules/
 dist/
-.env.local
 api/vendor/
 api/var/
 desktop/src-tauri/target/
+
+# Secrets et configuration locale : jamais commités (modèle : .env.example)
+.env
+.env.*
+!.env.example
+api/public/bundles/
+api/config/secrets/prod/prod.decrypt.private.php
+
+# Tests, outils, OS, éditeurs
+coverage/
+*.log
+.DS_Store
+.idea/
+.vscode/
+.phpunit.result.cache
