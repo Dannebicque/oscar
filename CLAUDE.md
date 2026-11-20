@@ -25,7 +25,18 @@ Cahier des charges v2 et maquette cliquable : projet claude.ai « Agenda » (doc
 ## Ton d'Oscar
 Majordome numérique (« Votre majordome numérique. »). Phrases courtes, jamais de reproche, humour léger qui disparaît en cas d'erreur, toujours une action proposée. Tutoiement dans l'application.
 
+## Références
+- Cahier des charges v2 (doc claude.ai) : https://claude.ai/artifact/P1MTWboDnQZFWT79qR9i4k : source de vérité, exigences F-xx / N-xx / U-xx.
+- Maquette cliquable (18 écrans mobile et bureau) : https://claude.ai/artifact/Rhjp3aw2sqYzAKeLYRewbq
+- Lire le cahier des charges avant toute fonctionnalité : citer l'ID de l'exigence dans les commits et les tests.
+
+## Modèle de suivi (F-50 à F-56)
+- Un sens (`toHandle` / `waiting`) et un état (`new` / `inProgress` / `waiting` / `done`).
+- « En retard », « relance due », « réponse reçue » sont des signaux calculés, jamais des états stockés.
+
 ## État
-- Fait : front « Mes suivis » avec API simulée (`web/src/api/suivis.ts`), réglage de langue.
-- Prochaine tranche : squelette Symfony, entité Suivi, endpoints `GET /api/suivis` et `POST /api/suivis/{id}/close`, puis connexion IMAP et liste des mails.
-- Reporté : nom commercial, vérification nom/domaine/marque, modèle économique, mobile (MVP 2-3).
+- Fait : prototype front complet sur API simulée (Accueil, Suivis priorités/tableau + mode Relances, Mails avec suivi et boîte partagée, Écrire, Agenda, Tâches, Récap, Alertes, Journal, Réglages), thèmes (clair, sombre, contraste), densités, fr/en, tests (domaine, flux, axe-core).
+- Fait : API Symfony avec entité Suivi (GET, POST, PATCH, close). Le front l'utilise pour les suivis si `VITE_API_URL` est défini.
+- Fait : serveur IMAP de test `docker/dovecot/` (comptes, scénarios F-11, F-44, F-52).
+- Prochaine tranche : connexion IMAP réelle côté API (lecture par UID, Message-ID, détection de réponse), puis entités Mail/Tâche/Événement, CAS, Mercure.
+- Reporté : nom commercial, vérification nom/domaine/marque, modèle économique, mobile natif, Tauri, hors ligne (S), réponse assistée IA réelle.
