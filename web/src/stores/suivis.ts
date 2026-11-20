@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { api, ME } from '../api'
+import { api, session } from '../api'
 import type { SuiviPatch } from '../api/types'
 import { clock } from '../domain/clock'
 import { addDays, isoDay } from '../domain/dates'
@@ -40,7 +40,7 @@ export const useSuivisStore = defineStore('suivis', () => {
   }
 
   async function patch(id: string, p: SuiviPatch, action: string) {
-    const next = await api.suivis.update(id, p, { at: clock.now().toISOString(), author: ME, action })
+    const next = await api.suivis.update(id, p, { at: clock.now().toISOString(), author: session.name, action })
     replace(next)
     return next
   }
@@ -60,6 +60,8 @@ export const useSuivisStore = defineStore('suivis', () => {
     return () => patch(id, { status: before.status, replyReceived: before.replyReceived }, 'reopened')
   }
 
+  /** Brouillon de relance : celui de l'IA si elle est active, sinon null (le front garde son modèle local). */
+  const draftRelance = (id: string) => api.suivis.draftRelance(id)
   const setStatus = (id: string, status: Status) => patch(id, { status }, `status:${status}`)
   /** Réponse reçue mais il reste une action : on garde la demande ouverte (F-65). */
   const keepOpen = (id: string) => patch(id, { replyReceived: false, status: 'inProgress' }, 'keptOpen')
@@ -77,6 +79,6 @@ export const useSuivisStore = defineStore('suivis', () => {
 
   return {
     items, loading, error, scope, sorted, inScope, mine, actionCount, relances, load, create, close, setStatus, keepOpen,
-    keepWaiting, stopRelance, resumeRelance, snooze, relanceSent, byId, flag: (s: Suivi) => flagOf(s, clock.now()),
+    keepWaiting, stopRelance, resumeRelance, snooze, relanceSent, draftRelance, byId, flag: (s: Suivi) => flagOf(s, clock.now()),
   }
 })

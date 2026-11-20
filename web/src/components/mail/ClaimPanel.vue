@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ME } from '../../api'
+import { session } from '../../api'
 import { collisionWith } from '../../domain/claim'
 import type { Mail } from '../../domain/types'
 import BaseButton from '../ui/BaseButton.vue'
@@ -12,8 +12,8 @@ const props = defineProps<{ mail: Mail }>()
 const emit = defineEmits<{ take: []; release: []; handle: []; reopen: []; takeOver: []; reply: [] }>()
 const { t } = useI18n()
 const state = computed(() => props.mail.claim?.state ?? 'new')
-const mine = computed(() => props.mail.claim?.by === ME)
-const other = computed(() => collisionWith(props.mail, ME))
+const mine = computed(() => props.mail.claim?.by === session.name)
+const other = computed(() => collisionWith(props.mail, session.name))
 </script>
 
 <template>
@@ -23,7 +23,7 @@ const other = computed(() => collisionWith(props.mail, ME))
       <h3 v-if="state === 'new'">{{ t('mail.claim.bannerNew') }}</h3>
       <h3 v-else>{{ t(`mail.claim.${state}`, { who: mail.claim?.by ?? '' }) }}</h3>
       <p v-if="state === 'new'">{{ t('mail.claim.bannerNewText') }}</p>
-      <p v-if="mail.composing && mail.composing !== ME">{{ t('mail.claim.warnComposing', { who: mail.composing }) }}</p>
+      <p v-if="mail.composing && mail.composing !== session.name">{{ t('mail.claim.warnComposing', { who: mail.composing }) }}</p>
     </div>
     <div class="actions">
       <template v-if="state === 'new'">

@@ -19,6 +19,7 @@ const ui = useUiStore()
 
 const META: Record<NotificationKind, { icon: string; tone: 'info' | 'warn' | 'danger' | 'neutral' }> = {
   replyReceived: { icon: 'mail', tone: 'info' }, relanceDue: { icon: 'clock', tone: 'warn' }, invitation: { icon: 'calendar', tone: 'neutral' }, connectionFailed: { icon: 'alert', tone: 'danger' },
+  takenOver: { icon: 'user', tone: 'warn' }, memberReplied: { icon: 'send', tone: 'info' },
 }
 const sorted = computed(() => [...system.notifications].sort((a, b) => b.at.localeCompare(a.at)))
 async function markAll() {
@@ -39,7 +40,7 @@ async function markAll() {
           <ToneChip :tone="META[n.kind].tone" :icon="META[n.kind].icon" :label="t(`alerts.kinds.${n.kind}`)" />
           <ToneChip v-if="!n.read" tone="info" icon="star" :label="t('alerts.unread')" />
         </p>
-        <p class="txt">{{ n.title }}</p>
+        <p class="txt">{{ t(`alerts.messages.${n.kind}`, n.params, Number(n.params.n ?? 1)) }}</p>
         <time class="muted" :datetime="n.at">{{ fmt.dateTime(n.at) }}</time>
       </div>
       <BaseButton :label="t('alerts.open')" @click="router.push('/' + n.to)" />

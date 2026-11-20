@@ -141,7 +141,7 @@ final class RecapAndNotificationsTest extends ApiTestCase
         static::getContainer()->get(RecapService::class)->dispatchDue($this->david, new \DateTimeImmutable('2026-11-20 08:00:00 UTC'));
         $log = $this->em->getRepository(LogEntry::class)->findAll();
         self::assertCount(1, $log);
-        self::assertStringContainsString('consultable dans Oscar', $log[0]->getMessage());
+        self::assertSame('recapNotSent', $log[0]->getMessage());
     }
 
     public function testConnectionFailuresAreLoggedAndAlertOnlyAfterRepeatedFailuresOncePerDay(): void
@@ -156,8 +156,8 @@ final class RecapAndNotificationsTest extends ApiTestCase
         self::assertSame(1, $this->em->getRepository(Notification::class)->count([]), 'une seule alerte par jour');
         $logs = $this->em->getRepository(LogEntry::class)->findAll();
         self::assertCount(4, $logs);
-        self::assertStringContainsString('identifiant ou le mot de passe', $logs[0]->getMessage());
-        self::assertStringNotContainsString('Authentication failed', $logs[0]->getMessage(), 'jamais la trace technique');
+        self::assertSame('authRefused', $logs[0]->getMessage(), 'un code traduit côté front, jamais la trace technique');
+        self::assertSame('reconnect', $logs[0]->getAction());
 
         $m->success($this->account);
         self::assertSame(0, $this->account->getFailureCount());

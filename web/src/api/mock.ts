@@ -1,7 +1,8 @@
 import { addDays, atTime, isoDay } from '../domain/dates'
-import type { Api } from './types'
+import { handle as claimHandle, release as claimRelease, reopen as claimReopen, take as claimTake, takeOver as claimTakeOver } from '../domain/claim'
+import type { Api, ServerSettings } from './types'
 import type {
-  AppNotification, CalEvent, CalendarSource, Connection, LogEntry, Mail, Suivi, Task,
+  AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
 } from '../domain/types'
 
 export const ME = 'David'
@@ -74,10 +75,10 @@ export function createMockApi(now: Date = new Date()): Api {
   ]
 
   let notifications: AppNotification[] = [
-    { id: 'n1', kind: 'replyReceived', title: 'Sophie Laurent a répondu à « Planning des soutenances ».', at: hoursAgo(2), read: false, to: 'suivis' },
-    { id: 'n2', kind: 'relanceDue', title: 'Relance due : « Devis des affiches ».', at: hoursAgo(4), read: false, to: 'suivis' },
-    { id: 'n3', kind: 'connectionFailed', title: 'Google Agenda : reconnexion nécessaire.', at: hoursAgo(9), read: false, to: 'journal' },
-    { id: 'n4', kind: 'invitation', title: 'Invitation : Conseil de département.', at: hoursAgo(30), read: true, to: 'agenda' },
+    { id: 'n1', kind: 'replyReceived', params: { who: 'Sophie Laurent', subject: 'Planning des soutenances' }, at: hoursAgo(2), read: false, to: 'suivis' },
+    { id: 'n2', kind: 'relanceDue', params: { who: 'Marc Dubois', subject: 'Devis des affiches', n: 1 }, at: hoursAgo(4), read: false, to: 'suivis' },
+    { id: 'n3', kind: 'connectionFailed', params: { account: 'Google Agenda' }, at: hoursAgo(9), read: false, to: 'journal' },
+    { id: 'n4', kind: 'invitation', params: { title: 'Conseil de département' }, at: hoursAgo(30), read: true, to: 'agenda' },
   ]
   let connections: Connection[] = [
     { id: 'mail', state: 'ok', detail: 'david@iut-troyes.fr', lastOk: hoursAgo(0.1) },
@@ -86,9 +87,18 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'ai', state: 'ok', detail: 'ai.university', lastOk: hoursAgo(0.1) },
   ]
   const log: LogEntry[] = [
-    { id: 'l1', at: hoursAgo(9), account: 'Google Agenda', type: 'auth', message: 'Le jeton d’accès a expiré.', action: 'reconnect' },
-    { id: 'l2', at: hoursAgo(26), account: 'Messagerie', type: 'sync', message: 'Le serveur IMAP n’a pas répondu à temps. Deux nouvelles tentatives ont réussi.', action: 'none' },
+    { id: 'l1', at: hoursAgo(9), account: 'Google Agenda', type: 'auth', message: 'authRefused', action: 'reconnect' },
+    { id: 'l2', at: hoursAgo(26), account: 'Messagerie', type: 'sync', message: 'timeout', action: 'none' },
   ]
+
+  const mailAccounts: MailAccount[] = [{ id: 'acc1', label: 'david@iut-troyes.fr', address: 'david@iut-troyes.fr', imapHost: 'imap.iut-troyes.fr', imapPort: 993, imapEncryption: 'ssl', smtpHost: 'smtp.iut-troyes.fr', smtpPort: 587, smtpEncryption: 'tls', username: 'david', aiAllowed: true }]
+  const calendarAccounts: CalendarAccount[] = [
+    { id: 'iut', label: 'IUT', kind: 'caldav', url: 'https://agenda.iut-troyes.fr/dav/', username: 'david', personal: false },
+    { id: 'perso', label: 'Perso', kind: 'google', url: '', username: '', personal: true },
+  ]
+  let serverSettings: ServerSettings = {}
+  const findMail = (id: string) => mails.find((x) => x.id === id)
+  const replaceMail = (m: Mail) => { mails = mails.map((x) => (x.id === m.id ? m : x)) }
 
   return {
     suivis: {
@@ -105,21 +115,34 @@ export function createMockApi(now: Date = new Date()): Api {
       async close(id) {
         suivis = suivis.map((s) => (s.id === id ? { ...s, status: 'done', replyReceived: false, journal: [...s.journal, { at: new Date().toISOString(), author: ME, action: 'closed' }] } : s))
       },
+      async draftRelance() { return null },
     },
     mails: {
       async list() { return clone(mails) },
-      async body(id) { return clone(mails.find((x) => x.id === id)?.paragraphs ?? []) },
+      async body(id) { return clone(findMail(id)?.paragraphs ?? []) },
+      async hints(id) { return clone(findMail(id)?.hints ?? {}) },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
-      async setClaim(id, c, e, composing) {
-        mails = mails.map((x) => (x.id === id ? { ...x, claim: c, composing: composing === undefined ? x.composing : composing, activity: [...x.activity, e] } : x))
-        return clone(mails.find((x) => x.id === id)!)
+      async claim(mailId, _suiviId, action) {
+        const m = findMail(mailId)
+        if (!m) return
+        const at = new Date()
+        const next = { take: claimTake, release: claimRelease, handle: claimHandle, reopen: claimReopen, takeOver: claimTakeOver }[action](m, ME, at)
+        replaceMail(next)
+        if (m.suivi) {
+          const status = next.claim?.state === 'handled' ? 'done' : next.claim?.state === 'taken' ? 'inProgress' : 'new'
+          suivis = suivis.map((s) => (s.id === m.suivi ? { ...s, status } : s))
+        }
       },
-      async addNote(id, note) {
-        mails = mails.map((x) => (x.id === id ? { ...x, notes: [...x.notes, note] } : x))
-        return clone(mails.find((x) => x.id === id)!)
+      async addNote(mailId, _suiviId, text) {
+        const m = findMail(mailId)
+        if (m) replaceMail({ ...m, notes: [...m.notes, { id: uid('n'), author: ME, text, at: new Date().toISOString() }] })
       },
-      async linkSuivi(id, suiviId) { mails = mails.map((x) => (x.id === id ? { ...x, suivi: suiviId } : x)) },
-      async send() { /* rien ne part sans clic : ici, simulé */ },
+      async send(p) {
+        if (p.followHours === undefined) return { followDueAt: null }
+        const due = day(Math.ceil(p.followHours / 24))
+        suivis = [...suivis, base(uid('s'), { subject: p.subject.replace(/^(re|tr)\s*:\s*/i, ''), contact: p.to[0].split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), direction: 'waiting', status: 'waiting', dueAt: due, relanceAt: due, suggestedByAi: p.followSuggestedByAi ?? false, journal: [{ at: now.toISOString(), author: ME, action: 'created' }, { at: now.toISOString(), author: ME, action: 'sent' }] })]
+        return { followDueAt: due }
+      },
     },
     tasks: {
       async list() { return clone(tasks) },
@@ -131,15 +154,39 @@ export function createMockApi(now: Date = new Date()): Api {
       async events() { return clone(events) },
       async create(e) { const n = { ...e, id: uid('e') }; events = [...events, n]; return clone(n) },
     },
+    accounts: {
+      mail: {
+        async list() { return clone(mailAccounts) },
+        async create(a) { const { password: _p, ...rest } = a; const n = { ...rest, id: uid('acc') }; mailAccounts.push(n); return clone(n) },
+        async remove(id) { const i = mailAccounts.findIndex((a) => a.id === id); if (i >= 0) mailAccounts.splice(i, 1) },
+        async test() { return { ok: true } },
+      },
+      calendar: {
+        async list() { return clone(calendarAccounts) },
+        async create(a) { const { password: _p, ...rest } = a; const n = { ...rest, kind: 'caldav' as const, id: uid('cal') }; calendarAccounts.push(n); return clone(n) },
+        async remove(id) { const i = calendarAccounts.findIndex((a) => a.id === id); if (i >= 0) calendarAccounts.splice(i, 1) },
+      },
+      shared: { async list() { return [{ id: 'sm1', slug: SHARED.id, address: SHARED.address, name: 'Contact', role: 'admin' as const, aiEnabled: false, members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })) }] } },
+    },
+    settings: {
+      async get() { return clone(serverSettings) },
+      async update(patch) { serverSettings = { ...serverSettings, ...patch }; return clone(serverSettings) },
+    },
     system: {
       async notifications() { return clone(notifications) },
       async markAllRead() { notifications = notifications.map((n) => ({ ...n, read: true })) },
       async connections() { return clone(connections) },
-      async retryConnection(id) {
-        connections = connections.map((c) => (c.id === id ? { ...c, state: 'ok' as const, lastOk: new Date().toISOString() } : c))
-        return clone(connections.find((c) => c.id === id)!)
+      async syncNow() {
+        connections = connections.map((c) => (c.id === 'google' ? c : { ...c, state: 'ok' as const, lastOk: new Date().toISOString() }))
+        return clone(connections)
       },
       async log() { return clone(log) },
+    },
+    auth: {
+      async devLogin() { return 'mock-token' },
+      async exchange() { return 'mock-token' },
+      async me() { return { username: ME.toLowerCase(), displayName: ME } },
+      async logout() { /* rien */ },
     },
   }
 }

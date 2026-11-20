@@ -1,12 +1,14 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { i18n } from './i18n'
+import { useAuthStore } from './stores/auth'
 import { useUiStore } from './stores/ui'
 
 /** Chaque route : clé de titre i18n. Les vues sont chargées à la demande. */
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/connexion', name: 'login', component: () => import('./views/LoginView.vue'), meta: { title: 'login.title', public: true } },
     { path: '/', name: 'home', component: () => import('./views/HomeView.vue'), meta: { title: 'nav.home' } },
     { path: '/mails/:id?', name: 'mails', component: () => import('./views/MailView.vue'), meta: { title: 'nav.mails' }, props: true },
     { path: '/suivis', name: 'suivis', component: () => import('./views/SuivisView.vue'), meta: { title: 'nav.suivis' } },
@@ -20,6 +22,15 @@ export const router = createRouter({
     { path: '/:rest(.*)*', redirect: '/' },
   ],
   scrollBehavior: () => ({ top: 0 }),
+})
+
+/** Toute page sauf la connexion demande une session ; on y revient après s'être connecté. */
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  if (!auth.checked) await auth.restore()
+  if (!to.meta.public && !auth.authenticated) return { name: 'login', query: to.fullPath === '/' ? {} : { next: to.fullPath } }
+  if (to.name === 'login' && auth.authenticated && !to.hash) return { name: 'home' }
+  return true
 })
 
 /** Titre de page et focus sur <h1> à chaque navigation : l'annonce se fait au lecteur d'écran (WCAG 2.4.2, 2.4.3). */

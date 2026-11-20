@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, watch } from 'vue'
+import { api, apiMode } from '../api'
+import type { ServerSettings } from '../api/types'
 import { setLocale, type Locale } from '../i18n'
 import { applyAppearance, DENSITIES, isThemePreference, type Density, type ThemePreference } from '../themes'
 
@@ -34,6 +36,12 @@ export const DEFAULTS: Settings = {
 
 const KEY = 'oscar.settings'
 
+/** Réglages que le serveur applique (relances, récaps, mode d'IA). Les autres restent sur l'appareil. */
+export const SERVER_KEYS = [
+  'relanceHours', 'businessDays', 'dailyCap', 'recapMorning', 'recapEvening', 'recapEmail', 'recapHome', 'includePersonalCalendar',
+  'shareBusy', 'aiMode', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'locale',
+] as const
+
 /** Fusionne des données stockées (non fiables) avec les valeurs par défaut. */
 export function parseSettings(raw: string | null): Settings {
   const out: Settings = { ...DEFAULTS }
@@ -67,10 +75,31 @@ export const useSettingsStore = defineStore('settings', () => {
   }
   apply()
   media?.addEventListener?.('change', apply)
+  let syncing = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const serverValues = () => Object.fromEntries(SERVER_KEYS.map((k) => [k, s[k]])) as ServerSettings
+
   watch(s, () => {
     apply()
     try { localStorage.setItem(KEY, JSON.stringify(s)) } catch { /* stockage indisponible */ }
+    if (apiMode === 'http' && !syncing) {
+      // Un seul envoi après une rafale de changements ; le serveur valide chaque valeur.
+      clearTimeout(timer)
+      timer = setTimeout(() => { void api.settings.update({ ...serverValues(), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).catch(() => undefined) }, 400)
+    }
   }, { deep: true })
 
-  return { s }
+  /** Après connexion : les réglages du serveur font foi, l'appareil garde thème et densité. */
+  async function loadFromServer() {
+    try {
+      const remote = await api.settings.get()
+      syncing = true
+      for (const k of SERVER_KEYS) if (k in remote && typeof remote[k] === typeof s[k]) (s as unknown as Record<string, unknown>)[k] = remote[k]
+    } catch { /* réglages locaux conservés */ } finally {
+      await Promise.resolve()
+      syncing = false
+    }
+  }
+
+  return { s, loadFromServer }
 })

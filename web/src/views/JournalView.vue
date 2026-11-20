@@ -44,7 +44,7 @@ function exportLog() {
       <thead><tr><th scope="col">{{ t('journal.date') }}</th><th scope="col">{{ t('journal.account') }}</th><th scope="col">{{ t('journal.type') }}</th><th scope="col">{{ t('journal.message') }}</th><th scope="col">{{ t('journal.action') }}</th></tr></thead>
       <tbody>
         <tr v-for="l in rows" :key="l.id">
-          <td>{{ fmt.dateTime(l.at) }}</td><td>{{ l.account }}</td><td>{{ t(`journal.types.${l.type}`) }}</td><td>{{ l.message }}</td><td>{{ t(`journal.actions.${l.action}`) }}</td>
+          <td>{{ fmt.dateTime(l.at) }}</td><td>{{ l.account }}</td><td>{{ t(`journal.types.${l.type}`) }}</td><td>{{ t(`journal.messages.${l.message}`) }}</td><td>{{ t(`journal.actions.${l.action}`) }}</td>
         </tr>
       </tbody>
     </table>

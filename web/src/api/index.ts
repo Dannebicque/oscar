@@ -1,14 +1,20 @@
-import { createHttpMailApi, createHttpSuivisApi } from './http'
+import { createHttpApi } from './http'
 import { createMockApi } from './mock'
+import { session } from './session'
 import type { Api } from './types'
 
-export { ME, SHARED } from './mock'
+export { SHARED } from './mock'
+export { session } from './session'
+export { ApiError } from './types'
 
-/** VITE_API_URL défini → suivis et mails passent par l'API Symfony (agenda, tâches et alertes restent simulés) ; sinon tout est simulé (démo, tests). */
+/**
+ * Par défaut l'application parle à l'API (VITE_API_URL, sinon http://localhost:8000).
+ * VITE_USE_MOCK=true force la démo hors ligne ; les tests utilisent toujours des données simulées.
+ */
+export const apiMode: 'http' | 'mock' = import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.MODE === 'test' ? 'mock' : 'http'
+
 function build(): Api {
-  const mock = createMockApi()
-  const url = import.meta.env.VITE_API_URL
-  return url ? { ...mock, suivis: createHttpSuivisApi(url), mails: createHttpMailApi(url) } : mock
+  return apiMode === 'mock' ? createMockApi() : createHttpApi(import.meta.env.VITE_API_URL ?? 'http://localhost:8000')
 }
 
 export let api: Api = build()
@@ -16,3 +22,6 @@ export let api: Api = build()
 export function resetApi(next: Api = createMockApi()) {
   api = next
 }
+
+/** Nom de l'utilisateur connecté, tel qu'il apparaît dans les journaux et « pris par ». */
+export const me = () => session.name

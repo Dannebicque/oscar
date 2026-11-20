@@ -25,9 +25,11 @@ const stateText = (c: Connection) => (c.state === 'ok' && c.id !== 'ai' ? t('sta
 const summaryKey = computed(() => (system.hasError ? 'error' : 'ok'))
 
 async function retry(c: Connection) {
-  const next = await system.retry(c.id)
+  await system.syncNow()
+  const next = system.connections.find((x) => x.id === c.id) ?? c
   selected.value = next
-  ui.notify(t('status.retryOk', { name: name(next) }))
+  if (next.state === 'error') ui.notify(t('status.retryFailed', { name: name(next) }), { tone: 'error' })
+  else ui.notify(t('status.retryOk', { name: name(next) }))
 }
 </script>
 
@@ -51,7 +53,7 @@ async function retry(c: Connection) {
       <p class="muted">{{ selected.lastOk ? t('status.lastOk', { when: fmt.dateTime(selected.lastOk) }) : t('status.neverOk') }}</p>
     </template>
     <template #footer>
-      <BaseButton v-if="selected && selected.state === 'error'" variant="primary" icon="refresh" :label="t('status.retry')" @click="retry(selected)" />
+      <BaseButton v-if="selected && selected.state === 'error'" variant="primary" icon="refresh" :disabled="system.syncing" :label="t('status.retry')" @click="retry(selected)" />
       <RouterLink v-if="selected && selected.state === 'error'" to="/journal" @click="selected = null">{{ t('status.journal') }}</RouterLink>
       <BaseButton :label="t('common.close')" @click="selected = null" />
     </template>

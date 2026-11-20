@@ -3,6 +3,7 @@ import type fr from './fr'
 const en: typeof fr = {
   app: { name: 'Oscar', tagline: 'Your digital butler.', skip: 'Skip to content', skipNav: 'Skip to navigation' },
   common: {
+    actionFailed: 'I couldn’t do that. Try again in a moment.', remove: 'Remove',
     close: 'Close', cancel: 'Cancel', undo: 'Undo', save: 'Save', add: 'Add', retry: 'Try again', loading: 'Loading…',
     open: 'Open', back: 'Back', today: 'Today', tomorrow: 'Tomorrow', none: 'None', me: 'Me', all: 'All',
     aiBadge: 'Suggested by AI', ai: 'AI', send: 'Send', ignore: 'Ignore', validate: 'Confirm',
@@ -11,11 +12,13 @@ const en: typeof fr = {
     dueOn: 'Due {date}', on: 'on {date}', never: 'Never',
   },
   nav: {
+    signOut: 'Sign out',
     label: 'Main navigation', home: 'Home', mails: 'Mail', suivis: 'Follow-ups', agenda: 'Calendar', tasks: 'Tasks',
     alerts: 'Alerts', settings: 'Settings', alertsCount: 'Alerts, {n} unread | Alerts, {n} unread | Alerts, {n} unread',
     compose: 'Write',
   },
   status: {
+    retryFailed: '{name}: still unreachable. Check the account in Settings.',
     label: 'Connection status', details: 'Connection details', journal: 'Log', lastSync: 'Last sync {time}',
     mail: 'Mailbox', calendar: 'Work calendar', google: 'Google Calendar', ai: 'University AI',
     ok: 'connected', syncing: 'syncing', error: 'reconnection needed', okShort: 'up to date',
@@ -53,7 +56,7 @@ const en: typeof fr = {
   },
   suivis: {
     title: 'Follow-ups', subtitle: 'Mails, tasks and events in one place.',
-    scopeLabel: 'Scope', mine: 'My follow-ups', team: 'Team · contact{\'@\'}',
+    scopeLabel: 'Scope', mine: 'My follow-ups', team: 'Team · {address}',
     viewLabel: 'View', priorities: 'Priorities', board: 'Board',
     filterKind: 'Show', filterAll: 'All',
     actionCount: 'Nothing to handle | 1 follow-up to handle | {n} follow-ups to handle',
@@ -84,7 +87,7 @@ const en: typeof fr = {
   mail: {
     title: 'Mail', folders: 'Folders', compose: 'Write', list: 'Message list', reading: 'Reading',
     folder: { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', archive: 'Archive', trash: 'Trash', suivis: 'Follow-ups' },
-    shared: 'Shared mailboxes', sharedMembers: 'Members: Claire, Marc, Léa and you (David). Everyone receives every mail.',
+    shared: 'Shared mailboxes', sharedMembers: 'Members: {names}. Everyone receives every mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Shared mailbox · {n} members',
     filters: { all: 'All', unread: 'Unread', attach: 'Attachment', week: 'This week' }, filterLabel: 'Filter',
     search: 'Search mail', searchPlaceholder: 'Search',
@@ -130,6 +133,7 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
+    noAccount: 'No mail account is configured: your message was not sent. Add an account in Settings.', notSent: 'The message was not sent: the outgoing server isn’t answering or refuses it. Nothing was created and your text is still here. Try again in a moment.',
     title: 'Write a mail', to: 'To', cc: 'Cc', bcc: 'Bcc', showCc: 'Cc / Bcc', subject: 'Subject', body: 'Message', signature: '-- \nDavid · IUT de Troyes',
     directory: 'Institution directory', directoryHelp: 'Start typing a name: suggestions come from the directory.',
     follow: 'Follow the reply', followAi: 'Oscar ticked it: this mail clearly expects a reply.', followDelay: 'Warn me if no reply within',
@@ -158,17 +162,36 @@ const en: typeof fr = {
     title: 'Recap', morning: 'Morning recap', evening: 'Evening review', mailsToHandle: 'Important unhandled mails', events: 'Upcoming events', tasks: 'Tasks today and overdue',
     relances: 'Reminders due', nothing: 'Nothing to report.', intro: 'Here is what matters now. I prepare, you decide.', example: 'Recap example', sentTo: 'Sent to david{\'@\'}iut-troyes.fr at {time}.',
   },
-  alerts: { markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection' }, open: 'Open', bell: 'Alerts' },
+  alerts: {
+    messages: {
+      replyReceived: '{who} replied to “{subject}”.',
+      relanceDue: 'Reminder due: “{subject}” ({who}). | {n} reminders to send.',
+      invitation: 'Invitation: {title}.', connectionFailed: '{account}: reconnection needed.',
+      takenOver: '{who} took over “{subject}”.', memberReplied: '{who} replied to “{subject}”.',
+    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
   journal: {
+    messages: {
+      authRefused: 'The server refused the username or password.', timeout: 'The server did not answer in time. Another attempt will be made automatically.',
+      unreachable: 'The server is unreachable: address, port or network.', failed: 'Synchronization failed. Another attempt will be made automatically.',
+      recapNotSent: 'The recap could not be emailed. It is still available in Oscar.',
+    },
     title: 'Event and error log', help: 'Date, account, type and suggested action. Separate from a request’s own log.', export: 'Export for support', exported: 'Log exported.',
     filter: 'Filter by account', empty: 'No events.', date: 'Date', account: 'Account', type: 'Type', message: 'Message', action: 'Suggested action',
-    actions: { reconnect: 'Reconnect the account in Settings.', none: 'Nothing to do.' },
-    types: { auth: 'Authentication', sync: 'Synchronization' }, back: 'Back to settings',
+    actions: { retry: 'Try again from the status bar.', reconnect: 'Reconnect the account in Settings.', none: 'Nothing to do.' },
+    types: { send: 'Sending', calendar: 'Calendar', auth: 'Authentication', sync: 'Synchronization' }, back: 'Back to settings',
   },
+  login: { title: 'Sign in', cas: 'Sign in with your institution account (CAS)', dev: 'Development sign-in', username: 'Username', devSubmit: 'Enter', devHelp: 'Only available locally: creates the user if missing.', casRefused: 'CAS refused the sign-in. Try again.', failed: 'I couldn’t sign you in. Try again in a moment.' },
   settings: {
     title: 'Settings', sections: 'Sections',
     nav: { accounts: 'Accounts and calendars', relances: 'Reminders and follow-up', recap: 'Recaps', ai: 'Oscar, the AI assistant', look: 'Appearance and accessibility', journal: 'Connection status and log' },
     accounts: {
+      mailAccounts: 'Mail accounts', addMail: 'Add a mail account', addCalendar: 'Add a calendar', noMail: 'No mail account yet. Add yours so I can read your mail.',
+      noCalendar: 'No calendar connected.', work: 'Work calendar', sharedBoxes: 'Shared mailboxes', noShared: 'You are not a member of any shared mailbox.', roleAdmin: 'Administrator', roleMember: 'Member',
+      added: 'Account “{name}” added.', addFailed: 'I couldn’t add this account. Check the fields, then try again.', testFailed: 'Connection failed. Check the server, port, encryption and password.',
+      removed: 'Account “{name}” removed.', removeFailed: 'I couldn’t remove this account. Try again.', removeTitle: 'Remove “{name}”?', removeText: 'Mails stay on the mail server. Oscar no longer keeps header copies or follow-ups linked to this account.',
+      fLabel: 'Account name', fAddress: 'Sender address', fUser: 'Username', fPassword: 'Password', passwordHelp: 'Encrypted on the server with a key kept outside the database. It is never shown again.',
+      fHost: 'Server', fPort: 'Port', fEncryption: 'Encryption', enc: { ssl: 'SSL/TLS', tls: 'STARTTLS', none: 'None (local test)' },
+      aiAllowed: 'Allow AI on this account', aiAllowedHelp: 'Turn it off for a confidential or HR mailbox: Oscar will read nothing there.', fCalUrl: 'CalDAV address', personalCal: 'Personal calendar',
       mailTitle: 'Mailbox · david{\'@\'}iut-troyes.fr', mailHelp: 'IMAP: imap.iut-troyes.fr · SMTP: smtp.iut-troyes.fr · username and password', test: 'Test connection', testOk: 'Connection successful.',
       sharedTitle: 'Shared mailbox · contact{\'@\'}iut-troyes.fr', alias: 'Received alias', sharedHelp: 'All alias members receive every mail. No owner is assigned: the state (new, taken, handled) simply informs the others.',
       calendars: 'Calendars', caldav: 'Work · CalDAV', caldavHelp: 'Acceptable invitations and calendar sharing depend on the server’s rights', google: 'Personal · Google Calendar', googleHelp: 'Personal account, read separately from work',

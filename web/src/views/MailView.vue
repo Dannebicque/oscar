@@ -9,8 +9,8 @@ import BaseIcon from '../components/ui/BaseIcon.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
-import { SHARED } from '../api'
 import type { MailFolder } from '../domain/types'
+import { useAccountsStore } from '../stores/accounts'
 import { useMailsStore } from '../stores/mails'
 import { useSuivisStore } from '../stores/suivis'
 
@@ -19,10 +19,11 @@ const { t } = useI18n()
 const router = useRouter()
 const mails = useMailsStore()
 const suivis = useSuivisStore()
+const accounts = useAccountsStore()
 
 type Box = { mailbox: string; folder: MailFolder | 'suivis' }
 const box = ref<Box>({ mailbox: 'personal', folder: 'inbox' })
-onMounted(() => Promise.all([mails.load(), suivis.load()]))
+onMounted(() => Promise.all([mails.load(), suivis.load(), accounts.load()]))
 
 const FOLDERS: MailFolder[] = ['inbox', 'sent', 'drafts', 'archive', 'trash']
 const list = computed(() => {
@@ -32,6 +33,7 @@ const list = computed(() => {
 })
 const selected = computed(() => mails.byId(props.id ?? '') ?? null)
 const sharedBox = computed(() => box.value.mailbox !== 'personal')
+const currentShared = computed(() => accounts.shared.find((b) => b.slug === box.value.mailbox))
 
 // Un lien direct vers un mail (depuis Suivis ou l'accueil) place le panneau sur la bonne boîte.
 watch(() => [props.id, mails.items.length], () => {
@@ -72,16 +74,16 @@ const suivisCount = computed(() => suivis.mine.filter((s) => s.status !== 'done'
       </ul>
       <h2 class="sec">{{ t('mail.shared') }}</h2>
       <ul>
-        <li>
-          <button type="button" :aria-current="box.mailbox === SHARED.id ? 'true' : undefined" @click="pick(SHARED.id, 'inbox')">
-            <BaseIcon name="users" :size="18" /><span>{{ `${SHARED.address.split('@')[0]}@` }}</span><span v-if="count(SHARED.id)" class="n">{{ count(SHARED.id) }}</span>
+        <li v-for="b in accounts.shared" :key="b.id">
+          <button type="button" :aria-current="box.mailbox === b.slug ? 'true' : undefined" @click="pick(b.slug, 'inbox')">
+            <BaseIcon name="users" :size="18" /><span>{{ `${b.address.split('@')[0]}@` }}</span><span v-if="count(b.slug)" class="n">{{ count(b.slug) }}</span>
           </button>
         </li>
       </ul>
     </nav>
 
     <div class="mid">
-      <p v-if="sharedBox" class="members muted">{{ t('mail.sharedMembers') }}</p>
+      <p v-if="sharedBox && currentShared" class="members muted">{{ t('mail.sharedMembers', { names: currentShared.members.map((m) => m.displayName).join(', ') }) }}</p>
       <p v-if="mails.loading" class="muted">{{ t('common.loading') }}</p>
       <MailList v-else :mails="list" :selected-id="id ?? null" :shared="sharedBox" @select="select" />
     </div>

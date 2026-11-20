@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { ME } from '../api'
+import { apiMode, session } from '../api'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -15,6 +15,7 @@ import { useFormat } from '../composables/useFormat'
 import { useNow } from '../composables/useNow'
 import { buildPriorities, type PriorityItem } from '../domain/priorities'
 import { isoDay } from '../domain/dates'
+import { useAccountsStore } from '../stores/accounts'
 import { useAgendaStore } from '../stores/agenda'
 import { useMailsStore } from '../stores/mails'
 import { useSuivisStore } from '../stores/suivis'
@@ -29,16 +30,19 @@ const suivis = useSuivisStore()
 const tasks = useTasksStore()
 const agenda = useAgendaStore()
 const mails = useMailsStore()
+const accounts = useAccountsStore()
 const ui = useUiStore()
 
 type Mode = 'auto' | 'busy' | 'calm' | 'first'
 const mode = ref<Mode>('auto')
 const capture = ref('')
-onMounted(() => Promise.all([suivis.load(), tasks.load(), agenda.load(), mails.load()]))
+onMounted(() => Promise.all([suivis.load(), tasks.load(), agenda.load(), mails.load(), accounts.load()]))
 
 const priorities = computed(() => buildPriorities(suivis.mine, tasks.items, agenda.work, now.value))
 const top = computed(() => priorities.value.filter((i) => i.rank < 4).slice(0, 3))
-const state = computed<'busy' | 'calm' | 'first'>(() => (mode.value !== 'auto' ? mode.value : top.value.length ? 'busy' : 'calm'))
+/** Premier lancement : aucun compte connecté, la page se remplira ensuite (F-72). */
+const noAccount = computed(() => apiMode === 'http' && accounts.loaded && accounts.mail.length === 0)
+const state = computed<'busy' | 'calm' | 'first'>(() => (mode.value !== 'auto' ? mode.value : noAccount.value ? 'first' : top.value.length ? 'busy' : 'calm'))
 
 /** Texte d'Oscar : une phrase courte, jamais de reproche, une action proposée (§5). */
 const assistant = computed(() => {
@@ -56,7 +60,10 @@ const counters = computed(() => [
   { key: 'rdv', n: agenda.work.filter((e) => isoDay(new Date(e.start)) === today.value).length, to: '/agenda', icon: 'calendar' },
 ])
 const demoOptions = computed(() => (['auto', 'busy', 'calm', 'first'] as Mode[]).map((m) => ({ value: m, label: m === 'auto' ? 'Auto' : t(`home.demoStates.${m}`) })))
-const steps = computed(() => (['mail', 'calendar', 'rules', 'ai'] as const).map((k) => ({ key: k, to: k === 'rules' || k === 'ai' ? '/reglages' : '/reglages', done: state.value !== 'first' })))
+const steps = computed(() => (['mail', 'calendar', 'rules', 'ai'] as const).map((k) => ({
+  key: k, to: '/reglages',
+  done: mode.value === 'first' ? false : k === 'mail' ? accounts.mail.length > 0 : k === 'calendar' ? accounts.calendar.length > 0 : state.value !== 'first',
+})))
 const doneSteps = computed(() => steps.value.filter((s) => s.done).length)
 
 function open(i: PriorityItem) {
@@ -86,9 +93,11 @@ async function quickAdd() {
 </script>
 
 <template>
-  <PageHeader :title="t('home.title')" :subtitle="`${t('home.hello', { name: ME })} ${fmt.dateLong(now)}`">
-    <span class="demo muted">{{ t('home.demo') }}</span>
-    <SegmentedControl v-model="mode" :options="demoOptions" :label="t('home.demo')" />
+  <PageHeader :title="t('home.title')" :subtitle="`${t('home.hello', { name: session.name })} ${fmt.dateLong(now)}`">
+    <template v-if="apiMode === 'mock'">
+      <span class="demo muted">{{ t('home.demo') }}</span>
+      <SegmentedControl v-model="mode" :options="demoOptions" :label="t('home.demo')" />
+    </template>
   </PageHeader>
 
   <div class="grid">

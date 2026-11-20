@@ -35,6 +35,10 @@ export interface Suivi {
   /** Motif exprimé par l'IA pour la vue Priorités (F-70). */
   reason: string | null
   journal: JournalEntry[]
+  /** Renseignés par l'API pour une demande d'alias : « pris par X », notes internes, « X rédige » (F-67 à F-69). */
+  takenByName?: string | null
+  notes?: Note[]
+  composingName?: string | null
 }
 
 export type NewSuivi = Pick<Suivi, 'subject' | 'contact' | 'direction' | 'dueAt'> &
@@ -79,6 +83,53 @@ export interface MailTaskHint {
   quote: string
 }
 
+export type ClaimAction = 'take' | 'release' | 'handle' | 'reopen' | 'takeOver'
+
+export interface MailAccount {
+  id: string
+  label: string
+  address: string
+  imapHost: string
+  imapPort: number
+  imapEncryption: 'none' | 'ssl' | 'tls'
+  smtpHost: string
+  smtpPort: number
+  smtpEncryption: 'none' | 'ssl' | 'tls'
+  username: string
+  aiAllowed: boolean
+  lastSyncAt?: string | null
+  lastError?: string | null
+}
+export type NewMailAccount = Omit<MailAccount, 'id' | 'lastSyncAt' | 'lastError'> & { password: string }
+
+export interface CalendarAccount {
+  id: string
+  label: string
+  kind: 'caldav' | 'google'
+  url: string
+  username: string
+  personal: boolean
+  lastError?: string | null
+}
+export type NewCalendarAccount = Omit<CalendarAccount, 'id' | 'kind' | 'lastError'> & { password: string }
+
+export interface SharedMailboxInfo {
+  id: string
+  slug: string
+  address: string
+  name: string
+  role: 'member' | 'admin'
+  aiEnabled: boolean
+  members: { username: string; displayName: string; role: 'member' | 'admin' }[]
+}
+
+export interface MailHints {
+  availability?: MailAvailabilityHint | null
+  event?: MailEventHint | null
+  task?: MailTaskHint | null
+  suggestFollow?: boolean
+}
+
 export interface Mail {
   id: string
   /** Message-ID IMAP : identifie la demande même reçue dans plusieurs boîtes (F-44). Absent des données simulées. */
@@ -102,7 +153,7 @@ export interface Mail {
   composing: string | null
   notes: Note[]
   activity: JournalEntry[]
-  hints: { availability?: MailAvailabilityHint; event?: MailEventHint; task?: MailTaskHint }
+  hints: MailHints
 }
 
 export type Origin = 'manual' | 'mail' | 'event' | 'ai'
@@ -137,11 +188,12 @@ export interface CalEvent {
   location: string | null
 }
 
-export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed'
+export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied'
 export interface AppNotification {
   id: string
   kind: NotificationKind
-  title: string
+  /** Paramètres du message (qui, objet, nombre) : le texte est composé côté front, en français ou en anglais. */
+  params: Record<string, string | number>
   at: string
   read: boolean
   to: string
@@ -160,6 +212,7 @@ export interface LogEntry {
   at: string
   account: string
   type: string
+  /** Code du message (authRefused, timeout, unreachable, failed, recapNotSent) : traduit côté front. */
   message: string
   action: string
 }

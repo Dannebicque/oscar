@@ -73,7 +73,7 @@ final class RecapService
             $this->mailer->send($account, $mail);
         } catch (\Throwable $e) {
             // Le récap reste disponible dans l'application ; l'échec est visible dans le journal des erreurs.
-            $this->em->persist((new \App\Entity\LogEntry($account->getLabel(), 'send', 'Le récap n’a pas pu être envoyé par e-mail. Il reste consultable dans Oscar.', 'retry'))->setOwner($user));
+            $this->em->persist((new \App\Entity\LogEntry($account->getLabel(), 'send', 'recapNotSent', 'retry'))->setOwner($user));
             $this->em->flush();
         }
     }

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { ME } from '../../api'
+import { session } from '../../api'
 import { collisionWith } from '../../domain/claim'
 import { clock } from '../../domain/clock'
 import { isoDay, addDays } from '../../domain/dates'
@@ -40,16 +40,16 @@ const showDraft = ref(false)
 const showAvail = ref(false)
 const showCollision = ref(false)
 const dismissed = ref<Set<string>>(new Set())
-onMounted(() => mails.loadBody(props.mail.id))
+onMounted(() => { void mails.loadBody(props.mail.id); if (aiOn.value && !shared.value) void mails.loadHints(props.mail.id); else if (aiOn.value && shared.value) void mails.loadHints(props.mail.id) })
 const bodyLoading = computed(() => mails.loadingBody.has(props.mail.id))
 const bodyFailed = computed(() => mails.bodyError.has(props.mail.id))
 
 const suivi = computed(() => (props.mail.suivi ? suivis.byId(props.mail.suivi) : undefined))
 const shared = computed(() => props.mail.claim !== null)
-const collision = computed(() => (shared.value ? collisionWith(props.mail, ME) : null))
+const collision = computed(() => (shared.value ? collisionWith(props.mail, session.name) : null))
 const hints = computed(() => props.mail.hints)
 const showSuggestFollow = computed(
-  () => !suivi.value && !shared.value && props.mail.folder === 'inbox' && settings.s.aiMode !== 'off' && settings.s.aiSuggestFollow && !dismissed.value.has('follow') && !!(hints.value.task || hints.value.availability),
+  () => !suivi.value && !shared.value && props.mail.folder === 'inbox' && settings.s.aiMode !== 'off' && settings.s.aiSuggestFollow && !dismissed.value.has('follow') && (hints.value.suggestFollow ?? !!(hints.value.task || hints.value.availability)),
 )
 const aiOn = computed(() => settings.s.aiMode !== 'off')
 
@@ -66,8 +66,13 @@ async function takeOverAndReply() {
   router.push({ name: 'compose', query: { reply: props.mail.id } })
 }
 async function act(fn: () => Promise<unknown>, msg: string) {
-  await fn()
-  ui.notify(msg)
+  try {
+    await fn()
+    ui.notify(msg)
+  } catch (e) {
+    // « Claire s'en occupe » : l'API prévient au lieu de laisser un doublon ; l'état affiché est déjà rafraîchi.
+    ui.notify(mails.conflictMessage(e) ?? t('common.actionFailed'), { tone: 'error' })
+  }
 }
 async function createSuivi(ai = false) {
   const due = isoDay(addDays(clock.now(), Math.ceil(settings.s.relanceHours / 24) + 1))

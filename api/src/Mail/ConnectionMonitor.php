@@ -31,7 +31,7 @@ final class ConnectionMonitor
         $account->markFailed($e->getMessage());
         $owner = $account->getOwner();
         if ($owner !== null) {
-            $this->em->persist((new LogEntry($account->getLabel(), $type, $this->humanize($e), 'retry'))->setOwner($owner));
+            $this->em->persist((new LogEntry($account->getLabel(), $type, $this->humanize($e), $this->humanize($e) === 'authRefused' ? 'reconnect' : 'retry'))->setOwner($owner));
             if ($account->getFailureCount() >= self::ALERT_AFTER) {
                 $this->notifyOnce($owner, new Notification('connectionFailed', ['account' => $account->getLabel()], 'journal', 'conn:'.$account->getLabel().':'.$now->format('Y-m-d'), $now));
             }
@@ -39,16 +39,19 @@ final class ConnectionMonitor
         $this->em->flush();
     }
 
-    /** Message pour l'utilisateur : la cause en clair, jamais la trace technique (F-79). */
+    /**
+     * Code de la cause, jamais la trace technique (F-79) : le front le traduit en français ou en anglais
+     * (`journal.messages.<code>`) avec l'action à faire.
+     */
     private function humanize(\Throwable $e): string
     {
         $m = strtolower($e->getMessage());
 
         return match (true) {
-            str_contains($m, 'auth') || str_contains($m, 'login') || str_contains($m, 'credential') || str_contains($m, '401') => 'Le serveur a refusé l’identifiant ou le mot de passe. Reconnecte le compte dans Réglages.',
-            str_contains($m, 'timed out') || str_contains($m, 'timeout') => 'Le serveur n’a pas répondu à temps. Une nouvelle tentative aura lieu automatiquement.',
-            str_contains($m, 'refused') || str_contains($m, 'resolve') || str_contains($m, 'connect') => 'Le serveur est injoignable. Vérifie l’adresse, le port et ta connexion réseau.',
-            default => 'La synchronisation a échoué. Une nouvelle tentative aura lieu automatiquement.',
+            str_contains($m, 'auth') || str_contains($m, 'login') || str_contains($m, 'credential') || str_contains($m, '401') => 'authRefused',
+            str_contains($m, 'timed out') || str_contains($m, 'timeout') => 'timeout',
+            str_contains($m, 'refused') || str_contains($m, 'resolve') || str_contains($m, 'connect') => 'unreachable',
+            default => 'failed',
         };
     }
 

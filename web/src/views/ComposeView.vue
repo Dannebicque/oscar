@@ -2,7 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { api } from '../api'
+import { ApiError } from '../api'
+import { extractAddress } from '../api/http'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
@@ -11,7 +12,6 @@ import { clock } from '../domain/clock'
 import { addDays, isoDay } from '../domain/dates'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
-import { useSuivisStore } from '../stores/suivis'
 import { useUiStore } from '../stores/ui'
 
 const { t } = useI18n()
@@ -19,7 +19,6 @@ const route = useRoute()
 const router = useRouter()
 const fmt = useFormat()
 const mails = useMailsStore()
-const suivis = useSuivisStore()
 const settings = useSettingsStore()
 const ui = useUiStore()
 
@@ -39,6 +38,7 @@ const follow = ref(false)
 const aiPicked = ref(false)
 const delayHours = ref<number>(settings.s.relanceHours)
 const submitted = ref(false)
+const sending = ref(false)
 
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
@@ -55,27 +55,38 @@ onMounted(async () => {
 })
 
 const dueDate = computed(() => isoDay(addDays(clock.now(), Math.ceil(delayHours.value / 24))))
-const invalid = computed(() => submitted.value && (!to.value.trim() || !subject.value.trim()))
+const toList = computed(() => addresses(to.value))
+const invalid = computed(() => submitted.value && (!subject.value.trim() || !toList.value || toList.value.length === 0 || !addresses(cc.value) || !addresses(bcc.value)))
 const who = computed(() => to.value.replace(/<.*>/, '').trim() || '…')
 const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { v: 168, k: 'd7' }]
 
+/** Découpe « A <a@x.fr>, b@y.fr » en adresses ; renvoie null si l'une d'elles n'est pas valide. */
+function addresses(input: string): string[] | null {
+  const parts = input.split(/[;,]/).map((p) => p.trim()).filter(Boolean)
+  const out = parts.map(extractAddress)
+  return out.some((a) => a === null) ? null : (out as string[])
+}
+
 async function send() {
   submitted.value = true
-  if (!to.value.trim() || !subject.value.trim()) return
+  const [toList, ccList, bccList] = [addresses(to.value), addresses(cc.value), addresses(bcc.value)]
+  if (!subject.value.trim() || !toList || toList.length === 0 || !ccList || !bccList) return
+  sending.value = true
   try {
-    await api.mails.send({ to: to.value, subject: subject.value, body: body.value, follow: follow.value })
-  } catch {
-    // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour (§5).
-    ui.notify(t('compose.notAvailable'), { tone: 'error' })
-    return
+    const r = await mails.send({
+      to: toList, cc: ccList, bcc: bccList, subject: subject.value.trim(), body: body.value,
+      followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
+      inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
+    })
+    ui.notify(r.followDueAt ? t('compose.sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
+    router.push({ name: 'mails' })
+  } catch (e) {
+    // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour, avec une action (§5, F-79).
+    const noAccount = e instanceof ApiError && e.message === 'no-account'
+    ui.notify(t(noAccount ? 'compose.noAccount' : 'compose.notSent'), { tone: 'error' })
+  } finally {
+    sending.value = false
   }
-  if (follow.value) {
-    await suivis.create({ subject: subject.value.replace(/^re\s*:\s*/i, ''), contact: who.value, direction: 'waiting', dueAt: dueDate.value, relanceAt: dueDate.value, suggestedByAi: aiPicked.value })
-    ui.notify(t('compose.sentFollow', { date: fmt.date(dueDate.value) }))
-  } else {
-    ui.notify(t('compose.sent', { to: who.value }))
-  }
-  router.push({ name: 'mails' })
 }
 function saveDraft() {
   ui.notify(t('compose.draftSaved'), { tone: 'info' })
@@ -87,7 +98,7 @@ function saveDraft() {
   <form class="form" novalidate @submit.prevent="send">
     <div class="field">
       <label for="to">{{ t('compose.to') }}</label>
-      <input id="to" v-model="to" class="input" list="directory" autocomplete="off" required :aria-invalid="submitted && !to.trim()" aria-describedby="dir-help" />
+      <input id="to" v-model="to" class="input" list="directory" autocomplete="off" required :aria-invalid="submitted && (!toList || toList.length === 0)" aria-describedby="dir-help" />
       <datalist id="directory"><option v-for="d in DIRECTORY" :key="d" :value="d" /></datalist>
       <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
     </div>
@@ -122,7 +133,7 @@ function saveDraft() {
     </fieldset>
 
     <div class="actions">
-      <BaseButton variant="primary" type="submit" icon="send" :label="t('compose.send')" />
+      <BaseButton variant="primary" type="submit" icon="send" :disabled="sending" :label="t('compose.send')" />
       <BaseButton icon="paperclip" :label="t('compose.attach')" @click="ui.notify(t('compose.attach'), { tone: 'info' })" />
       <BaseButton :label="t('compose.saveDraft')" @click="saveDraft" />
       <BaseButton variant="ghost" :label="t('common.cancel')" @click="router.back()" />

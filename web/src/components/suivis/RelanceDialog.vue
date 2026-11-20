@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ME } from '../../api'
+import { session } from '../../api'
 import type { Suivi } from '../../domain/types'
 import { useSuivisStore } from '../../stores/suivis'
 import { useUiStore } from '../../stores/ui'
@@ -27,8 +27,16 @@ const total = computed(() => props.queue.length)
 const index = computed(() => done.value.size + 1)
 
 const first = (s: Suivi) => s.contact.split(' ')[0]
-function resetDraft() {
-  body.value = current.value ? t('suivis.relanceDraft', { first: first(current.value), subject: current.value.subject, me: ME }) : ''
+function localDraft(s: Suivi) {
+  return t('suivis.relanceDraft', { first: first(s), subject: s.subject, me: session.name })
+}
+/** Brouillon de l'IA si elle est active ; sinon le modèle local. L'utilisateur relit toujours avant d'envoyer. */
+async function resetDraft() {
+  const s = current.value
+  body.value = s ? localDraft(s) : ''
+  if (!s) return
+  const ai = await store.draftRelance(s.id).catch(() => null)
+  if (ai && current.value?.id === s.id && body.value === localDraft(s)) body.value = ai
 }
 watch(() => props.open, (o) => { if (o) { done.value = new Set(); resetDraft() } })
 watch(current, resetDraft)

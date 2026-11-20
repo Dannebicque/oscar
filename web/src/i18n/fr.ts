@@ -1,6 +1,7 @@
 export default {
   app: { name: 'Oscar', tagline: 'Votre majordome numérique.', skip: 'Aller au contenu', skipNav: 'Aller à la navigation' },
   common: {
+    actionFailed: 'Je n’ai pas pu faire cela. Réessaie dans un instant.', remove: 'Supprimer',
     close: 'Fermer', cancel: 'Annuler', undo: 'Annuler', save: 'Enregistrer', add: 'Ajouter', retry: 'Réessayer', loading: 'Chargement…',
     open: 'Ouvrir', back: 'Retour', today: 'Aujourd’hui', tomorrow: 'Demain', none: 'Aucun', me: 'Moi', all: 'Tout',
     aiBadge: 'Suggéré par l’IA', ai: 'IA', send: 'Envoyer', ignore: 'Ignorer', validate: 'Valider',
@@ -9,11 +10,13 @@ export default {
     dueOn: 'Échéance {date}', on: 'le {date}', never: 'Jamais',
   },
   nav: {
+    signOut: 'Se déconnecter',
     label: 'Navigation principale', home: 'Accueil', mails: 'Mails', suivis: 'Suivis', agenda: 'Agenda', tasks: 'Tâches',
     alerts: 'Alertes', settings: 'Réglages', alertsCount: 'Alertes, {n} non lue | Alertes, {n} non lue | Alertes, {n} non lues',
     compose: 'Écrire',
   },
   status: {
+    retryFailed: '{name} : toujours injoignable. Vérifie le compte dans Réglages.',
     label: 'État des connexions', details: 'Détail des connexions', journal: 'Journal', lastSync: 'Dernière synchro {time}',
     mail: 'Messagerie', calendar: 'Agenda IUT', google: 'Google Agenda', ai: 'IA de l’université',
     ok: 'connecté', syncing: 'synchronisation en cours', error: 'reconnexion nécessaire', okShort: 'à jour',
@@ -53,7 +56,7 @@ export default {
   },
   suivis: {
     title: 'Suivis', subtitle: 'Mails, tâches et rendez-vous au même endroit.',
-    scopeLabel: 'Périmètre', mine: 'Mes suivis', team: 'Équipe · contact{\'@\'}',
+    scopeLabel: 'Périmètre', mine: 'Mes suivis', team: 'Équipe · {address}',
     viewLabel: 'Affichage', priorities: 'Priorités', board: 'Tableau',
     filterKind: 'Afficher', filterAll: 'Tout',
     actionCount: 'Aucun suivi à traiter | 1 suivi à traiter | {n} suivis à traiter',
@@ -84,7 +87,7 @@ export default {
   mail: {
     title: 'Mails', folders: 'Dossiers', compose: 'Écrire', list: 'Liste des messages', reading: 'Lecture',
     folder: { inbox: 'Boîte de réception', sent: 'Envoyés', drafts: 'Brouillons', archive: 'Archives', trash: 'Corbeille', suivis: 'Suivis' },
-    shared: 'Boîtes partagées', sharedMembers: 'Membres : Claire, Marc, Léa et toi (David). Tout le monde reçoit chaque mail.',
+    shared: 'Boîtes partagées', sharedMembers: 'Membres : {names}. Tout le monde reçoit chaque mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Boîte partagée · {n} membres',
     filters: { all: 'Tous', unread: 'Non lus', attach: 'Pièce jointe', week: 'Cette semaine' }, filterLabel: 'Filtrer',
     search: 'Rechercher dans les mails', searchPlaceholder: 'Rechercher',
@@ -130,6 +133,7 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
+    noAccount: 'Aucun compte de messagerie n’est configuré : ton message n’est pas parti. Ajoute un compte dans Réglages.', notSent: 'Le message n’est pas parti : le serveur d’envoi ne répond pas ou refuse. Rien n’a été créé, ton texte est toujours là. Réessaie dans un instant.',
     title: 'Écrire un mail', to: 'À', cc: 'Cc', bcc: 'Cci', showCc: 'Cc / Cci', subject: 'Objet', body: 'Message', signature: '-- \nDavid · IUT de Troyes',
     directory: 'Annuaire de l’établissement', directoryHelp: 'Commence à taper un nom : les suggestions viennent de l’annuaire.',
     follow: 'Suivre la réponse', followAi: 'Oscar l’a coché : ce mail attend visiblement une réponse.', followDelay: 'Me prévenir si pas de réponse sous',
@@ -158,17 +162,36 @@ export default {
     title: 'Récapitulatif', morning: 'Récap du matin', evening: 'Bilan du soir', mailsToHandle: 'Mails importants non traités', events: 'Événements à venir', tasks: 'Tâches du jour et en retard',
     relances: 'Relances dues', nothing: 'Rien à signaler.', intro: 'Voilà ce qui compte maintenant. Je prépare, tu décides.', example: 'Exemple de récap', sentTo: 'Envoyé à david{\'@\'}iut-troyes.fr à {time}.',
   },
-  alerts: { markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion' }, open: 'Ouvrir', bell: 'Alertes' },
+  alerts: {
+    messages: {
+      replyReceived: '{who} a répondu à « {subject} ».',
+      relanceDue: 'Relance due : « {subject} » ({who}). | {n} relances à faire.',
+      invitation: 'Invitation : {title}.', connectionFailed: '{account} : reconnexion nécessaire.',
+      takenOver: '{who} a repris « {subject} ».', memberReplied: '{who} a répondu à « {subject} ».',
+    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
   journal: {
+    messages: {
+      authRefused: 'Le serveur a refusé l’identifiant ou le mot de passe.', timeout: 'Le serveur n’a pas répondu à temps. Une nouvelle tentative aura lieu automatiquement.',
+      unreachable: 'Le serveur est injoignable : adresse, port ou réseau.', failed: 'La synchronisation a échoué. Une nouvelle tentative aura lieu automatiquement.',
+      recapNotSent: 'Le récap n’a pas pu être envoyé par e-mail. Il reste consultable dans Oscar.',
+    },
     title: 'Journal des événements et des erreurs', help: 'Date, compte, type et action proposée. Distinct du journal d’une demande.', export: 'Exporter pour le support', exported: 'Journal exporté.',
     filter: 'Filtrer par compte', empty: 'Aucun événement.', date: 'Date', account: 'Compte', type: 'Type', message: 'Message', action: 'Action proposée',
-    actions: { reconnect: 'Reconnecte le compte dans Réglages.', none: 'Rien à faire.' },
-    types: { auth: 'Authentification', sync: 'Synchronisation' }, back: 'Retour aux réglages',
+    actions: { retry: 'Réessaie depuis la barre d’état.', reconnect: 'Reconnecte le compte dans Réglages.', none: 'Rien à faire.' },
+    types: { send: 'Envoi', calendar: 'Agenda', auth: 'Authentification', sync: 'Synchronisation' }, back: 'Retour aux réglages',
   },
+  login: { title: 'Connexion', cas: 'Se connecter avec le compte de l’établissement (CAS)', dev: 'Connexion de développement', username: 'Identifiant', devSubmit: 'Entrer', devHelp: 'Disponible seulement en local : crée l’utilisateur s’il n’existe pas.', casRefused: 'Le CAS a refusé la connexion. Réessaie.', failed: 'Je n’ai pas pu te connecter. Réessaie dans un instant.' },
   settings: {
     title: 'Réglages', sections: 'Sections',
     nav: { accounts: 'Comptes et agendas', relances: 'Relances et suivi', recap: 'Récapitulatifs', ai: 'Oscar, l’assistant IA', look: 'Apparence et accessibilité', journal: 'État des connexions et journal' },
     accounts: {
+      mailAccounts: 'Comptes de messagerie', addMail: 'Ajouter un compte de messagerie', addCalendar: 'Ajouter un agenda', noMail: 'Aucun compte de messagerie pour l’instant. Ajoute le tien pour que je lise tes mails.',
+      noCalendar: 'Aucun agenda connecté.', work: 'Agenda pro', sharedBoxes: 'Boîtes partagées', noShared: 'Tu n’es membre d’aucune boîte partagée.', roleAdmin: 'Administrateur', roleMember: 'Membre',
+      added: 'Compte « {name} » ajouté.', addFailed: 'Je n’ai pas pu ajouter ce compte. Vérifie les champs, puis réessaie.', testFailed: 'Connexion impossible. Vérifie le serveur, le port, le chiffrement et le mot de passe.',
+      removed: 'Compte « {name} » supprimé.', removeFailed: 'Je n’ai pas pu supprimer ce compte. Réessaie.', removeTitle: 'Supprimer « {name} » ?', removeText: 'Les mails restent sur le serveur de messagerie. Oscar n’en garde plus de copie d’en-têtes ni de suivis liés à ce compte.',
+      fLabel: 'Nom du compte', fAddress: 'Adresse d’expédition', fUser: 'Identifiant', fPassword: 'Mot de passe', passwordHelp: 'Chiffré sur le serveur avec une clé hors base de données. Il ne s’affiche plus jamais.',
+      fHost: 'Serveur', fPort: 'Port', fEncryption: 'Chiffrement', enc: { ssl: 'SSL/TLS', tls: 'STARTTLS', none: 'Aucun (test local)' },
+      aiAllowed: 'Autoriser l’IA sur ce compte', aiAllowedHelp: 'Désactive-le pour une boîte confidentielle ou RH : Oscar n’y lira rien.', fCalUrl: 'Adresse CalDAV', personalCal: 'Agenda personnel',
       mailTitle: 'Messagerie · david{\'@\'}iut-troyes.fr', mailHelp: 'IMAP : imap.iut-troyes.fr · SMTP : smtp.iut-troyes.fr · identifiant et mot de passe', test: 'Tester la connexion', testOk: 'Connexion réussie.',
       sharedTitle: 'Boîte partagée · contact{\'@\'}iut-troyes.fr', alias: 'Alias reçu', sharedHelp: 'Tous les membres de l’alias reçoivent chaque mail. Aucun responsable n’est désigné : l’état (nouveau, pris, traité) informe simplement les autres.',
       calendars: 'Agendas', caldav: 'IUT · CalDAV', caldavHelp: 'Invitations acceptables et partage d’agenda selon les droits du serveur', google: 'Perso · Google Agenda', googleHelp: 'Compte perso, lu séparément du pro',

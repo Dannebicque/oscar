@@ -13,10 +13,12 @@ import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
+import { apiMode } from '../api'
 import { useFormat } from '../composables/useFormat'
 import { useNow } from '../composables/useNow'
 import { buildPriorities, type PriorityItem } from '../domain/priorities'
 import type { ItemKind, NewSuivi } from '../domain/types'
+import { useAccountsStore } from '../stores/accounts'
 import { useAgendaStore } from '../stores/agenda'
 import { useMailsStore } from '../stores/mails'
 import { useSuivisStore, type Scope } from '../stores/suivis'
@@ -31,6 +33,7 @@ const tasks = useTasksStore()
 const agenda = useAgendaStore()
 const mails = useMailsStore()
 const ui = useUiStore()
+const accounts = useAccountsStore()
 const now = useNow()
 
 type View = 'priorities' | 'board'
@@ -41,7 +44,7 @@ const showNew = ref(false)
 const showRelances = ref(false)
 const suggestion = ref<'open' | 'done' | 'ignored'>('open')
 
-onMounted(() => Promise.all([store.load(), tasks.load(), agenda.load(), mails.load()]))
+onMounted(() => Promise.all([store.load(), tasks.load(), agenda.load(), mails.load(), accounts.load()]))
 const failed = computed(() => store.error || tasks.error || agenda.error)
 
 const all = computed(() => {
@@ -63,7 +66,7 @@ const kindOptions = computed(() => [
 ])
 const scopeOptions = computed(() => [
   { value: 'mine' as Scope, label: t('suivis.mine') },
-  { value: 'team' as Scope, label: t('suivis.team') },
+  ...(accounts.shared.length ? [{ value: 'team' as Scope, label: t('suivis.team', { address: accounts.shared[0].address.split('@')[0] + '@' }) }] : []),
 ])
 const viewOptions = computed(() => [
   { value: 'priorities' as const, label: t('suivis.priorities') },
@@ -139,7 +142,7 @@ function suggest(accept: boolean) {
         <BaseButton variant="primary" icon="clock" :label="t('suivis.relancesStart')" @click="showRelances = true" />
       </section>
 
-      <section v-if="suggestion === 'open' && store.scope === 'mine'" class="ai-card" aria-labelledby="sug-h">
+      <section v-if="apiMode === 'mock' && suggestion === 'open' && store.scope === 'mine'" class="ai-card" aria-labelledby="sug-h">
         <AiBadge />
         <p id="sug-h">{{ t('suivis.suggestionTitle') }}</p>
         <div class="row-actions">

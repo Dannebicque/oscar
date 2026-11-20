@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { ME } from '../../api'
+import { session } from '../../api'
 import { useFormat } from '../../composables/useFormat'
 import type { Suivi } from '../../domain/types'
 import StatusChip from '../ui/StatusChip.vue'
@@ -16,7 +16,7 @@ const fmt = useFormat()
     <h3>{{ t('mail.suiviPanel') }}</h3>
     <StatusChip :status="suivi.status" />
     <dl>
-      <dt>{{ t('suivis.responsible') }}</dt><dd>{{ suivi.responsible === ME ? t('common.me') : suivi.responsible ?? t('suivis.responsibleNone') }}</dd>
+      <dt>{{ t('suivis.responsible') }}</dt><dd>{{ suivi.responsible === session.name ? t('common.me') : suivi.responsible ?? t('suivis.responsibleNone') }}</dd>
       <dt>{{ t('suivis.dueLabel') }}</dt><dd>{{ fmt.date(suivi.dueAt) }}</dd>
       <dt>{{ t('suivis.relanceLabel') }}</dt>
       <dd>

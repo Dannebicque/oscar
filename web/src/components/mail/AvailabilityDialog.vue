@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ME } from '../../api'
+import { session } from '../../api'
 import { useFormat } from '../../composables/useFormat'
 import type { Mail } from '../../domain/types'
 import BaseButton from '../ui/BaseButton.vue'
@@ -26,7 +26,7 @@ const label = (s: { start: string; end: string }) => `${fmt.dateLong(s.start)}, 
 watch(() => props.open, (o) => { if (o) { chosen.value = []; tentative.value = false } })
 watch([chosen, () => props.open], () => {
   const lines = slots.value.filter((s) => chosen.value.includes(s.start)).map((s) => `- ${label(s)}`).join('\n')
-  body.value = `Bonjour ${props.mail.from.name.split(' ')[0]},\n\nVoici mes disponibilités :\n${lines}\n\nDis-moi ce qui te convient.\n${ME}`
+  body.value = `Bonjour ${props.mail.from.name.split(' ')[0]},\n\nVoici mes disponibilités :\n${lines}\n\nDis-moi ce qui te convient.\n${session.name}`
 }, { deep: true, immediate: true })
 </script>
 

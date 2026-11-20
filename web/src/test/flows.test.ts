@@ -93,7 +93,7 @@ describe('Écrire (F-73)', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     const s = useSuivisStore().items.find((x) => x.subject === 'Ma question')
-    expect(s).toMatchObject({ direction: 'waiting', contact: 'Sophie Laurent', suggestedByAi: true })
+    expect(s).toMatchObject({ direction: 'waiting', contact: 'Sophie', suggestedByAi: true })
     expect(router.currentRoute.value.name).toBe('mails')
   })
   it('refuse un envoi sans destinataire ni objet, avec une erreur annoncée', async () => {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AccountsPanel from '../components/settings/AccountsPanel.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
@@ -13,12 +14,10 @@ import { LOCALES } from '../i18n'
 import { DENSITIES, THEMES } from '../themes'
 import { useSettingsStore } from '../stores/settings'
 import { useSystemStore } from '../stores/system'
-import { useUiStore } from '../stores/ui'
 
 const { t } = useI18n()
 const { s } = useSettingsStore()
 const system = useSystemStore()
-const ui = useUiStore()
 
 const sections = ['accounts', 'relances', 'recap', 'ai', 'look', 'journal'] as const
 const themeOpts = computed(() => THEMES.map((x) => ({ value: x.id, label: t(`settings.look.themes.${x.id}`), icon: x.icon })))
@@ -27,11 +26,6 @@ const langOpts = computed(() => LOCALES.map((l) => ({ value: l, label: l === 'fr
 const delayOpts = computed(() => ([24, 48, 72, 168] as const).map((h) => ({ value: h, label: t(`settings.relances.h${h}`) })))
 const capOpts = [3, 5, 10].map((n) => ({ value: n as 3 | 5 | 10, label: String(n) }))
 const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((m) => ({ value: m, label: t(`settings.ai.${m}`), help: t(`settings.ai.${m}Help`) })))
-const connState = (id: string) => system.connections.find((c) => c.id === id)?.state
-
-function testMail() {
-  ui.notify(t('settings.accounts.testOk'))
-}
 </script>
 
 <template>
@@ -44,21 +38,8 @@ function testMail() {
     <div class="sections">
       <section id="set-accounts" aria-labelledby="h-accounts">
         <h2 id="h-accounts">{{ t('settings.nav.accounts') }}</h2>
+        <AccountsPanel />
         <div class="card">
-          <div class="head"><h3>{{ t('settings.accounts.mailTitle') }}</h3><ToneChip :tone="connState('mail') === 'ok' ? 'success' : 'danger'" :icon="connState('mail') === 'ok' ? 'checkCircle' : 'alert'" :label="t(`status.${connState('mail') ?? 'ok'}`)" /></div>
-          <p class="muted">{{ t('settings.accounts.mailHelp') }}</p>
-          <BaseButton icon="refresh" :label="t('settings.accounts.test')" @click="testMail" />
-        </div>
-        <div class="card">
-          <div class="head"><h3>{{ t('settings.accounts.sharedTitle') }}</h3><ToneChip tone="info" icon="users" :label="t('settings.accounts.alias')" /></div>
-          <p class="muted">{{ t('settings.accounts.sharedHelp') }}</p>
-        </div>
-        <div class="card">
-          <h3>{{ t('settings.accounts.calendars') }}</h3>
-          <p class="line"><strong>{{ t('settings.accounts.caldav') }}</strong> <ToneChip tone="success" icon="checkCircle" :label="t('status.ok')" /></p>
-          <p class="muted">{{ t('settings.accounts.caldavHelp') }}</p>
-          <p class="line"><strong>{{ t('settings.accounts.google') }}</strong> <ToneChip :tone="connState('google') === 'error' ? 'danger' : 'success'" :icon="connState('google') === 'error' ? 'alert' : 'checkCircle'" :label="t(`status.${connState('google') ?? 'ok'}`)" /></p>
-          <p class="muted">{{ t('settings.accounts.googleHelp') }}</p>
           <SwitchField v-model="s.includePersonalCalendar" :label="t('settings.accounts.includePersonal')" :help="t('settings.accounts.includePersonalHelp')" />
           <SwitchField v-model="s.shareBusy" :label="t('settings.accounts.shareBusy')" :help="t('settings.accounts.shareBusyHelp')" />
         </div>

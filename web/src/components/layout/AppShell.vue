@@ -1,18 +1,42 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAccountsStore } from '../../stores/accounts'
+import { useAuthStore } from '../../stores/auth'
+import { useSettingsStore } from '../../stores/settings'
 import { useSystemStore } from '../../stores/system'
 import BaseIcon from '../ui/BaseIcon.vue'
 import ToastHost from '../ui/ToastHost.vue'
 import OscarMark from '../OscarMark.vue'
+import { session } from '../../api'
 import { MAIN_NAV } from './NavLinks'
 import StatusBar from './StatusBar.vue'
 
 const { t } = useI18n()
 const route = useRoute()
 const system = useSystemStore()
-onMounted(() => system.load())
+const auth = useAuthStore()
+const settings = useSettingsStore()
+const accounts = useAccountsStore()
+const router = useRouter()
+
+/** Charge les données de la session, puis les rafraîchit chaque minute (le temps réel viendra avec Mercure). */
+let poll: ReturnType<typeof setInterval> | undefined
+async function start() {
+  if (!auth.authenticated) return
+  await settings.loadFromServer()
+  await Promise.all([system.load(), accounts.load()])
+  clearInterval(poll)
+  poll = setInterval(() => { if (document.visibilityState === 'visible') void system.load() }, 60_000)
+}
+onMounted(start)
+onBeforeUnmount(() => clearInterval(poll))
+watch(() => auth.authenticated, (ok) => { if (ok) void start(); else { clearInterval(poll); router.replace({ name: 'login' }) } })
+async function signOut() {
+  await auth.logout()
+  router.replace({ name: 'login' })
+}
 
 /** aria-current sur la rubrique active, y compris pour les sous-routes (/mails/:id). */
 const isCurrent = (name: string) => route.name === name || (name === 'mails' && route.name === 'compose')
@@ -46,6 +70,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
       <RouterLink to="/reglages" class="link wide" :class="{ current: route.name === 'settings' || route.name === 'journal' }" :aria-current="route.name === 'settings' ? 'page' : undefined">
         <BaseIcon name="settings" :size="22" /><span>{{ t('nav.settings') }}</span>
       </RouterLink>
+      <button v-if="session.token" type="button" class="link wide out" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOut') }}</span></button>
     </nav>
 
     <main id="main" tabindex="-1"><RouterView /></main>
@@ -70,6 +95,7 @@ main { grid-area: main; padding: var(--space-5) var(--space-6); min-width: 0; ma
 .link:hover { background: var(--c-surface-2); }
 .link.current { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; }
 .spacer { margin-top: auto; }
+.out { border: 0; background: transparent; font: inherit; font-size: 0.75rem; cursor: pointer; }
 .badge { position: absolute; top: 6px; right: 14px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--c-danger); color: #fff; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 :root[data-theme='contrast'] .badge { background: #fff; color: #000; }
 

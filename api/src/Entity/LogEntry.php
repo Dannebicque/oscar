@@ -30,6 +30,7 @@ class LogEntry implements OwnedInterface
         #[ORM\Column(length: 160)] private string $account,
         /** auth | sync | send | calendar */
         #[ORM\Column(length: 30)] private string $type,
+        /** Code de message (authRefused, timeout, unreachable, failed, recapNotSent) : traduit côté front. */
         #[ORM\Column(type: Types::TEXT)] private string $message,
         /** Action proposée : reconnect | retry | none (traduite côté front). */
         #[ORM\Column(length: 30)] private string $action = 'none',
