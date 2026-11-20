@@ -25,7 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     ],
     formats: ['json' => ['application/json']],
 )]
-class MailAccount implements OwnedInterface
+class MailAccount implements OwnedInterface, SyncableAccount
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
@@ -73,6 +73,8 @@ class MailAccount implements OwnedInterface
     private ?\DateTimeImmutable $lastSyncAt = null;
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $lastError = null;
+    #[ORM\Column]
+    private int $failureCount = 0;
 
     public function __construct()
     {
@@ -109,6 +111,7 @@ class MailAccount implements OwnedInterface
     public function getLastSyncAt(): ?\DateTimeImmutable { return $this->lastSyncAt; }
     public function getLastError(): ?string { return $this->lastError; }
 
-    public function markSynced(): void { $this->lastSyncAt = new \DateTimeImmutable(); $this->lastError = null; }
-    public function markFailed(string $message): void { $this->lastError = mb_substr($message, 0, 500); }
+    #[Ignore] public function getFailureCount(): int { return $this->failureCount; }
+    public function markSynced(): void { $this->lastSyncAt = new \DateTimeImmutable(); $this->lastError = null; $this->failureCount = 0; }
+    public function markFailed(string $message): void { $this->lastError = mb_substr($message, 0, 500); ++$this->failureCount; }
 }

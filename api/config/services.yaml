@@ -35,9 +35,22 @@ services:
             $base64Key: '%env(APP_VAULT_KEY)%'
 
     App\Mail\OutgoingMailer: '@App\Mail\SymfonyOutgoingMailer'
+    App\Calendar\CalendarProvider: '@App\Calendar\CalDavProvider'
 
 when@test:
     services:
+        _defaults:
+            autowire: true
+            autoconfigure: true
+        App\Tests\Support\FakeCalendarProvider:
+            public: true
+        App\Calendar\CalendarProvider: '@App\Tests\Support\FakeCalendarProvider'
+        App\Recap\RecapService:
+            public: true
+        App\Recap\RelanceNotifier:
+            public: true
+        App\Mail\ConnectionMonitor:
+            public: true
         App\Tests\Support\FakeOutgoingMailer:
             public: true
         App\Mail\OutgoingMailer: '@App\Tests\Support\FakeOutgoingMailer'

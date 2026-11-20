@@ -20,6 +20,7 @@ final class SyncMailCommand extends Command
         private readonly MailSynchronizer $sync,
         private readonly MailboxReaderFactory $factory,
         private readonly EntityManagerInterface $em,
+        private readonly \App\Mail\ConnectionMonitor $monitor,
     ) {
         parent::__construct();
     }
@@ -43,11 +44,11 @@ final class SyncMailCommand extends Command
         foreach ($accounts as $a) {
             try {
                 $r = $this->sync->sync($a, $this->factory->create($a));
+                $this->monitor->success($a);
                 $io->success(sprintf('%s : %d nouveaux messages, %d suivi(s) avec une réponse reçue.', $a->getLabel(), $r['fetched'], $r['replies']));
             } catch (\Throwable $e) {
                 ++$failed;
-                $a->markFailed($e->getMessage());
-                $this->em->flush();
+                $this->monitor->failure($a, 'sync', $e);
                 // Message clair, jamais un code technique seul (F-79).
                 $io->error(sprintf('%s : je n’ai pas pu joindre le serveur de messagerie (%s). Vérifie qu’il tourne et que les identifiants sont bons.', $a->getLabel(), $e->getMessage()));
             }

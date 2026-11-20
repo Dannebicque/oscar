@@ -44,6 +44,14 @@ final class MailSynchronizer
         return ['fetched' => $fetched, 'replies' => $this->markReplies($account->getOwner())];
     }
 
+    private function notifyReply(User $owner, Suivi $s, MailHeader $reply): void
+    {
+        $key = 'reply:'.$s->getId().':'.$reply->key();
+        if ($this->em->getRepository(\App\Entity\Notification::class)->findOneBy(['owner' => $owner, 'dedupeKey' => $key]) === null) {
+            $this->em->persist((new \App\Entity\Notification('replyReceived', ['who' => $reply->fromName !== '' ? $reply->fromName : $reply->fromAddress, 'subject' => $s->getSubject()], 'suivis', $key))->setOwner($owner));
+        }
+    }
+
     /** Un suivi « en attente » dont le fil a reçu une vraie réponse passe en « réponse reçue ». */
     public function markReplies(User $owner): int
     {
@@ -58,6 +66,7 @@ final class MailSynchronizer
             if (($reply = $this->detector->firstReply($inbound, $s->getMailId())) !== null) {
                 $s->setReplyReceived(true);
                 $s->log($reply->fromName !== '' ? $reply->fromName : $reply->fromAddress, 'replyReceived', $reply->date);
+                $this->notifyReply($owner, $s, $reply);
                 ++$marked;
             }
         }
