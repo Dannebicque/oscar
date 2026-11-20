@@ -8,7 +8,7 @@ import { useMailsStore } from '../stores/mails'
 import { useSuivisStore } from '../stores/suivis'
 import { useUiStore } from '../stores/ui'
 import { resolveTheme } from '../themes'
-import { mountApp } from './helpers'
+import { addRecipient, mountApp } from './helpers'
 
 afterEach(() => { document.body.innerHTML = '' })
 
@@ -24,8 +24,9 @@ describe('thèmes et réglages (U-09, F-17)', () => {
   })
   it('changer de thème et de densité dans Réglages s’applique au document', async () => {
     const { wrapper } = await mountApp(SettingsView)
-    await wrapper.find('input[name="theme"][value="dark"]').setValue()
-    await wrapper.find('input[name="density"][value="compact"]').setValue()
+    // Reka UI : un groupe de boutons role="radio".
+    await wrapper.find('button[role="radio"][value="dark"]').trigger('click')
+    await wrapper.find('button[role="radio"][value="compact"]').trigger('click')
     await flushPromises()
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(document.documentElement.dataset.density).toBe('compact')
@@ -85,10 +86,10 @@ describe('boîte partagée (F-67, F-68)', () => {
 describe('Écrire (F-73)', () => {
   it('« Suivre la réponse » est préremplie par Oscar, modifiable, et crée un suivi à l’envoi', async () => {
     const { wrapper, router } = await mountApp(ComposeView, '/ecrire')
-    const box = wrapper.find('input[type="checkbox"]')
-    expect((box.element as HTMLInputElement).checked).toBe(true)
+    const box = wrapper.find('[role="checkbox"]')
+    expect(box.attributes('aria-checked')).toBe('true')
     expect(wrapper.text()).toContain('Suggéré par l’IA')
-    await wrapper.find('#to').setValue('Sophie Laurent <sophie@x.fr>')
+    await addRecipient(wrapper, 'to', 'Sophie Laurent <sophie@x.fr>')
     await wrapper.find('#subject').setValue('Ma question')
     await wrapper.find('form').trigger('submit')
     await flushPromises()

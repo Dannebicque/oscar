@@ -133,6 +133,7 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
+    removeRecipient: 'Remove {to}', noMatch: 'No contact found. Type a full address to add it.', badAddress: '“{text}” is not a valid address.',
     noAccount: 'No mail account is configured: your message was not sent. Add an account in Settings.', notSent: 'The message was not sent: the outgoing server isn’t answering or refuses it. Nothing was created and your text is still here. Try again in a moment.',
     title: 'Write a mail', to: 'To', cc: 'Cc', bcc: 'Bcc', showCc: 'Cc / Bcc', subject: 'Subject', body: 'Message', signature: '-- \nDavid · IUT de Troyes',
     directory: 'Institution directory', directoryHelp: 'Start typing a name: suggestions come from the directory.',

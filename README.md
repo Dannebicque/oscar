@@ -45,6 +45,10 @@ cd web && npm install && npm run dev
 Sans API, `VITE_USE_MOCK=true npm run dev` lance la démo simulée hors ligne. Par défaut le front parle à `VITE_API_URL`
 (`http://localhost:8000`).
 
+## Composants
+
+Les widgets interactifs reposent sur des bibliothèques maintenues plutôt que sur du code maison : **Reka UI** (MIT, composants accessibles sans style : fenêtres modales, interrupteurs, cases à cocher, choix exclusifs, notifications, pastilles de destinataires) et **FullCalendar 6** (MIT : agenda). Ils sont habillés par nos jetons de thème (`web/src/components/ui`, `web/src/components/agenda`).
+
 ## Thèmes
 
 Les couleurs ne vivent que dans des jetons (`web/src/styles/tokens.css`). Un thème est un bloc `[data-theme]` dans

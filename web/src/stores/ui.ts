@@ -25,12 +25,11 @@ export const useUiStore = defineStore('ui', () => {
     toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 
-  /** Les erreurs restent jusqu'à fermeture ; le reste disparaît seul (annulation possible jusque-là). */
+  /** Les erreurs restent jusqu'à fermeture ; le reste disparaît seul après 8 s, en pause au survol et au focus. */
   function notify(message: string, opts: { tone?: Toast['tone']; undo?: Toast['undo']; ms?: number } = {}) {
     const t: Toast = { id: ++seq, message, tone: opts.tone ?? 'success', undo: opts.undo }
     toasts.value = [...toasts.value, t]
-    announce(message)
-    if (t.tone !== 'error') setTimeout(() => dismiss(t.id), opts.ms ?? 8000)
+    // La notification s'annonce elle-même (zone live de Reka UI) ; la fermeture automatique est gérée par le composant.
     return t.id
   }
 

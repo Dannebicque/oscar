@@ -9,7 +9,7 @@ import { useMailsStore } from '../stores/mails'
 import { useSuivisStore } from '../stores/suivis'
 import { useUiStore } from '../stores/ui'
 import ComposeView from '../views/ComposeView.vue'
-import { mountApp } from './helpers'
+import { addRecipient, mountApp } from './helpers'
 
 const RAW_MAIL = { id: 'u1', folder: 'INBOX', mailbox: 'personal', messageId: '<devis-1@x>', fromName: '', fromAddress: 'marc@x.fr', toAddresses: ['david@x.fr'], subject: 'Re: Devis', date: '2026-11-20T10:00:00+00:00' }
 const RAW_REPLY = { id: 'u2', folder: 'INBOX', messageId: '<reponse-1@x>', inReplyTo: '<devis-1@x>', references: ['<devis-1@x>'], fromName: 'Marc', fromAddress: 'marc@x.fr', toAddresses: [], subject: 'Re: Re: Devis', date: '2026-11-20T11:00:00+00:00' }
@@ -134,7 +134,7 @@ describe('Écrire sur l’API', () => {
     const { wrapper, router } = await mountApp(ComposeView, '/ecrire')
     stubFetch({ 'GET /api/mail-accounts': [{ id: 'acc1' }], 'POST /api/mails/send': err(502, { title: 'serveur d’envoi' }) })
     resetApi(createHttpApi('http://api'))
-    await wrapper.find('#to').setValue('Marc <marc@x.fr>')
+    await addRecipient(wrapper, 'to', 'Marc <marc@x.fr>')
     await wrapper.find('#subject').setValue('Test')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
@@ -149,18 +149,21 @@ describe('Écrire sur l’API', () => {
     const { wrapper } = await mountApp(ComposeView, '/ecrire')
     stubFetch({})
     resetApi(createHttpApi('http://api'))
-    await wrapper.find('#to').setValue('pas une adresse')
+    await addRecipient(wrapper, 'to', 'pas une adresse')
     await wrapper.find('#subject').setValue('Test')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
-    expect(wrapper.find('[role="alert"]').text()).toContain('destinataire')
+    const alerts = wrapper.findAll('[role="alert"]').map((a) => a.text()).join(' | ')
+    expect(alerts).toContain('n’est pas une adresse valide')
+    expect(alerts).toContain('destinataire')
     expect(calls).toHaveLength(0)
   })
   it('un envoi réussi redirige et annonce la date de relance', async () => {
     const { wrapper, router } = await mountApp(ComposeView, '/ecrire')
     stubFetch({ 'GET /api/mail-accounts': [{ id: 'acc1' }], 'POST /api/mails/send': { messageId: '<x>', suivi: { dueAt: '2026-11-22' } }, 'GET /api/suivis': [], 'GET /api/mails': [] })
     resetApi(createHttpApi('http://api'))
-    await wrapper.find('#to').setValue('marc@x.fr, claire@x.fr')
+    await addRecipient(wrapper, 'to', 'marc@x.fr')
+    await addRecipient(wrapper, 'to', 'Claire <claire@x.fr>')
     await wrapper.find('#subject').setValue('Test')
     await wrapper.find('form').trigger('submit')
     await flushPromises()

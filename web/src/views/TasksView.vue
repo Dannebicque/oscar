@@ -5,6 +5,7 @@ import BaseButton from '../components/ui/BaseButton.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
+import CheckboxField from '../components/ui/CheckboxField.vue'
 import ToneChip from '../components/ui/ToneChip.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import { useFormat } from '../composables/useFormat'
@@ -75,7 +76,7 @@ async function reject(task: Task) { await store.reject(task.id); ui.notify(t('ta
       <fieldset v-if="store.tags.length"><legend>{{ t('tasks.filterTag') }}</legend>
         <BaseButton v-for="g in store.tags" :key="g" :label="`#${g}`" :pressed="store.filters.tags.includes(g)" @click="store.filters.tags = toggle(store.filters.tags, g)" />
       </fieldset>
-      <label class="check"><input v-model="store.filters.showDone" type="checkbox" /> {{ t('tasks.showDone') }}</label>
+      <CheckboxField v-model="store.filters.showDone" :label="t('tasks.showDone')" />
       <BaseButton v-if="hasFilter" variant="ghost" icon="x" :label="t('tasks.clearFilters')" @click="store.filters.projects = []; store.filters.tags = []" />
     </div>
 
@@ -86,9 +87,9 @@ async function reject(task: Task) { await store.reject(task.id); ui.notify(t('ta
       <h2 :id="`g-${g.key}`">{{ t(`tasks.groups.${g.key}`) }}</h2>
       <ul>
         <li v-for="task in g.items" :key="task.id" class="task" :class="{ done: task.done, confirm: task.toConfirm }">
-          <input
-            :id="`c-${task.id}`" type="checkbox" class="cb" :checked="task.done" :disabled="task.toConfirm"
-            :aria-label="task.done ? t('tasks.markUndone', { title: task.title }) : t('tasks.markDone', { title: task.title })" @change="setDone(task, ($event.target as HTMLInputElement).checked)"
+          <CheckboxField
+            :id="`c-${task.id}`" :model-value="task.done" :disabled="task.toConfirm" hide-label
+            :label="task.done ? t('tasks.markUndone', { title: task.title }) : t('tasks.markDone', { title: task.title })" @update:model-value="(v) => setDone(task, v)"
           />
           <div class="main">
             <p class="line">
@@ -130,7 +131,6 @@ ul { display: grid; gap: var(--gap); }
 .task { display: flex; gap: var(--space-3); align-items: center; padding: var(--row-y) var(--space-4); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
 .task.confirm { border-color: var(--c-ai); background: var(--c-ai-soft); }
 .task.done .line strong { text-decoration: line-through; color: var(--c-text-muted); }
-.cb { width: 24px; height: 24px; flex: none; accent-color: var(--c-primary); }
 .main { flex: 1; min-width: 0; }
 .line { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .meta { font-size: var(--fs-sm); }

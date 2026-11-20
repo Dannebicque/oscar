@@ -3,13 +3,15 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ApiError } from '../api'
-import { extractAddress } from '../api/http'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
+import CheckboxField from '../components/ui/CheckboxField.vue'
+import RecipientInput from '../components/ui/RecipientInput.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { useFormat } from '../composables/useFormat'
 import { clock } from '../domain/clock'
 import { addDays, isoDay } from '../domain/dates'
+import { searchDirectory } from '../domain/directory'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
 import { useUiStore } from '../stores/ui'
@@ -22,15 +24,9 @@ const mails = useMailsStore()
 const settings = useSettingsStore()
 const ui = useUiStore()
 
-/** Annuaire LDAP simulé : nom, prénom, e-mail au minimum (F-18). */
-const DIRECTORY = [
-  'Sophie Laurent <sophie.laurent@univ-reims.fr>', 'Marc Dubois <marc.dubois@imprimerie.fr>', 'Claire Petit <claire.petit@entreprise.fr>',
-  'Claire Roux <claire.roux@iut-troyes.fr>', 'Léa Martin <lea.martin@iut-troyes.fr>', 'Scolarité <scolarite@iut-troyes.fr>',
-]
-
-const to = ref('')
-const cc = ref('')
-const bcc = ref('')
+const to = ref<string[]>([])
+const cc = ref<string[]>([])
+const bcc = ref<string[]>([])
 const showCc = ref(false)
 const subject = ref('')
 const body = ref(`\n\n${t('compose.signature')}`)
@@ -44,7 +40,7 @@ onMounted(async () => {
   if (!mails.items.length) await mails.load()
   const original = route.query.reply ? mails.byId(String(route.query.reply)) : undefined
   if (original) {
-    to.value = `${original.from.name} <${original.from.address}>`
+    to.value = [original.from.address]
     subject.value = /^re\s*:/i.test(original.subject) ? original.subject : `Re : ${original.subject}`
     body.value = `\n\n${t('compose.signature')}\n\n> ${original.paragraphs.join('\n> ')}`
   } else {
@@ -55,26 +51,17 @@ onMounted(async () => {
 })
 
 const dueDate = computed(() => isoDay(addDays(clock.now(), Math.ceil(delayHours.value / 24))))
-const toList = computed(() => addresses(to.value))
-const invalid = computed(() => submitted.value && (!subject.value.trim() || !toList.value || toList.value.length === 0 || !addresses(cc.value) || !addresses(bcc.value)))
-const who = computed(() => to.value.replace(/<.*>/, '').trim() || '…')
+const invalid = computed(() => submitted.value && (!subject.value.trim() || to.value.length === 0))
+const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.name ?? to.value[0] : '…'))
 const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { v: 168, k: 'd7' }]
-
-/** Découpe « A <a@x.fr>, b@y.fr » en adresses ; renvoie null si l'une d'elles n'est pas valide. */
-function addresses(input: string): string[] | null {
-  const parts = input.split(/[;,]/).map((p) => p.trim()).filter(Boolean)
-  const out = parts.map(extractAddress)
-  return out.some((a) => a === null) ? null : (out as string[])
-}
 
 async function send() {
   submitted.value = true
-  const [toList, ccList, bccList] = [addresses(to.value), addresses(cc.value), addresses(bcc.value)]
-  if (!subject.value.trim() || !toList || toList.length === 0 || !ccList || !bccList) return
+  if (!subject.value.trim() || to.value.length === 0) return
   sending.value = true
   try {
     const r = await mails.send({
-      to: toList, cc: ccList, bcc: bccList, subject: subject.value.trim(), body: body.value,
+      to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: body.value,
       followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
     })
@@ -98,14 +85,13 @@ function saveDraft() {
   <form class="form" novalidate @submit.prevent="send">
     <div class="field">
       <label for="to">{{ t('compose.to') }}</label>
-      <input id="to" v-model="to" class="input" list="directory" autocomplete="off" required :aria-invalid="submitted && (!toList || toList.length === 0)" aria-describedby="dir-help" />
-      <datalist id="directory"><option v-for="d in DIRECTORY" :key="d" :value="d" /></datalist>
+      <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />
       <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
     </div>
     <BaseButton v-if="!showCc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
     <template v-else>
-      <div class="field"><label for="cc">{{ t('compose.cc') }}</label><input id="cc" v-model="cc" class="input" list="directory" autocomplete="off" /></div>
-      <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><input id="bcc" v-model="bcc" class="input" list="directory" autocomplete="off" /></div>
+      <div class="field"><label for="cc">{{ t('compose.cc') }}</label><RecipientInput id="cc" v-model="cc" :label="t('compose.cc')" /></div>
+      <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><RecipientInput id="bcc" v-model="bcc" :label="t('compose.bcc')" /></div>
     </template>
     <div class="field">
       <label for="subject">{{ t('compose.subject') }}</label>
@@ -119,7 +105,7 @@ function saveDraft() {
 
     <fieldset class="follow">
       <legend class="sr-only">{{ t('compose.follow') }}</legend>
-      <label class="check"><input v-model="follow" type="checkbox" /> <strong>{{ t('compose.follow') }}</strong> <AiBadge v-if="aiPicked && follow" /></label>
+      <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
       <p v-if="aiPicked && follow" class="hint">{{ t('compose.followAi') }}</p>
       <template v-if="follow">
         <div class="field inline">

@@ -29,3 +29,11 @@ export async function mountApp(component: Component, path = '/', props: Record<s
   await flushPromises()
   return { wrapper, router, pinia }
 }
+
+/** Saisit un destinataire dans un champ RecipientInput et le valide avec Entrée, comme le ferait l'utilisateur. */
+export async function addRecipient(wrapper: { find: (sel: string) => { setValue: (v: string) => Promise<void>; trigger: (e: string, o?: object) => Promise<void> } }, id: string, text: string) {
+  const input = wrapper.find(`#${id}`)
+  await input.setValue(text)
+  await input.trigger('keydown', { key: 'Enter' })
+  await flushPromises()
+}

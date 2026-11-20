@@ -133,6 +133,7 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
+    removeRecipient: 'Retirer {to}', noMatch: 'Aucun contact trouvé. Tape une adresse complète pour l’ajouter.', badAddress: '« {text} » n’est pas une adresse valide.',
     noAccount: 'Aucun compte de messagerie n’est configuré : ton message n’est pas parti. Ajoute un compte dans Réglages.', notSent: 'Le message n’est pas parti : le serveur d’envoi ne répond pas ou refuse. Rien n’a été créé, ton texte est toujours là. Réessaie dans un instant.',
     title: 'Écrire un mail', to: 'À', cc: 'Cc', bcc: 'Cci', showCc: 'Cc / Cci', subject: 'Objet', body: 'Message', signature: '-- \nDavid · IUT de Troyes',
     directory: 'Annuaire de l’établissement', directoryHelp: 'Commence à taper un nom : les suggestions viennent de l’annuaire.',

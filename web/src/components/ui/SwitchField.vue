@@ -1,5 +1,7 @@
 <script setup lang="ts">
-/** Interrupteur : une vraie case à cocher native avec role="switch" (clavier et lecteur d'écran gratuits). */
+import { SwitchRoot, SwitchThumb } from 'reka-ui'
+
+/** Interrupteur sur Reka UI : role="switch", clavier (Espace) et état annoncés. */
 defineProps<{ modelValue: boolean; label: string; help?: string }>()
 defineEmits<{ 'update:modelValue': [v: boolean] }>()
 const id = `sw-${Math.random().toString(36).slice(2, 8)}`
@@ -7,7 +9,9 @@ const id = `sw-${Math.random().toString(36).slice(2, 8)}`
 
 <template>
   <div class="sw">
-    <input :id="id" type="checkbox" role="switch" :checked="modelValue" :aria-describedby="help ? `${id}-h` : undefined" @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)" />
+    <SwitchRoot :id="id" class="sw-root" :model-value="modelValue" :aria-describedby="help ? `${id}-h` : undefined" @update:model-value="(v: boolean) => $emit('update:modelValue', v)">
+      <SwitchThumb class="sw-thumb" />
+    </SwitchRoot>
     <div>
       <label :for="id">{{ label }}</label>
       <p v-if="help" :id="`${id}-h`" class="hint">{{ help }}</p>
@@ -17,9 +21,9 @@ const id = `sw-${Math.random().toString(36).slice(2, 8)}`
 
 <style scoped>
 .sw { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--target); }
-input { appearance: none; flex: none; width: 48px; height: 28px; margin-top: 8px; border-radius: 14px; background: var(--c-border); position: relative; cursor: pointer; border: 2px solid var(--c-text-muted); transition: background var(--dur) var(--ease); }
-input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--c-surface); border: 2px solid var(--c-text-muted); transition: transform var(--dur) var(--ease); }
-input:checked { background: var(--c-primary); border-color: var(--c-primary); }
-input:checked::after { transform: translateX(20px); border-color: var(--c-primary); }
-label { font-weight: 600; display: block; padding-top: 8px; }
+.sw-root { flex: none; width: 48px; height: 28px; margin-top: 8px; padding: 0; border-radius: 14px; background: var(--c-border); border: 2px solid var(--c-text-muted); position: relative; cursor: pointer; transition: background var(--dur) var(--ease); }
+.sw-root[data-state='checked'] { background: var(--c-primary); border-color: var(--c-primary); }
+.sw-thumb { display: block; width: 20px; height: 20px; border-radius: 50%; background: var(--c-surface); border: 2px solid var(--c-text-muted); transform: translateX(2px); transition: transform var(--dur) var(--ease); }
+.sw-root[data-state='checked'] .sw-thumb { transform: translateX(22px); border-color: var(--c-primary); }
+label { font-weight: 600; display: block; padding-top: 8px; cursor: pointer; }
 </style>

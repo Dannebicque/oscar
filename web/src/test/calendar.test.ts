@@ -105,8 +105,11 @@ describe('écran Agenda', () => {
     expect(ev).toBeTruthy()
     await ev!.trigger('click')
     await flushPromises()
-    expect(wrapper.find('dialog h2').text()).toBe('Point équipe')
-    expect(wrapper.find('dialog').text()).toContain('IUT')
+    // Reka UI téléporte la fenêtre dans <body> : on la cherche dans le document.
+    const dlg = document.body.querySelector('[role="dialog"]')!
+    expect(dlg.querySelector('h2')?.textContent).toBe('Point équipe')
+    expect(dlg.textContent).toContain('IUT')
+    expect(dlg.getAttribute('aria-labelledby')).toBeTruthy()
   })
 
   it('les boutons de période et de vue pilotent la grille', async () => {
@@ -125,8 +128,10 @@ describe('écran Agenda', () => {
     const { wrapper } = await mountApp(AgendaView, '/agenda')
     await flushPromises()
     await wrapper.findAll('button').find((b) => b.text().includes('Nouvel événement'))!.trigger('click')
-    await wrapper.find('#ev-title').setValue('Réunion test')
-    await wrapper.find('#new-event').trigger('submit')
+    const title = document.body.querySelector<HTMLInputElement>('#ev-title')!
+    title.value = 'Réunion test'
+    title.dispatchEvent(new Event('input', { bubbles: true }))
+    document.body.querySelector<HTMLFormElement>('#new-event')!.dispatchEvent(new Event('submit', { cancelable: true }))
     await flushPromises()
     expect(wrapper.text()).toContain('Réunion test')
   })
