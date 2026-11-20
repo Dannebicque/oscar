@@ -35,11 +35,11 @@ Majordome numérique (« Votre majordome numérique. »). Phrases courtes, jamai
 - « En retard », « relance due », « réponse reçue » sont des signaux calculés, jamais des états stockés.
 
 ## État
-- Fait : prototype front complet sur API simulée (Accueil, Suivis priorités/tableau + mode Relances, Mails avec suivi et boîte partagée, Écrire, Agenda, Tâches, Récap, Alertes, Journal, Réglages), thèmes (clair, sombre, contraste), densités, fr/en, tests (domaine, flux, axe-core).
-- Fait : API Symfony avec entité Suivi (GET, POST, PATCH, close). Le front l'utilise pour les suivis si `VITE_API_URL` est défini.
-- Fait : serveur IMAP de test `docker/dovecot/` (comptes, scénarios F-11, F-44, F-52).
-- Fait : synchro IMAP côté API (webklex/php-imap, incrémentale par UID, en-têtes seulement), entité Mail, `GET /api/mails`, détection de réponse par `In-Reply-To`/`References` (réponse automatique ignorée, jamais de clôture), regroupement des alias par Message-ID. Commande `php bin/console app:mail:sync`. Tests PHPUnit dont l'intégration Dovecot.
-- Fait : le front lit les mails sur `/api/mails` quand `VITE_API_URL` est défini (corps en texte brut à la demande via `/api/mails/{id}/body`, rattachement au suivi par Message-ID et par le fil). Vérifié de bout en bout avec Dovecot.
-- Pas encore côté serveur (échec explicite dans le front, rien ne fait semblant) : envoi SMTP, boîtes partagées (prise en charge, notes), suggestions IA, état lu.
-- Prochaine tranche : envoi SMTP (Symfony Mailer) avec création du suivi à l'envoi, puis boîtes partagées côté API, entités Tâche/Événement (CalDAV), CAS, Mercure. Identifiants IMAP à chiffrer hors base avant tout usage réel.
-- Reporté : nom commercial, vérification nom/domaine/marque, modèle économique, mobile natif, Tauri, hors ligne (S), réponse assistée IA réelle.
+Voir `docs/MVP.md` : tableau exigence par exigence (✅ / 🟡 / ❌), à tenir à jour à chaque tranche.
+
+- Dev en une commande : `scripts/dev-up.sh` (PostgreSQL + Dovecot en tmpfs, API, worker, SMTP de test, front) ; `scripts/dev-down.sh`.
+- Tests : `cd api && php bin/phpunit` (SQLite en mémoire ; `DATABASE_URL=postgresql://…` pour PostgreSQL), `cd web && npm test` (dont axe-core).
+- Le front parle à l'API par défaut ; `VITE_USE_MOCK=true` pour la démo hors ligne.
+- Backend : API Platform + Doctrine (PostgreSQL), Symfony Messenger/Scheduler, webklex/php-imap, Symfony Mailer, sabre/vobject (CalDAV), libsodium (coffre des identifiants).
+- Règles à ne pas casser : aucun envoi sans clic ; le suivi n'est créé que si le message est parti ; aucune clôture ni relance automatique ; l'IA ne reçoit jamais titres, lieux ni participants d'un agenda ; mails personnels jamais visibles des autres membres d'un alias.
+- Prochaine tranche : voir « Points de vigilance » de `docs/MVP.md` (CAS réel, CalDAV réel, image de production, Tauri).

@@ -1,0 +1,38 @@
+# Infrastructure de développement : PostgreSQL + IMAP de test. Local uniquement (127.0.0.1), valeurs publiques.
+# Les données sont en mémoire (tmpfs) : jetables, rapides, aucune écriture disque. Après un `down` : scripts/dev-up.sh.
+#   scripts/dev-up.sh      tout lancer (infra, API, worker, SMTP de test, front)
+#   scripts/dev-down.sh    tout arrêter
+name: oscar-dev
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: oscar
+      POSTGRES_PASSWORD: oscar-dev
+      POSTGRES_DB: oscar
+    ports:
+      - '127.0.0.1:5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U oscar -d oscar']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  dovecot:
+    image: dovecot/dovecot:2.3.21
+    platform: linux/amd64 # seule architecture publiée ; émulée sur Apple Silicon
+    container_name: oscar-dovecot
+    ports:
+      - '127.0.0.1:1143:143' # IMAP (sans TLS : test uniquement)
+    volumes:
+      - ../dovecot/conf/dovecot.conf:/etc/dovecot/dovecot.conf:ro
+      - ../dovecot/conf/users:/etc/dovecot/users:ro
+    tmpfs:
+      - /srv/mail:uid=1000,gid=1000,mode=0755
+    healthcheck:
+      test: ['CMD-SHELL', 'doveadm service status >/dev/null 2>&1 || exit 1']
+      interval: 5s
+      timeout: 3s
+      retries: 10

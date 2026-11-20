@@ -21,7 +21,9 @@ abstract class ApiTestCase extends WebTestCase
         $this->client->disableReboot(); // sinon la base en mémoire disparaît entre deux requêtes
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
         $this->em->getConfiguration()->setUseSchemaEditorApi(true);
-        (new SchemaTool($this->em))->createSchema($this->em->getMetadataFactory()->getAllMetadata());
+        $tool = new SchemaTool($this->em);
+        $tool->dropSchema($this->em->getMetadataFactory()->getAllMetadata()); // repart d'une base vide, aussi sur PostgreSQL
+        $tool->createSchema($this->em->getMetadataFactory()->getAllMetadata());
     }
 
     protected function user(string $name): User

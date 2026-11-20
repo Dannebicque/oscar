@@ -26,7 +26,9 @@ final class MailSynchronizerTest extends KernelTestCase
         self::bootKernel();
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
         $this->em->getConfiguration()->setUseSchemaEditorApi(true);
-        (new SchemaTool($this->em))->createSchema($this->em->getMetadataFactory()->getAllMetadata());
+        $tool = new SchemaTool($this->em);
+        $tool->dropSchema($this->em->getMetadataFactory()->getAllMetadata()); // repart d'une base vide, aussi sur PostgreSQL
+        $tool->createSchema($this->em->getMetadataFactory()->getAllMetadata());
         $this->sync = self::getContainer()->get(MailSynchronizer::class);
         $this->user = new User('david');
         $this->account = (new MailAccount())->setOwner($this->user)->setLabel('t')->setAddress('david@x.fr')->setImapHost('h')->setSmtpHost('h')->setUsername('david');

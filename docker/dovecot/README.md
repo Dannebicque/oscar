@@ -6,9 +6,10 @@ Pour développer et tester l'étape IMAP sans toucher à une vraie boîte. **Loc
 sans TLS, mots de passe publics. Ne jamais l'exposer ni y mettre de vrais mails.
 
 ```bash
-docker compose -f docker/dovecot/compose.yaml up -d
+docker compose -f docker/dev/compose.yaml up -d --wait dovecot
 python3 docker/dovecot/seed.py          # charge les mails de test (idempotent, --reset pour repartir de zéro)
 python3 docker/dovecot/smoke.py         # vérifie les scénarios ; code de sortie ≠ 0 si écart
+python3 docker/dovecot/smtp-sink.py     # SMTP de test (127.0.0.1:1025) : livre dans les boîtes ci-dessous
 ```
 
 ## Comptes
@@ -21,7 +22,7 @@ python3 docker/dovecot/smoke.py         # vérifie les scénarios ; code de sort
 | `lea`       | `oscar-test` | membre de l'alias `contact@`          |
 
 Serveur : `127.0.0.1`, port `1143`, IMAP sans chiffrement, identifiant seul (pas de `@domaine`).
-Variables côté API (à copier dans `api/.env.local`, non versionné) : voir `api/.env.example`.
+Côté API, `php bin/console app:dev:setup` crée ces quatre utilisateurs, leurs comptes de messagerie (mot de passe chiffré) et l'alias `contact@` ; `scripts/dev-up.sh` fait tout.
 
 ## Scénarios couverts
 

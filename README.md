@@ -8,30 +8,34 @@ Cahier des charges v2 et maquette cliquable : voir `CLAUDE.md` pour les liens et
 - `docker/dovecot/` : serveur IMAP de test local (voir son README).
 - `desktop/` : enveloppe Tauri 2, à ajouter une fois le flux principal en place.
 
-## Démarrer le front
+## Tout lancer en local
 
 ```bash
-cd web
-npm install
-npm run dev     # http://localhost:5173, tout est simulé dans le navigateur
-npm test        # unitaires, composants et audit d'accessibilité (axe-core)
-npm run build
+scripts/dev-up.sh     # PostgreSQL + IMAP de test (Docker), API, worker, SMTP de test, front
+scripts/dev-down.sh
 ```
 
-Pour brancher suivis et mails sur l'API Symfony (agenda, tâches et alertes restent simulés), copier `web/.env.example` en `web/.env.local` et définir `VITE_API_URL`.
+Front : http://localhost:5173, connexion de développement avec `david`, `claire`, `marc` ou `lea` (quatre membres de l'alias `contact@`).
+L'état exigence par exigence est dans [`docs/MVP.md`](docs/MVP.md).
 
-## Démarrer l'API
+## Tests
 
 ```bash
-cd api
-composer install
-cp .env.example .env            # puis renseigner APP_SECRET (le .env n'est jamais versionné)
-php bin/console doctrine:migrations:migrate -n
-php bin/console app:suivis:seed
-php -S 127.0.0.1:8000 -t public
-php bin/phpunit                 # tests ; l'intégration IMAP est ignorée si Dovecot n'est pas lancé
-php bin/console app:mail:sync   # synchronise la boîte IMAP (voir docker/dovecot pour un serveur de test)
+cd api && php bin/phpunit                                  # SQLite en mémoire
+cd api && DATABASE_URL="postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar_test?serverVersion=17" php bin/phpunit   # PostgreSQL
+cd web && npm test                                         # domaine, flux, client HTTP, axe-core sur chaque écran
 ```
+
+Les tests d'intégration IMAP (`api/tests/Mail/DovecotIntegrationTest.php`) sont ignorés si Dovecot ne tourne pas.
+
+## Front seul
+
+```bash
+cd web && npm install && npm run dev
+```
+
+Sans API, `VITE_USE_MOCK=true npm run dev` lance la démo simulée hors ligne. Par défaut le front parle à `VITE_API_URL`
+(`http://localhost:8000`).
 
 ## Thèmes
 
@@ -39,9 +43,7 @@ Les couleurs ne vivent que dans des jetons (`web/src/styles/tokens.css`). Un th�
 `web/src/styles/themes.css`, une entrée dans `web/src/themes/index.ts` et un libellé `settings.look.themes.<id>`.
 Livrés : automatique, clair, sombre, contraste élevé.
 
-## Tester l'étape IMAP
+## Sécurité
 
-```bash
-docker compose -f docker/dovecot/compose.yaml up -d
-python3 docker/dovecot/seed.py && python3 docker/dovecot/smoke.py
-```
+Identifiants de messagerie chiffrés (libsodium) avec une clé `APP_VAULT_KEY` hors base ; jetons d'accès opaques, hachés, révocables ;
+données isolées par utilisateur ; connexion par CAS en production (connexion de développement limitée à `dev` et `test`).

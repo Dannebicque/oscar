@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    name: API (PHPUnit, SQLite et PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: { POSTGRES_USER: oscar, POSTGRES_PASSWORD: oscar-dev, POSTGRES_DB: oscar }
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U oscar" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: sodium, pdo_sqlite, pdo_pgsql, intl, ctype, iconv
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - name: Conteneur et schéma
+        run: |
+          cp .env.example .env
+          php bin/console lint:container
+          DATABASE_URL="postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar?serverVersion=17&charset=utf8" php bin/console doctrine:migrations:migrate -n
+          DATABASE_URL="postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar?serverVersion=17&charset=utf8" php bin/console doctrine:schema:validate
+      - name: Tests (SQLite en mémoire)
+        run: php bin/phpunit
+      - name: Tests (PostgreSQL)
+        run: DATABASE_URL="postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar?serverVersion=17&charset=utf8" php bin/phpunit
+
+  imap:
+    name: IMAP réel (Dovecot de test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.4', extensions: 'sodium, pdo_sqlite, intl, ctype, iconv', coverage: none }
+      - run: composer install --no-interaction --prefer-dist
+      - name: Dovecot de test
+        working-directory: .
+        run: |
+          docker compose -f docker/dev/compose.yaml up -d --wait dovecot
+          python3 docker/dovecot/seed.py
+          python3 docker/dovecot/smoke.py
+      - run: cp .env.example .env
+      - name: Tests d'intégration IMAP (ne doivent pas être ignorés)
+        run: php bin/phpunit tests/Mail/DovecotIntegrationTest.php --fail-on-skipped
+
+  web:
+    name: Front (types, tests, accessibilité, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npx vue-tsc --noEmit
+      - run: npm test
+      - run: npm run build
