@@ -18,6 +18,14 @@ scripts/dev-down.sh
 Front : http://localhost:5173, connexion de développement avec `david`, `claire`, `marc` ou `lea` (quatre membres de l'alias `contact@`).
 L'état exigence par exigence est dans [`docs/MVP.md`](docs/MVP.md).
 
+## Tout tester d'un coup
+
+```bash
+scripts/test-all.sh          # démarre la pile si besoin, lance API (SQLite + PostgreSQL + IMAP réel), front, build et parcours de bout en bout
+scripts/test-all.sh --keep   # laisse la pile tourner ensuite pour essayer à la main
+python3 scripts/e2e.py       # seulement le parcours de bout en bout, sur une pile déjà lancée
+```
+
 ## Tests
 
 ```bash
