@@ -19,3 +19,4 @@ coverage/
 .idea/
 .vscode/
 .phpunit.result.cache
+.phpunit.cache/

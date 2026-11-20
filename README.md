@@ -29,6 +29,8 @@ cp .env.example .env            # puis renseigner APP_SECRET (le .env n'est jama
 php bin/console doctrine:migrations:migrate -n
 php bin/console app:suivis:seed
 php -S 127.0.0.1:8000 -t public
+php bin/phpunit                 # tests ; l'intégration IMAP est ignorée si Dovecot n'est pas lancé
+php bin/console app:mail:sync   # synchronise la boîte IMAP (voir docker/dovecot pour un serveur de test)
 ```
 
 ## Thèmes

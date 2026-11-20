@@ -13,6 +13,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'app:suivis:seed', description: 'Insère les suivis de démonstration (base vide uniquement).')]
 final class SeedSuivisCommand extends Command
 {
+    /** Message-ID des mails de test de docker/dovecot : la synchro IMAP les rattache à ces suivis. */
+    private const MAIL_IDS = [
+        'Devis des affiches' => '<devis-affiches-1@iut-troyes.fr>',
+        'Convention de stage' => '<convention-1@iut-troyes.fr>',
+    ];
+
     public function __construct(private readonly EntityManagerInterface $em)
     {
         parent::__construct();
@@ -41,7 +47,7 @@ final class SeedSuivisCommand extends Command
             $this->em->persist(
                 (new Suivi())->setSubject($subject)->setContact($contact)->setDirection($direction)->setStatus($status)
                     ->setDueAt($due)->setRelanceAt($relance)->setReplyReceived($reply)->setSuggestedByAi($ai)
-                    ->setResponsible('David')
+                    ->setResponsible('David')->setMailId(self::MAIL_IDS[$subject] ?? null)
             );
         }
         $this->em->flush();

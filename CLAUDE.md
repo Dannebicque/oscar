@@ -38,5 +38,6 @@ Majordome numérique (« Votre majordome numérique. »). Phrases courtes, jamai
 - Fait : prototype front complet sur API simulée (Accueil, Suivis priorités/tableau + mode Relances, Mails avec suivi et boîte partagée, Écrire, Agenda, Tâches, Récap, Alertes, Journal, Réglages), thèmes (clair, sombre, contraste), densités, fr/en, tests (domaine, flux, axe-core).
 - Fait : API Symfony avec entité Suivi (GET, POST, PATCH, close). Le front l'utilise pour les suivis si `VITE_API_URL` est défini.
 - Fait : serveur IMAP de test `docker/dovecot/` (comptes, scénarios F-11, F-44, F-52).
-- Prochaine tranche : connexion IMAP réelle côté API (lecture par UID, Message-ID, détection de réponse), puis entités Mail/Tâche/Événement, CAS, Mercure.
+- Fait : synchro IMAP côté API (webklex/php-imap, incrémentale par UID, en-têtes seulement), entité Mail, `GET /api/mails`, détection de réponse par `In-Reply-To`/`References` (réponse automatique ignorée, jamais de clôture), regroupement des alias par Message-ID. Commande `php bin/console app:mail:sync`. Tests PHPUnit dont l'intégration Dovecot.
+- Prochaine tranche : brancher le front sur `/api/mails` (liste, lecture du corps à la demande), envoi SMTP, puis entités Tâche/Événement (CalDAV), CAS, Mercure. Identifiants IMAP à chiffrer hors base avant tout usage réel.
 - Reporté : nom commercial, vérification nom/domaine/marque, modèle économique, mobile natif, Tauri, hors ligne (S), réponse assistée IA réelle.
