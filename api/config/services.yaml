@@ -36,6 +36,7 @@ services:
 
     App\Mail\OutgoingMailer: '@App\Mail\SymfonyOutgoingMailer'
     App\Calendar\CalendarProvider: '@App\Calendar\CalDavProvider'
+    App\Ai\AiProvider: '@App\Ai\HeuristicProvider'
 
 when@test:
     services:
@@ -44,6 +45,9 @@ when@test:
             autoconfigure: true
         App\Tests\Support\FakeCalendarProvider:
             public: true
+        App\Tests\Support\SpyAiProvider:
+            public: true
+        App\Ai\AiProvider: '@App\Tests\Support\SpyAiProvider'
         App\Calendar\CalendarProvider: '@App\Tests\Support\FakeCalendarProvider'
         App\Recap\RecapService:
             public: true
