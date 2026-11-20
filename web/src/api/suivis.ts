@@ -14,7 +14,7 @@ const SEED: Suivi[] = [
   { id: 's5', subject: 'Matériel de TP', contact: 'Service achats', state: 'done', dueAt: '2026-11-12', suggestedByAi: false },
 ]
 
-/** Implémentation locale utilisée tant que l'API n'est pas branchée. */
+/** Implémentation locale (démo hors ligne, tests). */
 export function createMockApi(): SuivisApi {
   let data = structuredClone(SEED)
   return {
@@ -27,4 +27,24 @@ export function createMockApi(): SuivisApi {
   }
 }
 
-export const api: SuivisApi = createMockApi()
+/** Client HTTP de l'API Symfony. */
+export function createHttpApi(baseUrl: string): SuivisApi {
+  const root = baseUrl.replace(/\/$/, '')
+  return {
+    async list() {
+      const res = await fetch(`${root}/api/suivis`, { headers: { Accept: 'application/json' } })
+      if (!res.ok) throw new Error(`GET /api/suivis : ${res.status}`)
+      return (await res.json()) as Suivi[]
+    },
+    async close(id) {
+      const res = await fetch(`${root}/api/suivis/${encodeURIComponent(id)}/close`, { method: 'POST' })
+      if (!res.ok) throw new Error(`POST /api/suivis/${id}/close : ${res.status}`)
+    },
+  }
+}
+
+/** VITE_USE_MOCK=true force l'API simulée (démo hors ligne) ; sinon on parle à l'API. */
+export const api: SuivisApi =
+  import.meta.env.VITE_USE_MOCK === 'true'
+    ? createMockApi()
+    : createHttpApi(import.meta.env.VITE_API_URL ?? 'http://localhost:8000')
