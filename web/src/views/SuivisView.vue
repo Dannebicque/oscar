@@ -1,25 +1,183 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import SuiviCard from '../components/SuiviCard.vue'
-import { useSuivisStore } from '../stores/suivis'
-const store = useSuivisStore()
+import { useRouter } from 'vue-router'
+import NewSuiviDialog from '../components/suivis/NewSuiviDialog.vue'
+import NextEventCard from '../components/suivis/NextEventCard.vue'
+import RelanceDialog from '../components/suivis/RelanceDialog.vue'
+import SuiviBoard from '../components/suivis/SuiviBoard.vue'
+import SuiviRow from '../components/suivis/SuiviRow.vue'
+import AiBadge from '../components/ui/AiBadge.vue'
+import BaseButton from '../components/ui/BaseButton.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import ErrorState from '../components/ui/ErrorState.vue'
+import PageHeader from '../components/ui/PageHeader.vue'
+import SegmentedControl from '../components/ui/SegmentedControl.vue'
+import { useFormat } from '../composables/useFormat'
+import { useNow } from '../composables/useNow'
+import { buildPriorities, type PriorityItem } from '../domain/priorities'
+import type { ItemKind, NewSuivi } from '../domain/types'
+import { useAgendaStore } from '../stores/agenda'
+import { useMailsStore } from '../stores/mails'
+import { useSuivisStore, type Scope } from '../stores/suivis'
+import { useTasksStore } from '../stores/tasks'
+import { useUiStore } from '../stores/ui'
+
 const { t } = useI18n()
-onMounted(() => store.load())
+const router = useRouter()
+const fmt = useFormat()
+const store = useSuivisStore()
+const tasks = useTasksStore()
+const agenda = useAgendaStore()
+const mails = useMailsStore()
+const ui = useUiStore()
+const now = useNow()
+
+type View = 'priorities' | 'board'
+type KindFilter = 'all' | ItemKind
+const view = ref<View>('priorities')
+const kind = ref<KindFilter>('all')
+const showNew = ref(false)
+const showRelances = ref(false)
+const suggestion = ref<'open' | 'done' | 'ignored'>('open')
+
+onMounted(() => Promise.all([store.load(), tasks.load(), agenda.load(), mails.load()]))
+const failed = computed(() => store.error || tasks.error || agenda.error)
+
+const all = computed(() => {
+  const team = store.scope === 'team'
+  return buildPriorities(store.inScope, team ? [] : tasks.items, team ? [] : agenda.work, now.value)
+})
+const counts = computed(() => ({
+  all: all.value.length,
+  mail: all.value.filter((i) => i.kind === 'mail').length,
+  task: all.value.filter((i) => i.kind === 'task').length,
+  rdv: all.value.filter((i) => i.kind === 'rdv').length,
+}))
+const shown = computed(() => (kind.value === 'all' ? all.value : all.value.filter((i) => i.kind === kind.value)))
+const kindOptions = computed(() => [
+  { value: 'all' as const, label: t('suivis.filterAll'), count: counts.value.all },
+  { value: 'mail' as const, label: t('kinds.mail'), count: counts.value.mail },
+  { value: 'task' as const, label: t('kinds.task'), count: counts.value.task },
+  { value: 'rdv' as const, label: t('kinds.rdv'), count: counts.value.rdv },
+])
+const scopeOptions = computed(() => [
+  { value: 'mine' as Scope, label: t('suivis.mine') },
+  { value: 'team' as Scope, label: t('suivis.team') },
+])
+const viewOptions = computed(() => [
+  { value: 'priorities' as const, label: t('suivis.priorities') },
+  { value: 'board' as const, label: t('suivis.board') },
+])
+const recent = computed(() =>
+  store.inScope.flatMap((s) => s.journal.map((j) => ({ ...j, subject: s.subject }))).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 5),
+)
+
+/** Boîte partagée : l'état prime sur le responsable, qui n'existe pas (F-67). */
+function teamExtra(i: PriorityItem): string | undefined {
+  if (store.scope !== 'team') return undefined
+  const m = mails.items.find((x) => x.suivi === i.refId)
+  if (!m?.claim) return undefined
+  const age = Math.round((now.value.getTime() - new Date(m.at).getTime()) / 3_600_000)
+  const who = m.claim.by ?? ''
+  const state = m.claim.state === 'new' ? t('suivis.teamOwnerNone') : m.claim.state === 'taken' ? t('suivis.teamTakenBy', { who }) : t('suivis.teamHandledBy', { who })
+  return `${state} · ${t('suivis.teamAge', { n: age })}`
+}
+
+function open(i: PriorityItem) {
+  if (i.kind === 'mail') {
+    const s = store.byId(i.refId)
+    return router.push(s?.mailId ? { name: 'mails', params: { id: s.mailId } } : { name: 'mails' })
+  }
+  return router.push({ name: i.route.name })
+}
+async function done(i: PriorityItem) {
+  if (i.kind === 'mail') {
+    const subject = i.title
+    const undo = await store.close(i.refId)
+    ui.notify(t('suivis.closed', { subject }), { undo: undo && (async () => { await undo(); ui.notify(t('suivis.reopened')) }) })
+  } else if (i.kind === 'task') {
+    await tasks.setDone(i.refId, true)
+    ui.notify(t('tasks.doneToast', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
+  }
+}
+async function create(n: NewSuivi) {
+  const s = await store.create(n)
+  showNew.value = false
+  ui.notify(t('suivis.created', { subject: s.subject }))
+}
+function suggest(accept: boolean) {
+  suggestion.value = accept ? 'done' : 'ignored'
+  ui.notify(accept ? t('suivis.suggestionDone') : t('suivis.suggestionIgnored'))
+}
 </script>
 
 <template>
-  <h1>{{ t('suivis.title') }}</h1>
-  <p class="count" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
-  <p v-if="store.loading">{{ t('suivis.loading') }}</p>
-  <p v-else-if="store.items.length === 0">{{ t('suivis.empty') }}</p>
-  <ul v-else class="list">
-    <SuiviCard v-for="s in store.sorted" :key="s.id" :suivi="s" @close="store.close" />
-  </ul>
+  <PageHeader :title="t('suivis.title')" :subtitle="t('suivis.subtitle')">
+    <BaseButton variant="primary" icon="plus" :label="t('suivis.new')" @click="showNew = true" />
+  </PageHeader>
+
+  <ErrorState v-if="failed" @retry="() => { store.load(); tasks.load(); agenda.load() }" />
+  <template v-else>
+    <div class="toolbar">
+      <SegmentedControl v-model="store.scope" :options="scopeOptions" :label="t('suivis.scopeLabel')" />
+      <SegmentedControl v-model="view" :options="viewOptions" :label="t('suivis.viewLabel')" />
+    </div>
+
+    <div class="stack">
+      <NextEventCard v-if="store.scope === 'mine'" :now="now" />
+
+      <section v-if="store.scope === 'mine' && store.relances.length" class="relances" aria-labelledby="rel-h">
+        <div>
+          <h2 id="rel-h">{{ t('suivis.relancesTitle', { n: store.relances.length }, store.relances.length) }}</h2>
+          <p class="muted">{{ t('suivis.relancesHelp') }}</p>
+        </div>
+        <BaseButton variant="primary" icon="clock" :label="t('suivis.relancesStart')" @click="showRelances = true" />
+      </section>
+
+      <section v-if="suggestion === 'open' && store.scope === 'mine'" class="ai-card" aria-labelledby="sug-h">
+        <AiBadge />
+        <p id="sug-h">{{ t('suivis.suggestionTitle') }}</p>
+        <div class="row-actions">
+          <BaseButton variant="primary" :label="t('suivis.suggestionCreate')" @click="suggest(true)" />
+          <BaseButton :label="t('common.ignore')" @click="suggest(false)" />
+        </div>
+      </section>
+
+      <p class="muted" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
+
+      <template v-if="view === 'priorities'">
+        <SegmentedControl v-model="kind" :options="kindOptions" :label="t('suivis.filterKind')" />
+        <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
+        <EmptyState v-else-if="all.length === 0" :text="t('suivis.empty')" />
+        <EmptyState v-else-if="shown.length === 0" icon="list" :text="t('suivis.emptyCategory')" />
+        <ol v-else class="list" :aria-label="t('suivis.priorities')">
+          <SuiviRow v-for="(i, n) in shown" :key="i.key" :item="i" :rank="n + 1" :extra="teamExtra(i)" @open="open" @done="done" />
+        </ol>
+      </template>
+      <SuiviBoard v-else :items="store.inScope" @open="(s) => router.push(s.mailId ? { name: 'mails', params: { id: s.mailId } } : { name: 'mails' })" />
+
+      <section v-if="recent.length" aria-labelledby="act-h">
+        <h2 id="act-h">{{ t('suivis.activity') }}</h2>
+        <ul class="activity">
+          <li v-for="(j, n) in recent" :key="n"><span class="muted">{{ fmt.dateTime(j.at) }}</span> · <strong>{{ j.author }}</strong> · {{ fmt.journal(j) }} · {{ j.subject }}</li>
+        </ul>
+      </section>
+    </div>
+  </template>
+
+  <NewSuiviDialog :open="showNew" @close="showNew = false" @create="create" />
+  <RelanceDialog :open="showRelances" :queue="store.relances" @close="showRelances = false" />
 </template>
 
 <style scoped>
-h1 { margin: 0 0 4px; font-size: 24px; }
-.count { margin: 0 0 16px; color: var(--grey); }
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.toolbar { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.stack { display: grid; gap: var(--space-4); }
+.list { display: grid; gap: var(--gap); }
+.relances { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); border: 1px solid var(--c-warn); background: var(--c-warn-soft); color: var(--c-warn); border-radius: var(--radius-md); }
+.relances .muted { color: var(--c-text); }
+.ai-card { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); border: 1px solid var(--c-ai); background: var(--c-ai-soft); border-radius: var(--radius-md); justify-items: start; }
+.row-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+h2 { margin-bottom: var(--space-2); font-size: var(--fs-md); }
+.activity { display: grid; gap: var(--space-2); font-size: var(--fs-sm); }
 </style>

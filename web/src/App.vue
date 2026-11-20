@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import AppShell from './components/AppShell.vue'
+import AppShell from './components/layout/AppShell.vue'
 </script>
 
-<template>
-  <AppShell><RouterView /></AppShell>
-</template>
+<template><AppShell /></template>

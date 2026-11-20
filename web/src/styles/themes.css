@@ -1,0 +1,60 @@
+/*
+ * Thèmes. Pour en ajouter un : un bloc ici + une entrée dans src/themes/index.ts + un libellé i18n.
+ * Aucun composant à modifier.
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --c-bg: #0e1420;
+  --c-surface: #161e2c;
+  --c-surface-2: #1f2938;
+  --c-border: #33405a;
+  --c-text: #eaf0fa;
+  --c-text-muted: #aab6c9;
+  --c-primary: #6f9bff;
+  --c-primary-hover: #93b2ff;
+  --c-on-primary: #0b1220;
+  --c-primary-soft: #1c2c52;
+  --c-on-primary-soft: #b9ceff;
+  --c-ai: #b9a8ff;
+  --c-ai-soft: #2a2250;
+  --c-warn: #fdb022;
+  --c-warn-soft: #3d2a0a;
+  --c-danger: #ff8a80;
+  --c-danger-soft: #4a1713;
+  --c-success: #4ade80;
+  --c-success-soft: #0f3a25;
+  --c-neutral-soft: #1f2938;
+  --c-focus: #93b2ff;
+  --c-overlay: rgb(0 0 0 / 0.65);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-2: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+
+/* Contraste élevé : AAA partout, bordures marquées, focus très visible. */
+:root[data-theme='contrast'] {
+  color-scheme: dark;
+  --c-bg: #000000;
+  --c-surface: #000000;
+  --c-surface-2: #14141f;
+  --c-border: #ffffff;
+  --c-text: #ffffff;
+  --c-text-muted: #f0f0f0;
+  --c-primary: #ffe14d;
+  --c-primary-hover: #fff08a;
+  --c-on-primary: #000000;
+  --c-primary-soft: #000000;
+  --c-on-primary-soft: #ffe14d;
+  --c-ai: #d9ccff;
+  --c-ai-soft: #000000;
+  --c-warn: #ffd166;
+  --c-warn-soft: #000000;
+  --c-danger: #ff9e9e;
+  --c-danger-soft: #000000;
+  --c-success: #7dffb0;
+  --c-success-soft: #000000;
+  --c-neutral-soft: #000000;
+  --c-focus: #ffe14d;
+  --c-overlay: rgb(0 0 0 / 0.85);
+  --shadow-1: none;
+  --shadow-2: 0 0 0 2px #fff;
+}

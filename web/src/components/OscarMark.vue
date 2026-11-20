@@ -1,6 +1,7 @@
 <template>
   <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M3 7l7 5-7 5z M21 7l-7 5 7 5z" fill="#fff" />
-    <rect x="9.5" y="9.5" width="5" height="5" rx="1.5" fill="#fff" />
+    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+    <path d="M6 9l6 3-6 3z M18 9l-6 3 6 3z" fill="currentColor" />
+    <rect x="10.2" y="10.2" width="3.6" height="3.6" rx="1" fill="currentColor" />
   </svg>
 </template>
