@@ -38,6 +38,13 @@ final class SystemController extends AbstractController
         return new JsonResponse($out);
     }
 
+    /** « Réessayer » : resynchronise maintenant les comptes de l'utilisateur et dit ce qui a marché. */
+    #[Route('/api/sync', methods: ['POST'])]
+    public function sync(#[CurrentUser] User $user, \App\Mail\SyncService $sync): JsonResponse
+    {
+        return new JsonResponse(['results' => $sync->syncUser($user)]);
+    }
+
     #[Route('/api/notifications/read-all', methods: ['POST'])]
     public function readAll(#[CurrentUser] User $user, EntityManagerInterface $em): JsonResponse
     {
