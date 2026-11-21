@@ -17,6 +17,7 @@ import { useFormat } from '../composables/useFormat'
 import { clock } from '../domain/clock'
 import { followUpDue, isoDay } from '../domain/dates'
 import { searchDirectory } from '../domain/directory'
+import { isOffline, useOutbox } from '../composables/useOutbox'
 import { useOscar } from '../oscar/useOscar'
 import { useAccountsStore } from '../stores/accounts'
 import { useTasksStore } from '../stores/tasks'
@@ -31,6 +32,7 @@ const fmt = useFormat()
 const mails = useMailsStore()
 const settings = useSettingsStore()
 const accounts = useAccountsStore()
+const outbox = useOutbox()
 const tasks = useTasksStore()
 const ui = useUiStore()
 const { say } = useOscar()
@@ -151,19 +153,28 @@ async function send() {
   submitted.value = true
   if (!subject.value.trim() || to.value.length === 0) return
   sending.value = true
+  let payload: Parameters<typeof mails.send>[0] | null = null
   try {
-    const r = await mails.send({
+    payload = {
       to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: quoteOn.value && original.value ? body.value + quote.value : body.value,
       attachments: await Promise.all(files.value.map(async (f) => ({ name: f.name, type: f.type || 'application/octet-stream', content: await readBase64(f) }))),
       followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
-    })
+    }
+    const r = await mails.send(payload)
     if (draftId.value) await mails.moveTo(draftId.value, 'trash').catch(() => undefined)
     // Le message est parti : seulement maintenant, la tâche cochée est créée (jamais avant, jamais sans clic).
     if (taskOn.value && taskHint.value && taskTitle.value.trim()) await tasks.add({ title: taskTitle.value.trim(), dueAt: taskHint.value.dueAt, origin: 'ai', source: subject.value.trim() }).catch(() => undefined)
     ui.notify(r.followDueAt ? say('sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
     router.push({ name: 'mails' })
   } catch (e) {
+    // Pas de réseau (F-80) : le message, déjà envoyé par un clic, patiente dans la file et part au retour de la connexion.
+    if (payload && isOffline(e)) {
+      await outbox.queue(payload)
+      if (draftId.value) draftId.value = null
+      router.push({ name: 'mails' })
+      return
+    }
     // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour, avec une action (§5, F-79).
     const noAccount = e instanceof ApiError && e.message === 'no-account'
     ui.notify(noAccount ? t('compose.noAccount') : say('errorSend'), { tone: 'error' })

@@ -188,6 +188,10 @@ export default {
     relances: 'Relances dues', nothing: 'Rien à signaler.', intro: 'Voilà ce qui compte maintenant. Je prépare, tu décides.', example: 'Exemple de récap', sentTo: 'Envoyé à david{\'@\'}iut-troyes.fr à {time}.',
   },
   quick: { title: 'Capture rapide', help: 'Une tâche en deux gestes : tape un titre, Entrée.' },
+  offline: {
+    banner: 'Hors ligne : tu consultes ce qui était déjà chargé.', back: 'Connexion revenue.', queue: 'Aucun message en attente. | 1 message en attente d’envoi. | {n} messages en attente d’envoi.', sendNow: 'Envoyer maintenant',
+    queued: 'Pas de connexion : ton message est en file d’attente et partira dès que le réseau revient.', sent: 'Message envoyé : « {subject} ». L’envoi est confirmé.', failed: 'Le message « {subject} » n’est pas parti : le serveur le refuse. Il reste en file, ouvre-le ou réessaie.',
+  },
   alerts: {
     moreDesktop: '+ {n} autres notifications dans Oscar.',
     channelsTitle: 'Comment être prévenu', channelsHelp: 'Un canal par type d’événement. Les alertes sont regroupées pour ne pas se multiplier.', event: 'Événement', channel: { app: 'Dans l’application', desktop: 'Bureau', email: 'E-mail' },

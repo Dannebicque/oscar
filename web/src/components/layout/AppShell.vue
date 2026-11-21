@@ -7,6 +7,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useSettingsStore } from '../../stores/settings'
 import { useShortcuts } from '../../composables/useShortcuts'
 import { useSystemStore } from '../../stores/system'
+import OfflineBanner from './OfflineBanner.vue'
 import QuickCaptureDialog from './QuickCaptureDialog.vue'
 import { onNative } from '../../desktop/bridge'
 import { useDesktopNotifications } from '../../desktop/useDesktopNotifications'
@@ -86,7 +87,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
       <button v-if="session.token" type="button" class="link wide out" :aria-label="t('nav.signOut')" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOutShort') }}</span></button>
     </nav>
 
-    <main id="main" tabindex="-1" :class="{ bleed: route.meta.bleed }"><div class="page"><RouterView /></div></main>
+    <main id="main" tabindex="-1" :class="{ bleed: route.meta.bleed }"><OfflineBanner class="ob" /><div class="page"><RouterView /></div></main>
     <StatusBar />
   </div>
   <ShortcutsDialog />
@@ -105,6 +106,8 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
 .nav { grid-area: nav; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-2); background: var(--c-surface); border-right: var(--bw) solid var(--c-border); }
 main { grid-area: main; padding: var(--space-5) var(--space-5); min-width: 0; min-height: 0; overflow-y: auto; scroll-padding-top: var(--space-5); }
 .page { width: 100%; }
+.ob { margin: calc(var(--space-5) * -1) calc(var(--space-5) * -1) var(--space-4); }
+main.bleed .ob { margin: 0; }
 main.bleed { padding: 0; overflow: hidden; }
 main.bleed .page { max-width: none; height: 100%; margin: 0; }
 .brand { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; color: var(--c-text); font-weight: 800; }

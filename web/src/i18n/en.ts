@@ -188,6 +188,10 @@ const en: typeof fr = {
     relances: 'Reminders due', nothing: 'Nothing to report.', intro: 'Here is what matters now. I prepare, you decide.', example: 'Recap example', sentTo: 'Sent to david{\'@\'}iut-troyes.fr at {time}.',
   },
   quick: { title: 'Quick capture', help: 'A task in two moves: type a title, press Enter.' },
+  offline: {
+    banner: 'Offline: you are viewing what was already loaded.', back: 'Connection is back.', queue: 'No messages waiting. | 1 message waiting to be sent. | {n} messages waiting to be sent.', sendNow: 'Send now',
+    queued: 'No connection: your message is queued and will go out as soon as the network is back.', sent: 'Message sent: “{subject}”. Sending is confirmed.', failed: 'The message “{subject}” was not sent: the server refused it. It stays queued, review it or try again.',
+  },
   alerts: {
     moreDesktop: '+ {n} more notifications in Oscar.',
     channelsTitle: 'How to be notified', channelsHelp: 'One channel per kind of event. Alerts are grouped so they don’t pile up.', event: 'Event', channel: { app: 'In the app', desktop: 'Desktop', email: 'Email' },

@@ -8,7 +8,9 @@ import struct
 import zlib
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "desktop" / "src-tauri" / "icons"
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "desktop" / "src-tauri" / "icons"
+PWA = ROOT / "web" / "public" / "icons"
 BLUE = (0x24, 0x57, 0xD6)
 WHITE = (255, 255, 255)
 
@@ -27,9 +29,8 @@ def in_tri(px, py, a, b, c):
     return not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0))
 
 
-def bowtie(x, y):
+def bowtie(x, y, k=0.62):
     """Nœud papillon de l'identité visuelle : deux triangles et un carré central, dans le cadre 24 x 24 d'OscarMark, réduit au centre."""
-    k = 0.62  # part du cadre occupée par le motif
     u = (x - 0.5) / k * 24 + 12
     v = (y - 0.5) / k * 24 + 12
     return (
@@ -39,7 +40,7 @@ def bowtie(x, y):
     )
 
 
-def render(n, ss=3):
+def render(n, ss=3, rounded=True, k=0.62):
     rows = []
     for j in range(n):
         row = bytearray()
@@ -48,10 +49,10 @@ def render(n, ss=3):
             for sj in range(ss):
                 for si in range(ss):
                     x, y = (i + (si + .5) / ss) / n, (j + (sj + .5) / ss) / n
-                    if not inside_round_rect(x, y, 0.22):
+                    if rounded and not inside_round_rect(x, y, 0.22):
                         continue
                     a += 255
-                    col = WHITE if bowtie(x, y) else BLUE
+                    col = WHITE if bowtie(x, y, k) else BLUE
                     r, g, b = r + col[0] * 255, g + col[1] * 255, b + col[2] * 255
             cnt = ss * ss
             if a:
@@ -62,8 +63,8 @@ def render(n, ss=3):
     return rows
 
 
-def png(n):
-    raw = b"".join(render(n))
+def png(n, rounded=True, k=0.62):
+    raw = b"".join(render(n, rounded=rounded, k=k))
 
     def chunk(t, d):
         return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
@@ -99,7 +100,13 @@ def main():
     (OUT / "128x128@2x.png").write_bytes(png(256))
     (OUT / "icon.ico").write_bytes(ico([16, 32, 48, 64, 128, 256]))
     (OUT / "icon.icns").write_bytes(icns())
-    print("Icônes écrites dans", OUT)
+    # Application web installable (PWA) : 192 et 512 px, plus une version « maskable » (plein cadre, motif dans la zone sûre).
+    PWA.mkdir(parents=True, exist_ok=True)
+    (PWA / "icon-192.png").write_bytes(png(192))
+    (PWA / "icon-512.png").write_bytes(png(512))
+    (PWA / "icon-maskable-512.png").write_bytes(png(512, rounded=False, k=0.5))
+    (PWA / "apple-touch-icon.png").write_bytes(png(180, rounded=False, k=0.55))
+    print("Icônes écrites dans", OUT, "et", PWA)
 
 
 if __name__ == "__main__":

@@ -9,8 +9,8 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 39 | 21 | 5 |
-| Non fonctionnelles N (12) | 2 | 8 | 2 |
+| Exigences fonctionnelles F (65) | 40 | 21 | 4 |
+| Non fonctionnelles N (12) | 2 | 9 | 1 |
 | Interface U (11) | 5 | 4 | 2 |
 
 **MVP (priorité M)** : toutes les exigences M ont une implémentation ; les points qui les rendent 🟡 sont listés plus bas (webmail incomplet, LDAP, notifications bureau, application Tauri non commencée, pas d'image de production).
@@ -108,7 +108,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-77 | M | ✅ | Barre d'état : messagerie, agendas, IA avec mode ; détail et « Réessayer ». |
 | F-78 | M | 🟡 | Journal exportable, filtre par compte, cartes de connexion. Pas de filtre par niveau (le journal n'a pas de gravité). |
 | F-79 | M | ✅ | Messages clairs en français avec action ; alerte seulement après 3 échecs, une fois par jour. |
-| F-80 | S | ❌ | Hors ligne et file d'envoi. |
+| F-80 | S | 🟡 | Message écrit sans réseau : mis en file (IndexedDB, mémoire sinon), parti dans l'ordre au retour de la connexion avec confirmation ; un refus du serveur n'est jamais mis en file. Bannière « hors ligne » annoncée. Testé en unitaire ; **jamais essayé dans un vrai navigateur coupé du réseau**. |
 
 ## 2. Exigences non fonctionnelles
 
@@ -122,7 +122,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | N-06 | 🟡 | Export JSON de mes données et suppression définitive du compte (cascade) ✅, depuis Réglages > Mon compte. Pas de durées de conservation réglables ni de registre des traitements. Le journal des appels IA ne contient aucun contenu. |
 | N-07 | ❌ | Performances non mesurées (100 000 mails). |
 | N-08 | ✅ | Aucun récap ni alerte en double (unicité testée). |
-| N-09 | ❌ | Pas de cache hors ligne. |
+| N-09 | 🟡 | Service worker : coque de l'application en cache, lectures d'API (tâches, suivis, mails récents, agenda…) servies du cache hors ligne, effacées à la déconnexion ; file d'envoi (F-80). Écrit et construit, **non vérifié dans un navigateur** (le service worker n'a pas pu s'enregistrer dans le navigateur intégré de l'outil de développement). Pas de synchronisation des modifications faites hors ligne (tâches, suivis). |
 | N-10 | ✅ | fr/en, aucune chaîne en dur, clés vérifiées par test. |
 | N-11 | 🟡 | Dev en une commande ✅. Image de production (`Dockerfile`, FrankenPHP), `compose.prod.yaml` (base, application, worker), modèle `docker/prod/env.example` et guide `docs/INSTALL.md` écrits ; Compose validé, **image jamais construite ni essayée**. CI écrite, jamais exécutée sur GitHub. Fichier `LICENSE` (AGPL) absent. |
 | N-12 | 🟡 | Interface moderne, accessible, raccourcis Gmail. Gestes webmail courants présents ; vidage de la corbeille et HTML isolé manquent (F-16). |
@@ -133,7 +133,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 |---|---|---|---|
 | U-01 | M | ✅ | Barre du bas à cinq boutons (Suivis au centre) sur mobile, rail latéral au bureau avec « Suivis » mis en avant. |
 | U-02 | S | ❌ | Balayage entre vues. |
-| U-03 | M | 🟡 | Un seul code adaptatif ✅ ; PWA installable ❌. |
+| U-03 | M | 🟡 | Un seul code adaptatif ✅ ; PWA : manifeste, icônes (192, 512, maskable), service worker écrits ; installation non essayée. |
 | U-04 | M | 🟡 | Chaque bloc de l'accueil ouvre sa vue ; retour par bouton seulement, pas par geste. |
 | U-05 | M | 🟡 | Alternatives clavier et pointeur simple partout où il y a un geste ; balayage absent donc rien à doubler. |
 | U-06 | S | 🟡 | Bloc « Oscar » de la synthèse avec recommandations ✅ ; échange conversationnel ❌ (second temps prévu). |
@@ -188,7 +188,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | Reka UI, Pinia, Vue Router, vue-i18n | ✅ | FullCalendar pour l'agenda. |
 | Mercure (temps réel) | ❌ | Interrogation du serveur chaque minute. |
 | FrankenPHP | 🟡 | Image et Caddyfile écrits (`Dockerfile`, `docker/prod/`) ; jamais construits. `php -S` en développement. |
-| Cache hors ligne (service worker, IndexedDB) | ❌ | |
+| Cache hors ligne (service worker, IndexedDB) | 🟡 | Écrit et testé en unitaire ; non vérifié dans un navigateur. |
 | Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. Le code Rust compile (check, clippy, build sur macOS) ; **fenêtre, trousseau, notifications et raccourci non essayés à la main**. |
 | Playwright | ❌ | Remplacé par `scripts/e2e.py` (HTTP + IMAP réels). |
 | Affichage HTML isolé (iframe sandbox) | ❌ | Texte brut seulement : aucun contenu actif ne s'exécute. |
@@ -208,6 +208,6 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 2. **Fournisseur d'IA** : l'essayer contre un vrai service (OpenAI, Mistral, Ollama) et brancher un modèle auto-hébergé pour l'IA de l'université.
 3. **Tauri** : compiler `desktop/`, corriger, signer, mises à jour automatiques, essais sur les trois systèmes et lecteurs d'écran.
 4. **Agenda** : envoi d'invitations et mises à jour (F-25), vrai serveur CalDAV de test, Google.
-5. PWA et hors ligne.
+5. Vérifier la PWA et le hors-ligne dans un vrai navigateur ; synchroniser les modifications faites hors ligne.
 6. **Production** : construire et essayer l'image, test du CAS et du LDAP réels, `LICENSE`, durées de conservation (RGPD).
 7. **Suivi** : tâche liée à un suivi (F-36), filtres par compte/projet/étiquette (F-59), regroupement des relances au même destinataire.

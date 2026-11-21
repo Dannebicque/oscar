@@ -1,0 +1,20 @@
+{
+  "name": "Oscar",
+  "short_name": "Oscar",
+  "description": "Votre majordome numérique : mail, agenda, tâches et suivi des demandes.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#2457d6",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Écrire un message", "url": "/ecrire" },
+    { "name": "Mes suivis", "url": "/suivis" }
+  ]
+}

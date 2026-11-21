@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 
+import { clearOfflineData } from '../pwa/register'
 import { isDesktop, readStoredToken, storeToken } from '../desktop/bridge'
 
 const KEY = 'oscar.token'
@@ -12,6 +13,7 @@ export function loadToken(): string | null {
 }
 export function saveToken(token: string | null) {
   session.token = token
+  if (!token) clearOfflineData() // la session s'arrête : les données gardées pour le hors-ligne aussi
   if (isDesktop()) { void storeToken(token); return } // bureau : trousseau du système, jamais localStorage
   try {
     if (token) localStorage.setItem(KEY, token)
