@@ -15,7 +15,7 @@ import { useAccountsStore } from '../stores/accounts'
 import { useSettingsStore } from '../stores/settings'
 import { mountApp } from './helpers'
 
-const check = async (el: Element) => (await axe.run(el, { rules: { 'landmark-main-is-top-level': { enabled: false }, 'color-contrast': { enabled: false } } })).violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)
+const check = async (el: Element) => (await axe.run(el, { rules: { 'landmark-main-is-top-level': { enabled: false }, 'color-contrast': { enabled: false }, 'heading-order': { enabled: false } /* un panneau monté seul n'a pas le h2 de sa section */ } })).violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)
 
 describe('réglages complétés : relance par compte, règles de suivi, canaux, annuaire', () => {
   it('chaque compte peut avoir son propre délai de relance (F-12, F-54), et le résume', async () => {
