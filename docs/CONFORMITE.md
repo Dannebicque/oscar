@@ -124,7 +124,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | N-08 | ✅ | Aucun récap ni alerte en double (unicité testée). |
 | N-09 | ❌ | Pas de cache hors ligne. |
 | N-10 | ✅ | fr/en, aucune chaîne en dur, clés vérifiées par test. |
-| N-11 | 🟡 | Dev en une commande ✅, CI écrite (jamais exécutée sur GitHub). Image de production et Compose de déploiement ❌. Licence AGPL annoncée, fichier de licence à vérifier. |
+| N-11 | 🟡 | Dev en une commande ✅. Image de production (`Dockerfile`, FrankenPHP), `compose.prod.yaml` (base, application, worker), modèle `docker/prod/env.example` et guide `docs/INSTALL.md` écrits ; Compose validé, **image jamais construite ni essayée**. CI écrite, jamais exécutée sur GitHub. Fichier `LICENSE` (AGPL) absent. |
 | N-12 | 🟡 | Interface moderne, accessible, raccourcis Gmail. Gestes webmail courants présents ; vidage de la corbeille et HTML isolé manquent (F-16). |
 
 ## 3. Interface (section 10)
@@ -187,7 +187,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | Webklex, Symfony Mailer, sabre/vobject | ✅ | |
 | Reka UI, Pinia, Vue Router, vue-i18n | ✅ | FullCalendar pour l'agenda. |
 | Mercure (temps réel) | ❌ | Interrogation du serveur chaque minute. |
-| FrankenPHP | ❌ | `php -S` en développement ; pas d'image de production. |
+| FrankenPHP | 🟡 | Image et Caddyfile écrits (`Dockerfile`, `docker/prod/`) ; jamais construits. `php -S` en développement. |
 | Cache hors ligne (service worker, IndexedDB) | ❌ | |
 | Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. Le code Rust compile (check, clippy, build sur macOS) ; **fenêtre, trousseau, notifications et raccourci non essayés à la main**. |
 | Playwright | ❌ | Remplacé par `scripts/e2e.py` (HTTP + IMAP réels). |
@@ -209,5 +209,5 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 3. **Tauri** : compiler `desktop/`, corriger, signer, mises à jour automatiques, essais sur les trois systèmes et lecteurs d'écran.
 4. **Agenda** : invitations (F-25), vrai serveur CalDAV de test, Google.
 5. PWA et hors ligne.
-6. **Production** : image, Compose, documentation d'installation, test du CAS réel, RGPD (export, suppression, conservation).
+6. **Production** : construire et essayer l'image, test du CAS et du LDAP réels, `LICENSE`, durées de conservation (RGPD).
 7. **Suivi** : tâche liée à un suivi (F-36), filtres par compte/projet/étiquette (F-59), regroupement des relances au même destinataire.

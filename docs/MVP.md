@@ -50,7 +50,7 @@ Réponse assistée aux disponibilités (F-74) côté suggestion et brouillon, av
 | N-08 | ✅ | Aucun récap ni alerte en double (contraintes d'unicité testées). |
 | N-09 | ❌ | Pas de mode hors ligne ni de file d'envoi (F-80). |
 | N-10 | ✅ | fr/en, clés vérifiées par test. |
-| N-11 | 🟡 | Environnement de développement en une commande (`scripts/dev-up.sh`) ✅. **Image de production et Docker Compose de déploiement : ❌.** |
+| N-11 | 🟡 | Environnement de développement en une commande (`scripts/dev-up.sh`) ✅. Image de production et Compose écrits (`docs/INSTALL.md`), **jamais construits**. |
 | U-01, U-03, U-08 | ✅ | Barre du bas, rail latéral, couleur jamais seule. |
 | U-09, F-17 | ✅ | Trois styles (Moderne, Rétro, Néon), cinq palettes et accent libre corrigé pour le contraste, quatre modes, trois densités. Chaque combinaison vérifiée WCAG AA par test. |
 | U-11 | ✅ | Raccourcis Gmail (c, /, j, k, r, g+i/s/t/a/h, ?), désactivables. |

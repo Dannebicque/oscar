@@ -1,0 +1,18 @@
+.git
+.github
+.dev
+docs
+scripts
+desktop
+docker/dovecot
+docker/dev
+**/node_modules
+**/dist
+api/vendor
+api/var
+# Jamais de secret dans l'image : les .env locaux restent sur la machine.
+**/.env
+**/.env.local
+**/.env.*.local
+.env.prod
+web/.env.local

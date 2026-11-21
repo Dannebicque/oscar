@@ -88,3 +88,7 @@ données isolées par utilisateur ; connexion par CAS en production (connexion d
 ### Annuaire LDAP et canaux de notification
 
 `LDAP_URL`, `LDAP_BASE_DN`, `LDAP_BIND_DN`, `LDAP_BIND_PASSWORD` et les `LDAP_ATTR_*` branchent l'annuaire de l'établissement (lecture seule) ; vide, la saisie des destinataires garde sa liste de démonstration. Les canaux de notification (application, bureau, e-mail) se règlent par type dans Alertes ; l'e-mail passe par `MAILER_DSN`.
+
+### Production
+
+`Dockerfile`, `compose.prod.yaml` et `docker/prod/` : image FrankenPHP (HTTPS automatique), base PostgreSQL et worker. Guide complet : `docs/INSTALL.md` (l'image n'a pas encore été construite de bout en bout).

@@ -1,0 +1,34 @@
+{
+	# FrankenPHP : PHP dans Caddy. Pas d'interface d'administration exposée.
+	frankenphp
+	admin off
+}
+
+# SERVER_NAME : le nom de domaine public (HTTPS automatique) ; par défaut, essai local en HTTP.
+{$SERVER_NAME::80} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		-Server
+	}
+
+	# L'API Symfony.
+	handle /api/* {
+		root * /app/public
+		php_server
+	}
+
+	# Le front : toute adresse inconnue retombe sur index.html (routeur du navigateur) ; les fichiers compilés sont mis en cache longtemps.
+	handle {
+		root * /srv/web
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+}
