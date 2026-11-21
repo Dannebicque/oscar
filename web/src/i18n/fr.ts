@@ -88,6 +88,7 @@ export default {
     teamOwnerNone: 'Personne ne l’a pris', teamTakenBy: 'Pris par {who}', teamHandledBy: 'Traité par {who}', teamAge: 'Depuis {n} h',
   },
   mail: {
+    editDraft: 'Modifier le brouillon',
     attachments: 'Pièces jointes', download: 'Télécharger {name}', downloadFailed: 'Je n’ai pas pu télécharger la pièce jointe. Réessaie dans un instant.',
     moved: '« {subject} » : {folder}.', movedBack: 'Message remis dans la boîte de réception.', moveTo: 'Déplacer vers',
     thread: { title: 'Conversation', count: '{n} messages', me: 'Moi', show: 'Afficher', hide: 'Masquer', earlier: 'Message précédent' },

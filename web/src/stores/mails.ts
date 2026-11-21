@@ -103,6 +103,12 @@ export const useMailsStore = defineStore('mails', () => {
     try { patch(id, { attachments: await api.mails.attachments(id) }) } catch { /* pas de liste, pas de blocage */ }
   }
 
+  /** Enregistre un brouillon sur le serveur puis rafraîchit la liste (le brouillon y apparaît dans « Brouillons »). */
+  async function saveDraft(p: Parameters<typeof api.mails.saveDraft>[0]) {
+    await api.mails.saveDraft(p)
+    await load()
+  }
+
   /** Déplace un message (archives, corbeille, boîte de réception). Renvoie l'annulation : remettre en boîte de réception. */
   async function moveTo(id: string, folder: 'inbox' | 'archive' | 'trash') {
     const m = byId(id)
@@ -176,5 +182,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

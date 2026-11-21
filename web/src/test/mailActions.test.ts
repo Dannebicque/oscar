@@ -47,4 +47,17 @@ describe('actions sur un mail (F-16)', () => {
     await flushPromises()
     expect(wrapper.find('button[aria-label="Télécharger convention.pdf"]').exists()).toBe(true)
   })
+
+  it('« Enregistrer le brouillon » dépose le texte dans Brouillons sans rien envoyer', async () => {
+    const first = await mountApp({ template: '<div/>' })
+    await useMailsStore(first.pinia).load()
+    const { wrapper, pinia } = await mountApp(ComposeView, '/ecrire')
+    await flushPromises()
+    await wrapper.find('#subject').setValue('Idée de réunion')
+    await wrapper.findAll('button').find((b) => b.text() === 'Enregistrer le brouillon')!.trigger('click')
+    await flushPromises()
+    const drafts = useMailsStore(pinia).items.filter((m) => m.folder === 'drafts')
+    expect(drafts.some((m) => m.subject === 'Idée de réunion')).toBe(true)
+    expect(useMailsStore(pinia).items.filter((m) => m.folder === 'sent' && m.subject === 'Idée de réunion')).toHaveLength(0)
+  })
 })

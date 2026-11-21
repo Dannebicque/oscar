@@ -49,6 +49,7 @@ const aiBusy = ref(false)
 const aiFailed = ref(false)
 const slotStarts = ref<string[]>(String(route.query.slots ?? '').split(',').filter(Boolean))
 const edited = ref(false)
+const draftId = ref<string | null>(route.query.draft ? String(route.query.draft) : null)
 const MAX_BYTES = 5 * 1024 * 1024
 const files = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -75,6 +76,15 @@ const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ va
 
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
+  const dr = draftId.value ? mails.byId(draftId.value) : undefined
+  if (dr) {
+    to.value = dr.to.map((x) => x.address)
+    subject.value = dr.subject
+    await mails.loadBody(dr.id)
+    body.value = mails.byId(dr.id)?.paragraphs.join('\n\n') ?? ''
+    follow.value = false
+    return
+  }
   const fwd = route.query.forward ? mails.byId(String(route.query.forward)) : undefined
   if (fwd) {
     subject.value = /^(tr|fwd?)\s*:/i.test(fwd.subject) ? fwd.subject : `Tr : ${fwd.subject}`
@@ -126,6 +136,7 @@ async function send() {
       followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
     })
+    if (draftId.value) await mails.moveTo(draftId.value, 'trash').catch(() => undefined)
     ui.notify(r.followDueAt ? say('sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
     router.push({ name: 'mails' })
   } catch (e) {
@@ -136,8 +147,18 @@ async function send() {
     sending.value = false
   }
 }
-function saveDraft() {
-  ui.notify(t('compose.draftSaved'), { tone: 'info' })
+async function saveDraft() {
+  try {
+    await mails.saveDraft({
+      to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: body.value,
+      inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined, replaces: draftId.value ?? undefined,
+    })
+    // Le brouillon enregistré remplace l'ancien : on repart du plus récent de la boîte « Brouillons ».
+    draftId.value = mails.inFolder('personal', 'drafts').value.find((m) => m.subject === subject.value.trim())?.id ?? null
+    ui.notify(t('compose.draftSaved'), { tone: 'info' })
+  } catch (e) {
+    ui.notify(e instanceof Error && e.message ? e.message : t('common.actionFailed'), { tone: 'error' })
+  }
 }
 </script>
 

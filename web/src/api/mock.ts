@@ -132,6 +132,9 @@ export function createMockApi(now: Date = new Date()): Api {
       async move(id, folder) { mails = mails.map((x) => (x.id === id ? { ...x, folder } : x)) },
       async attachments(id) { return clone(findMail(id)?.attachments ?? []).map((a, index) => ({ ...a, index })) },
       async download() { /* démo : rien à télécharger */ },
+      async saveDraft(p) {
+        mails = [...mails.filter((x) => x.id !== p.replaces), m(`d${Date.now()}`, { folder: 'drafts', from: { name: ME, address: 'david@iut-troyes.fr' }, to: p.to.map((a) => ({ name: a, address: a })), subject: p.subject, at: new Date().toISOString(), paragraphs: p.body.split(/\n{2,}/).filter(Boolean) })]
+      },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
       async claim(mailId, _suiviId, action) {
         const m = findMail(mailId)

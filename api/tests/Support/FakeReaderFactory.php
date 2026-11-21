@@ -44,7 +44,7 @@ final class FakeReaderFactory extends MailboxReaderFactory
             public function attachment(string $folder, int $uid, int $index): ?array { return $index === 0 ? ['name' => 'convention.pdf', 'type' => 'application/pdf', 'content' => '%PDF-simulé'] : null; }
             public function fetchAfter(string $folder, int $afterUid): array { return []; }
             public function fetchBody(string $folder, int $uid): ?string { return 'Corps simulé'; }
-            public function append(string $folder, string $rawMessage): void
+            public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
             {
                 if (FakeReaderFactory::$appendFails) {
                     throw new \RuntimeException('imap down');

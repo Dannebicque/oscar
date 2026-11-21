@@ -41,10 +41,10 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         return $out;
     }
 
-    public function append(string $folder, string $rawMessage): void
+    public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
     {
-        $box = $this->client()->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
-        $box->appendMessage($rawMessage, ['\\Seen']);
+        $box = $this->client()->getFolderByPath($folder) ?? $this->client()->createFolder($folder, false);
+        $box->appendMessage($rawMessage, $flags);
     }
 
     public function move(string $folder, int $uid, string $messageId, string $target): ?int

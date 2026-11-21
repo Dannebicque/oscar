@@ -18,7 +18,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class MailSynchronizer
 {
-    public const FOLDERS = ['INBOX', 'Sent'];
+    public const FOLDERS = ['INBOX', 'Sent', 'Drafts'];
 
     public function __construct(
         private readonly EntityManagerInterface $em,

@@ -88,6 +88,7 @@ const en: typeof fr = {
     teamOwnerNone: 'Nobody has taken it', teamTakenBy: 'Taken by {who}', teamHandledBy: 'Handled by {who}', teamAge: 'For {n} h',
   },
   mail: {
+    editDraft: 'Edit draft',
     attachments: 'Attachments', download: 'Download {name}', downloadFailed: 'I couldn’t download the attachment. Try again in a moment.',
     moved: '“{subject}”: {folder}.', movedBack: 'Message moved back to the inbox.', moveTo: 'Move to',
     thread: { title: 'Conversation', count: '{n} messages', me: 'Me', show: 'Show', hide: 'Hide', earlier: 'Earlier message' },

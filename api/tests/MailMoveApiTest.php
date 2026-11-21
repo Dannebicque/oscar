@@ -88,4 +88,18 @@ final class MailMoveApiTest extends ApiTestCase
         self::assertSame(413, $st);
         self::assertCount(1, $smtp->sent, 'rien n’est parti');
     }
+
+    public function testDraftIsDepositedInDraftsAndNothingIsSent(): void
+    {
+        FakeReaderFactory::$appended = [];
+        $smtp = static::getContainer()->get(\App\Tests\Support\FakeOutgoingMailer::class);
+        $accountId = $this->em->getRepository(MailAccount::class)->findAll()[0]->getId();
+        [$st] = $this->call('POST', '/api/mails/draft', $this->token, ['accountId' => $accountId, 'to' => [], 'subject' => 'Brouillon', 'body' => 'à finir']);
+        self::assertSame(201, $st, 'un brouillon peut être sans destinataire');
+        self::assertSame('Drafts', FakeReaderFactory::$appended[0][0]);
+        self::assertStringContainsString('Subject: Brouillon', FakeReaderFactory::$appended[0][1]);
+        self::assertSame([], $smtp->sent, 'rien n’est envoyé');
+        [$st] = $this->call('POST', '/api/mails/draft', $this->other, ['accountId' => $accountId, 'subject' => 'x']);
+        self::assertSame(404, $st, 'compte d’un autre utilisateur');
+    }
 }

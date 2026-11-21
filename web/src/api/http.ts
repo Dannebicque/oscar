@@ -104,6 +104,12 @@ export function createHttpApi(baseUrl: string): Api {
         link.click()
         URL.revokeObjectURL(url)
       },
+      async saveDraft(p) {
+        const accounts = await mailAccounts()
+        if (accounts.length === 0) throw new ApiError(422, 'no-account')
+        const { replaces, ...rest } = p
+        await req('POST', '/api/mails/draft', { accountId: accounts[0].id, ...rest, replacesMailId: replaces })
+      },
       async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')

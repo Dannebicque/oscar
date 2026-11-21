@@ -34,7 +34,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-13 | S | 🟡 | Brouillon de réponse (ton cordial/court, créneaux cochés), jamais envoyé ✅. Gabarit déterministe, pas de génération par modèle. |
 | F-14 | S | 🟡 | Résumé extractif d'un message. Pas de résumé d'un fil entier. |
 | F-15 | S | ❌ | Règles de tri déterministes. |
-| F-16 | M | 🟡 | Dossiers, liste, lecture texte, répondre, répondre à tous, filtres, fil de discussion ✅. Archiver, déplacer (boîte de réception, archives, corbeille), supprimer (= corbeille, jamais définitif) ✅ : déplacement IMAP d'abord, base ensuite, annulation depuis la notification, vérifié contre Dovecot. Transférer ✅ (rédaction pré-remplie, message cité). Pièces jointes ✅ : liste et téléchargement seulement (jamais affichées, type forcé, `nosniff`), envoi jusqu'à 5 Mo, vérifié contre Dovecot et le SMTP de test. Manquent : brouillons enregistrés, vidage de la corbeille, affichage HTML isolé. |
+| F-16 | M | 🟡 | Dossiers, liste, lecture texte, répondre, répondre à tous, filtres, fil de discussion ✅. Archiver, déplacer (boîte de réception, archives, corbeille), supprimer (= corbeille, jamais définitif) ✅ : déplacement IMAP d'abord, base ensuite, annulation depuis la notification, vérifié contre Dovecot. Transférer ✅ (rédaction pré-remplie, message cité). Pièces jointes ✅ : liste et téléchargement seulement (jamais affichées, type forcé, `nosniff`), envoi jusqu'à 5 Mo, vérifié contre Dovecot et le SMTP de test. Brouillons enregistrés ✅ (dossier Drafts du serveur, rouvrables, remplacés à chaque enregistrement ; texte seul, sans pièces jointes). Manquent : vidage de la corbeille, affichage HTML isolé. |
 | F-17 | C | ✅ | Trois styles (Moderne, Rétro, Néon), cinq palettes + accent libre, quatre modes, trois densités ; WCAG AA vérifié par test sur chaque combinaison. |
 | F-18 | S | 🟡 | Autocomplétion sur une liste de démonstration. LDAP non implémenté, champs configurables absents de Réglages. |
 | F-19 | S | 🟡 | Signature fixe. Pas de signatures par identité ni de modèles de message. |
@@ -125,7 +125,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | N-09 | ❌ | Pas de cache hors ligne. |
 | N-10 | ✅ | fr/en, aucune chaîne en dur, clés vérifiées par test. |
 | N-11 | 🟡 | Dev en une commande ✅, CI écrite (jamais exécutée sur GitHub). Image de production et Compose de déploiement ❌. Licence AGPL annoncée, fichier de licence à vérifier. |
-| N-12 | 🟡 | Interface moderne, accessible, raccourcis Gmail. Gestes webmail courants présents ; brouillons enregistrés et HTML isolé manquent (F-16). |
+| N-12 | 🟡 | Interface moderne, accessible, raccourcis Gmail. Gestes webmail courants présents ; vidage de la corbeille et HTML isolé manquent (F-16). |
 
 ## 3. Interface (section 10)
 
@@ -148,7 +148,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Écran | État | Remarques |
 |---|---|---|
 | Aujourd'hui | ✅ | |
-| Réception | 🟡 | Voir F-16 (brouillons, HTML). |
+| Réception | 🟡 | Voir F-16 (corbeille, HTML). |
 | Mes suivis | ✅ | |
 | Tâches | ✅ | Listes + détail comme la maquette. |
 | Réglages | 🟡 | Manquent : champs LDAP, règles de création automatique de suivis, délai par compte, canaux de notification par type. |
@@ -204,7 +204,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 
 ## 7. Ce qui reste à faire, par ordre de valeur
 
-1. **Webmail (F-16)** : brouillons enregistrés, vidage de la corbeille, HTML isolé.
+1. **Webmail (F-16)** : vidage de la corbeille, HTML isolé, pièces jointes dans les brouillons.
 2. **Fournisseur d'IA réel** derrière `AiProvider` (Ollama d'abord), sorties validées par schéma.
 3. **Réglages manquants** : LDAP, règles de création de suivis, délai par compte, jours ouvrés, canaux de notification par type.
 4. **Agenda** : invitations (F-25), bascule par calendrier, panneau de détail, conflits (F-21), vrai serveur CalDAV de test, Google.

@@ -49,6 +49,8 @@ export interface MailApi {
   attachments(id: string): Promise<Attachment[]>
   /** Télécharge une pièce jointe (jamais affichée dans l'application). */
   download(id: string, a: Attachment): Promise<void>
+  /** Dépose un brouillon dans le dossier Drafts du serveur (rien n'est envoyé) ; `replaces` : l'ancien brouillon part à la corbeille. */
+  saveDraft(p: Omit<SendPayload, 'attachments' | 'followHours' | 'followSuggestedByAi'> & { replaces?: string }): Promise<void>
   markRead(id: string): Promise<void>
   /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
   move(id: string, folder: 'inbox' | 'archive' | 'trash'): Promise<void>
