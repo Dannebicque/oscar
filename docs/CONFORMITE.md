@@ -9,7 +9,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 38 | 21 | 6 |
+| Exigences fonctionnelles F (65) | 39 | 21 | 5 |
 | Non fonctionnelles N (12) | 2 | 8 | 2 |
 | Interface U (11) | 5 | 4 | 2 |
 
@@ -47,7 +47,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-22 | S | ✅ | Créneaux libres proposés depuis une demande de disponibilités (libre/occupé seulement). |
 | F-23 | C | ❌ | Tâches de préparation générées par un événement. |
 | F-24 | S | 🟡 | Plusieurs agendas affichés ensemble, bascule par calendrier, création dans l'agenda choisi ✅ ; une seule couleur par type (pro / perso), pas une couleur par source. |
-| F-25 | S | ❌ | Invitations (envoyer, accepter, refuser, iCalendar reçu). Seul le type de notification existe. |
+| F-25 | S | 🟡 | Invitation iCalendar reçue par mail (`METHOD:REQUEST`) : carte dans le lecteur avec accepter, peut-être, refuser ; la réponse (iTIP `REPLY`) part à l'organisateur sur clic seulement, l'événement entre dans l'agenda choisi sans doublon, chevauchements signalés ; testé et vérifié sur la pile réelle. Manque : envoyer une invitation, notification « invitation reçue » (il faudrait lire le corps à la synchro), mises à jour et annulations. |
 | F-26 | C | ❌ | Partage d'agenda (libre/occupé) avec l'équipe. |
 
 ### 4.4 Tâches
@@ -85,7 +85,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-58 | S | ✅ | Journal non modifiable. |
 | F-59 | M | 🟡 | Vue « Mes suivis » avec tuiles de situation ✅ ; filtres par compte, projet et étiquette ❌. |
 | F-60 | S | ✅ | Périmètre « Équipe » avec état et ancienneté (dans la page Suivis, pas d'écran dédié). |
-| F-61 | M | 🟡 | Récaps ✅ ; pas de ligne dédiée dans la to-do. |
+| F-61 | M | ✅ | Relances et retards dans les récaps ✅ ; la page Tâches signale « N relances à faire » avec un lien vers le mode Relances. |
 | F-62 | S | 🟡 | Repère, échéance, relance rédigée, synthèse du jour ✅ ; pas de résumé de l'historique d'une demande. |
 | F-63 | M | 🟡 | Entrée groupée, mode Relances, plafond quotidien, jamais d'envoi groupé ✅ ; regroupement des relances au même destinataire ❌. |
 | F-64 | S | ✅ | Carte « Suggéré par l'IA », champs modifiables, rien sans clic ; refus non mémorisé. |
@@ -152,7 +152,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Mes suivis | ✅ | |
 | Tâches | ✅ | Listes + détail comme la maquette. |
 | Réglages | ✅ | Mon compte, comptes avec délai de relance, annuaire, règles de suivi, IA externe, apparence. Reste à comparer ligne à ligne à la maquette. |
-| Agenda | 🟡 | Grille, bascule par calendrier, panneau « événement sélectionné », échéances de la période, conflits signalés ✅ ; invitations ❌. |
+| Agenda | ✅ | Grille, bascule par calendrier, panneau « événement sélectionné », échéances, conflits, invitations reçues (réponse depuis le mail). |
 | Équipe | 🟡 | Périmètre « Équipe » de la page Suivis ; pas d'écran dédié. |
 | Écrire | 🟡 | Voir F-73. |
 | Récapitulatif | ✅ | |
@@ -174,7 +174,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | DesktopAccueil / Main | vu | Fait : trois états. Reste : bloc « Recommandations » dédié (la synthèse d'Oscar le remplace). |
 | DesktopComposer | partiel | Reste : bloc « Suggéré par l'IA · à vérifier » pour la tâche à créer à l'envoi, bandeau LDAP, identité d'expéditeur. |
 | DesktopAlias | non comparé | Les états nouveau / pris / traité, notes et collision existent ; pas d'écran dédié « boîte partagée ». |
-| DesktopAgenda / MobAgenda | partiel | Fait : bascule de calendriers, panneau de l'événement sélectionné, échéances de la période. Reste : invitation reçue à accepter. |
+| DesktopAgenda / MobAgenda | partiel | Fait : bascule de calendriers, panneau de l'événement sélectionné, échéances de la période, invitation reçue à accepter. |
 | DesktopNotifs | partiel | Fait : « Comment être prévenu » (canal par type). |
 | DesktopReglages | partiel | Fait : LDAP, règles de suivi, délai par compte. Reste à comparer le détail. |
 | MobTaches, Suivis (mobile), Relance | partiel | Relance : brouillon, envoyer, reporter, ne plus relancer présents. Mise en page mobile contrôlée seulement par les tests de gabarit. |
@@ -207,7 +207,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 1. **Webmail (F-16)** : vidage de la corbeille, HTML isolé, pièces jointes dans les brouillons.
 2. **Fournisseur d'IA** : l'essayer contre un vrai service (OpenAI, Mistral, Ollama) et brancher un modèle auto-hébergé pour l'IA de l'université.
 3. **Tauri** : compiler `desktop/`, corriger, signer, mises à jour automatiques, essais sur les trois systèmes et lecteurs d'écran.
-4. **Agenda** : invitations (F-25), vrai serveur CalDAV de test, Google.
+4. **Agenda** : envoi d'invitations et mises à jour (F-25), vrai serveur CalDAV de test, Google.
 5. PWA et hors ligne.
 6. **Production** : construire et essayer l'image, test du CAS et du LDAP réels, `LICENSE`, durées de conservation (RGPD).
 7. **Suivi** : tâche liée à un suivi (F-36), filtres par compte/projet/étiquette (F-59), regroupement des relances au même destinataire.

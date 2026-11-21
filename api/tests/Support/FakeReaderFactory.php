@@ -18,6 +18,7 @@ final class FakeReaderFactory extends MailboxReaderFactory
     /** @var list<array{string, int, string}> */
     public static array $moved = [];
     public static bool $moveFails = false;
+    public static ?string $ics = null;
 
     public function __construct(CredentialVault $vault)
     {
@@ -40,6 +41,7 @@ final class FakeReaderFactory extends MailboxReaderFactory
 
                 return 500 + $uid;
             }
+            public function invitation(string $folder, int $uid): ?string { return FakeReaderFactory::$ics; }
             public function attachments(string $folder, int $uid): array { return [['name' => 'convention.pdf', 'size' => 2048, 'type' => 'application/pdf']]; }
             public function attachment(string $folder, int $uid, int $index): ?array { return $index === 0 ? ['name' => 'convention.pdf', 'type' => 'application/pdf', 'content' => '%PDF-simulé'] : null; }
             public function fetchAfter(string $folder, int $afterUid): array { return []; }

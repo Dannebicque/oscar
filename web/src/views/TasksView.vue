@@ -19,6 +19,8 @@ import type { Task } from '../domain/types'
 import type { TaskSort } from '../domain/tasks'
 import { useOscar } from '../oscar/useOscar'
 import { useRouter } from 'vue-router'
+import { useSuivisStore } from '../stores/suivis'
+import Callout from '../components/ui/Callout.vue'
 import { useTasksStore } from '../stores/tasks'
 import { useUiStore } from '../stores/ui'
 
@@ -27,12 +29,13 @@ const { say } = useOscar()
 const fmt = useFormat()
 const router = useRouter()
 const store = useTasksStore()
+const suivis = useSuivisStore()
 const ui = useUiStore()
 const title = ref('')
 const editing = ref<Task | null>(null)
 const dialogOpen = ref(false)
 const confirmDelete = ref<Task | null>(null)
-onMounted(() => store.load())
+onMounted(() => Promise.all([store.load(), suivis.load()]))
 
 const today = computed(() => isoDay(clock.now()))
 type View = 'open' | 'late' | 'today' | 'soon' | 'done'
@@ -129,6 +132,10 @@ async function reject(task: Task) { await store.reject(task.id); ui.notify(t('ta
     </aside>
 
     <section class="list" :aria-label="t('tasks.list')">
+      <Callout v-if="suivis.relances.length" :level="2" tone="warn" icon="clock" :title="t('tasks.relancesTitle', { n: suivis.relances.length }, suivis.relances.length)">
+        <p>{{ t('tasks.relancesText') }}</p>
+        <template #actions><RouterLink class="btn primary" to="/suivis">{{ t('tasks.relancesGo') }}</RouterLink></template>
+      </Callout>
       <h2 class="vt">{{ t(`tasks.views.${view}`) }} <span class="n">{{ shown.length }}</span></h2>
       <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
       <EmptyState v-else-if="groups.length === 0" icon="task" :text="say(view === 'open' ? 'tasksEmpty' : 'tasksViewEmpty')">

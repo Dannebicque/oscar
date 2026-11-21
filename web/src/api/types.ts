@@ -1,5 +1,5 @@
 import type {
-  AppNotification, Attachment, CalEvent, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
+  AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
   MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
 } from '../domain/types'
 
@@ -51,6 +51,10 @@ export interface MailApi {
   download(id: string, a: Attachment): Promise<void>
   /** Dépose un brouillon dans le dossier Drafts du serveur (rien n'est envoyé) ; `replaces` : l'ancien brouillon part à la corbeille. */
   saveDraft(p: Omit<SendPayload, 'attachments' | 'followHours' | 'followSuggestedByAi'> & { replaces?: string }): Promise<void>
+  /** Invitation d'agenda jointe au mail (F-25) et réponse déjà donnée. Lire ne change rien. */
+  invitation(id: string): Promise<{ invitation: MailInvitation | null; response: InvitationResponse | null }>
+  /** Répond à l'invitation (un clic de l'utilisateur) : la réponse part à l'organisateur ; accepté ou peut-être : l'événement entre dans l'agenda choisi. */
+  replyInvitation(id: string, p: { response: InvitationResponse; calendarId?: string }): Promise<{ added: boolean }>
   markRead(id: string): Promise<void>
   /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
   move(id: string, folder: 'inbox' | 'archive' | 'trash'): Promise<void>

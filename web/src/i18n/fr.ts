@@ -89,6 +89,7 @@ export default {
     teamOwnerNone: 'Personne ne l’a pris', teamTakenBy: 'Pris par {who}', teamHandledBy: 'Traité par {who}', teamAge: 'Depuis {n} h',
   },
   mail: {
+    invitation: { title: 'Invitation', organizer: 'Organisateur', calendar: 'Ajouter à l’agenda', accept: 'Accepter', maybe: 'Peut-être', decline: 'Refuser', overlap: 'Chevauche « {title} » à {time}.', help: 'Rien ne part sans ton clic : ta réponse est envoyée à l’organisateur, et l’événement n’entre dans ton agenda que si tu acceptes ou réponds « peut-être ».', added: 'Ajouté à ton agenda.', state: { accepted: 'Tu as accepté cette invitation.', tentative: 'Tu as répondu « peut-être ».', declined: 'Tu as refusé cette invitation.' }, sent: { accepted: 'Invitation acceptée : {organizer} est prévenu(e).', tentative: 'Réponse « peut-être » envoyée à {organizer}.', declined: 'Invitation refusée : {organizer} est prévenu(e).' } },
     attachmentsCount: 'Aucune pièce jointe | 1 pièce jointe | {n} pièces jointes', attachmentsMenu: 'Pièces jointes : {n}. Ouvrir la liste pour télécharger.',
     editDraft: 'Modifier le brouillon',
     attachments: 'Pièces jointes', download: 'Télécharger {name}', downloadFailed: 'Je n’ai pas pu télécharger la pièce jointe. Réessaie dans un instant.',
@@ -168,6 +169,7 @@ export default {
     freeBusy: 'Pour proposer des créneaux, Oscar ne lit que libre ou occupé : ni titres, ni lieux, ni participants.',
   },
   tasks: {
+    relancesTitle: 'Aucune relance à faire | 1 relance à faire | {n} relances à faire', relancesText: 'Une relance est due : le suivi correspondant te propose un brouillon. Rien ne part sans ton clic.', relancesGo: 'Voir les relances',
     views: { open: 'À faire', late: 'En retard', today: 'Aujourd’hui', soon: 'À venir', done: 'Terminées' }, viewsLabel: 'Listes de tâches', detail: 'Détail', detailEmpty: 'Choisis une tâche dans la liste pour voir son détail et son origine.', originLabel: 'Origine', stateLabel: 'État', todo: 'À faire', reopen: 'Rouvrir la tâche', markDoneShort: 'Marquer comme terminée', seeSource: { mail: 'Voir le mail', event: 'Voir l’événement', ai: 'Voir le mail', manual: '' },
     removeTag: 'Retirer l’étiquette {tag}', newTask: 'Nouvelle tâche', editTask: 'Modifier la tâche', fTitle: 'Titre', fDescription: 'Description', fDue: 'Échéance', fPriority: 'Priorité', fProject: 'Projet', fTags: 'Étiquettes', tagsHint: 'Entrée ou virgule pour ajouter.', saved: 'Tâche enregistrée.', deleted: 'Tâche supprimée : « {title} ».', deleteTitle: 'Supprimer cette tâche ?', deleteText: 'Elle disparaît définitivement. Tu peux plutôt la marquer comme traitée.', delete: 'Supprimer', filters: 'Filtres', list: 'Tâches', quick: 'Ajout rapide', titleRequired: 'Donne un titre à la tâche.', saveFailed: 'Je n’ai pas pu enregistrer la tâche. Réessaie dans un instant.', open: 'Ouvrir {title}',
     title: 'Tâches', add: 'Ajouter une tâche', addLabel: 'Nouvelle tâche', addPlaceholder: 'Titre de la tâche', added: 'Tâche ajoutée : « {title} ».',

@@ -46,6 +46,21 @@ LONG_MAIL = mail(frm="Direction des stages <stages@univ-reims.fr>", to=f"David <
                  body="Bonjour,\n\nLa campagne de conventions de stage de janvier démarre. Chaque responsable de formation doit valider les dossiers de ses étudiants. "
                       "Peux-tu transmettre la liste des étudiants concernés avant vendredi ? Les conventions incomplètes seront renvoyées aux étudiants. "
                       "Une réunion de point d'étape aura lieu jeudi à 14h en salle B12.\n\nCordialement,\nLa Direction des stages", hours_ago=8)
+# Invitation d'agenda (F-25) : un message avec une pièce text/calendar (METHOD:REQUEST), dans trois jours à 14 h (Paris).
+def _invitation():
+    start = (NOW + timedelta(days=3)).replace(hour=13, minute=0, second=0)  # 13:00 UTC = 14:00 à Paris (hiver)
+    fmt = lambda d: d.strftime("%Y%m%dT%H%M%SZ")
+    ics = ("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Oscar//demo//FR\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\n"
+           "UID:soutenance-lemoine@iut-troyes.fr\r\nSEQUENCE:0\r\nDTSTAMP:" + fmt(NOW) + "\r\nDTSTART:" + fmt(start) + "\r\nDTEND:" + fmt(start + timedelta(hours=1)) +
+           "\r\nSUMMARY:Soutenance de stage : M. Lemoine\r\nLOCATION:Salle B12\r\nORGANIZER;CN=Claire Petit:mailto:claire.petit@entreprise.fr\r\n"
+           "ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:david@" + DOMAIN + "\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n")
+    m = mail(frm="Claire Petit <claire.petit@entreprise.fr>", to=f"David <david@{DOMAIN}>", subject="Invitation : Soutenance de stage de M. Lemoine",
+             body="Bonjour David,\n\nJe t'invite à la soutenance de stage de M. Lemoine, mardi à 14 h en salle B12.\n\nClaire", hours_ago=2)
+    m.add_attachment(ics.encode(), maintype="text", subtype="calendar", filename="invitation.ics", params={"method": "REQUEST", "charset": "UTF-8"})
+    return m
+
+
+INVITATION = _invitation()
 # Alias contact@ : le MÊME message (même Message-ID) arrive chez les quatre membres. Une seule demande (F-44).
 ALIAS_ID = "<inscription-camille-1@gmail.com>"
 ALIAS = mail(frm="Camille Roux <camille.roux@gmail.com>", to=f"contact@{DOMAIN}", subject="Question d'inscription",
@@ -56,5 +71,5 @@ ALIAS_USERS = ["david", "claire", "marc", "lea"]
 # (utilisateur, dossier, message)
 PLAN = [
     ("david", "Sent", SENT), ("david", "INBOX", REPLY), ("david", "Sent", AUTO_SENT), ("david", "INBOX", AUTO_REPLY), ("david", "INBOX", TASK_MAIL),
-    ("david", "INBOX", AVAIL_MAIL), ("david", "INBOX", LONG_MAIL),
+    ("david", "INBOX", AVAIL_MAIL), ("david", "INBOX", LONG_MAIL), ("david", "INBOX", INVITATION),
 ] + [(u, "INBOX", ALIAS) for u in ALIAS_USERS]

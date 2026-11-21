@@ -44,6 +44,7 @@ export function createMockApi(now: Date = new Date()): Api {
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
     m('m5', { from: { name: 'Claire Roux', address: 'claire.roux@iut-troyes.fr' }, subject: 'Disponibilités pour la réunion pédagogique', at: hoursAgo(5), unread: true, paragraphs: ['Bonjour,', 'Pourrais-tu m’indiquer tes disponibilités la semaine du 30 novembre pour une réunion d’une heure ?', 'Merci !', 'Claire'], hints: { summary: 'Claire demande tes disponibilités la semaine du 30 novembre pour une réunion d’une heure.', availability: { slots: [0, 1, 2, 3, 4].map((i) => ({ start: iso(10 + i, 9 + i), end: iso(10 + i, 10 + i) })) } } }),
+    m('m9', { from: { name: 'Claire Petit', address: 'claire.petit@entreprise.fr' }, subject: 'Invitation : Soutenance de stage de M. Lemoine', at: hoursAgo(4), unread: true, paragraphs: ['Bonjour David,', 'Je t’invite à la soutenance de stage de M. Lemoine.', 'Claire'], invitation: { uid: 'soutenance-lemoine@iut', title: 'Soutenance de stage : M. Lemoine', start: iso(3, 14), end: iso(3, 15), location: 'Salle B12', organizerName: 'Claire Petit', organizerAddress: 'claire.petit@entreprise.fr' } }),
     m('m2', { folder: 'sent', from: { name: ME, address: 'david@iut-troyes.fr' }, to: [{ name: 'Marc Dubois', address: 'marc.dubois@imprimerie.fr' }], subject: 'Devis des affiches', at: hoursAgo(52), suivi: 's2', paragraphs: ['Bonjour Marc,', 'Pourriez-vous m’envoyer le devis pour 40 affiches A2 ?', 'Merci, David'] }),
     m('m3', { from: { name: 'Scolarité', address: 'scolarite@iut-troyes.fr' }, subject: 'Salle B104 pour le jury', at: hoursAgo(96), suivi: 's3', paragraphs: ['Bonjour, la salle B104 est disponible sous réserve de confirmation avant vendredi.'] }),
     m('m4', { folder: 'sent', from: { name: ME, address: 'david@iut-troyes.fr' }, to: [{ name: 'Claire Petit', address: 'claire.petit@entreprise.fr' }], subject: 'Convention de stage', at: hoursAgo(20), suivi: 's4', paragraphs: ['Bonjour Claire, ci-joint la convention à signer.'], attachments: [{ name: 'convention.pdf', size: '184 Ko' }] }),
@@ -136,6 +137,18 @@ export function createMockApi(now: Date = new Date()): Api {
       async download() { /* démo : rien à télécharger */ },
       async saveDraft(p) {
         mails = [...mails.filter((x) => x.id !== p.replaces), m(`d${Date.now()}`, { folder: 'drafts', from: { name: ME, address: 'david@iut-troyes.fr' }, to: p.to.map((a) => ({ name: a, address: a })), subject: p.subject, at: new Date().toISOString(), paragraphs: p.body.split(/\n{2,}/).filter(Boolean) })]
+      },
+      async invitation(id) { const m = findMail(id); return { invitation: clone(m?.invitation ?? null), response: m?.invitationResponse ?? null } },
+      async replyInvitation(id, p) {
+        const m = findMail(id)
+        if (!m?.invitation) throw new ApiError(422, 'Ce message ne contient pas d’invitation que je sache lire.')
+        mails = mails.map((x) => (x.id === id ? { ...x, invitationResponse: p.response } : x))
+        let added = false
+        if (p.response !== 'declined' && p.calendarId && !events.some((e) => e.id === m.invitation!.uid)) {
+          events.push({ id: m.invitation.uid, calendar: p.calendarId, title: m.invitation.title, start: m.invitation.start, end: m.invitation.end, location: m.invitation.location })
+          added = true
+        }
+        return { added }
       },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
       async claim(mailId, _suiviId, action) {

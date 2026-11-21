@@ -31,6 +31,10 @@ class Mail implements OwnedInterface
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?SharedMailbox $sharedMailbox = null;
 
+    /** Réponse de l'utilisateur à l'invitation jointe (F-25) : accepted | declined | tentative. */
+    #[ORM\Column(length: 12, nullable: true)]
+    private ?string $invitationResponse = null;
+
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
     private string $id;
@@ -84,6 +88,8 @@ class Mail implements OwnedInterface
     /** @return list<string> */
     public function getReferences(): array { return $this->references; }
     /** Décodé à la lecture : les mails déjà synchronisés avec un en-tête encodé s'affichent correctement. */
+    public function getInvitationResponse(): ?string { return $this->invitationResponse; }
+    public function setInvitationResponse(?string $v): static { $this->invitationResponse = $v; return $this; }
     public function getFromName(): string { return \App\Mail\MimeDecoder::decode($this->fromName); }
     public function getFromAddress(): string { return $this->fromAddress; }
     /** @return list<string> */

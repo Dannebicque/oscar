@@ -89,6 +89,7 @@ const en: typeof fr = {
     teamOwnerNone: 'Nobody has taken it', teamTakenBy: 'Taken by {who}', teamHandledBy: 'Handled by {who}', teamAge: 'For {n} h',
   },
   mail: {
+    invitation: { title: 'Invitation', organizer: 'Organizer', calendar: 'Add to calendar', accept: 'Accept', maybe: 'Maybe', decline: 'Decline', overlap: 'Overlaps “{title}” at {time}.', help: 'Nothing is sent without your click: your reply goes to the organizer, and the event only enters your calendar if you accept or answer “maybe”.', added: 'Added to your calendar.', state: { accepted: 'You accepted this invitation.', tentative: 'You answered “maybe”.', declined: 'You declined this invitation.' }, sent: { accepted: 'Invitation accepted: {organizer} has been told.', tentative: '“Maybe” sent to {organizer}.', declined: 'Invitation declined: {organizer} has been told.' } },
     attachmentsCount: 'No attachments | 1 attachment | {n} attachments', attachmentsMenu: 'Attachments: {n}. Open the list to download.',
     editDraft: 'Edit draft',
     attachments: 'Attachments', download: 'Download {name}', downloadFailed: 'I couldn’t download the attachment. Try again in a moment.',
@@ -168,6 +169,7 @@ const en: typeof fr = {
     freeBusy: 'To suggest slots, Oscar only reads free or busy: no titles, places or attendees.',
   },
   tasks: {
+    relancesTitle: 'No reminders to send | 1 reminder to send | {n} reminders to send', relancesText: 'A reminder is due: the matching follow-up offers a draft. Nothing is sent without your click.', relancesGo: 'See the reminders',
     views: { open: 'To do', late: 'Late', today: 'Today', soon: 'Upcoming', done: 'Done' }, viewsLabel: 'Task lists', detail: 'Details', detailEmpty: 'Pick a task in the list to see its details and where it comes from.', originLabel: 'Origin', stateLabel: 'Status', todo: 'To do', reopen: 'Reopen task', markDoneShort: 'Mark as done', seeSource: { mail: 'See the mail', event: 'See the event', ai: 'See the mail', manual: '' },
     removeTag: 'Remove tag {tag}', newTask: 'New task', editTask: 'Edit task', fTitle: 'Title', fDescription: 'Description', fDue: 'Due date', fPriority: 'Priority', fProject: 'Project', fTags: 'Tags', tagsHint: 'Press Enter or comma to add.', saved: 'Task saved.', deleted: 'Task deleted: “{title}”.', deleteTitle: 'Delete this task?', deleteText: 'It disappears for good. You could mark it as done instead.', delete: 'Delete', filters: 'Filters', list: 'Tasks', quick: 'Quick add', titleRequired: 'Give the task a title.', saveFailed: 'I couldn’t save the task. Try again in a moment.', open: 'Open {title}',
     title: 'Tasks', add: 'Add a task', addLabel: 'New task', addPlaceholder: 'Task title', added: 'Task added: “{title}”.',

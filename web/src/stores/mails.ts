@@ -94,6 +94,20 @@ export const useMailsStore = defineStore('mails', () => {
     }
   }
 
+  /** Invitation d'agenda jointe (F-25), lue à la demande, une fois par mail. Une panne n'empêche jamais de lire le message. */
+  const invitationLoaded = ref<Set<string>>(new Set())
+  async function loadInvitation(id: string) {
+    const m = byId(id)
+    if (!m || invitationLoaded.value.has(id)) return
+    invitationLoaded.value = new Set([...invitationLoaded.value, id])
+    try { const r = await api.mails.invitation(id); patch(id, { invitation: r.invitation, invitationResponse: r.response }) } catch { /* pas d'invitation affichée */ }
+  }
+  async function respondInvitation(id: string, response: 'accepted' | 'tentative' | 'declined', calendarId?: string) {
+    const r = await api.mails.replyInvitation(id, { response, calendarId })
+    patch(id, { invitationResponse: response })
+    return r
+  }
+
   /** Pièces jointes d'un mail, lues à la demande (une fois). Une panne n'empêche jamais de lire le message. */
   const attachmentsLoaded = ref<Set<string>>(new Set())
   async function loadAttachments(id: string) {
@@ -182,5 +196,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

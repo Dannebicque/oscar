@@ -21,4 +21,7 @@ interface MailboxReader
 
     /** @return ?array{name: string, type: string, content: string} contenu brut d'une pièce jointe, servi en téléchargement uniquement */
     public function attachment(string $folder, int $uid, int $index): ?array;
+
+    /** Texte iCalendar (text/calendar) d'une invitation jointe au message, s'il y en a une. Lu à la demande, jamais exécuté. */
+    public function invitation(string $folder, int $uid): ?string;
 }

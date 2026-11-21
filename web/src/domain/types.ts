@@ -139,8 +139,22 @@ export interface MailHints {
   summary?: string | null
 }
 
+export interface MailInvitation {
+  uid: string
+  title: string
+  start: string
+  end: string
+  location: string | null
+  organizerName: string
+  organizerAddress: string
+}
+export type InvitationResponse = 'accepted' | 'tentative' | 'declined'
+
 export interface Mail {
   id: string
+  /** Invitation d'agenda jointe (F-25), lue à la demande ; null = aucune. */
+  invitation?: MailInvitation | null
+  invitationResponse?: InvitationResponse | null
   /** Message-ID IMAP : identifie la demande même reçue dans plusieurs boîtes (F-44). Absent des données simulées. */
   messageId?: string
   /** Identifiants des messages auxquels celui-ci répond (In-Reply-To, References) : rattache une réponse à son fil. */

@@ -60,6 +60,19 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         return $moved === null ? null : (int) $moved->getUid();
     }
 
+    public function invitation(string $folder, int $uid): ?string
+    {
+        foreach ($this->message($folder, $uid)?->getAttachments() ?? [] as $a) {
+            if (str_contains(strtolower((string) $a->getMimeType()), 'calendar') || str_ends_with(strtolower((string) $a->getName()), '.ics')) {
+                $c = (string) $a->getContent();
+
+                return $c !== '' && \strlen($c) <= 200_000 ? $c : null;
+            }
+        }
+
+        return null;
+    }
+
     public function attachments(string $folder, int $uid): array
     {
         $out = [];

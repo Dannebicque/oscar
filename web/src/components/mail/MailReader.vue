@@ -17,6 +17,7 @@ import { useSuivisStore } from '../../stores/suivis'
 import { useTasksStore } from '../../stores/tasks'
 import { useUiStore } from '../../stores/ui'
 import RelanceDialog from '../suivis/RelanceDialog.vue'
+import SelectField from '../ui/SelectField.vue'
 import Avatar from '../ui/Avatar.vue'
 import AiBadge from '../ui/AiBadge.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
@@ -49,7 +50,7 @@ const showDraft = ref(false)
 const showAvail = ref(false)
 const showCollision = ref(false)
 const dismissed = ref<Set<string>>(new Set())
-onMounted(() => { void mails.loadBody(props.mail.id); void mails.loadAttachments(props.mail.id); if (aiOn.value && !shared.value) void mails.loadHints(props.mail.id); else if (aiOn.value && shared.value) void mails.loadHints(props.mail.id) })
+onMounted(() => { void mails.loadBody(props.mail.id); void mails.loadAttachments(props.mail.id); void mails.loadInvitation(props.mail.id); if (!agenda.events.length) void agenda.load(); if (aiOn.value && !shared.value) void mails.loadHints(props.mail.id); else if (aiOn.value && shared.value) void mails.loadHints(props.mail.id) })
 // « r » : répondre (raccourci Gmail), si les raccourcis sont actifs.
 const onReplyKey = () => reply(false)
 onMounted(() => window.addEventListener(SHORTCUT_EVENTS.reply, onReplyKey))
@@ -66,6 +67,23 @@ const showSuggestFollow = computed(
 )
 const aiOn = computed(() => settings.s.aiMode !== 'off')
 
+/** Invitation d'agenda (F-25) : lire ne change rien ; répondre est un clic, et la réponse part à l'organisateur. */
+const inv = computed(() => props.mail.invitation ?? null)
+const calChoice = ref('')
+const workCalendars = computed(() => agenda.sources.filter((x) => !x.personal))
+const calId = computed(() => calChoice.value || workCalendars.value[0]?.id || '')
+const overlaps = computed(() => (inv.value ? agenda.events.filter((e) => e.start < inv.value!.end && e.end > inv.value!.start && e.id !== inv.value!.uid).slice(0, 3) : []))
+const invBusy = ref(false)
+async function answer(response: 'accepted' | 'tentative' | 'declined') {
+  invBusy.value = true
+  try {
+    const r = await mails.respondInvitation(props.mail.id, response, response === 'declined' ? undefined : calId.value || undefined)
+    if (r.added) await agenda.load()
+    ui.notify(t(`mail.invitation.sent.${response}`, { organizer: inv.value?.organizerName ?? '' }) + (r.added ? ' ' + t('mail.invitation.added') : ''))
+  } catch (e) {
+    ui.notify(e instanceof Error && e.message ? e.message : t('common.actionFailed'), { tone: 'error' })
+  } finally { invBusy.value = false }
+}
 const showMove = ref(false)
 async function download(a: Attachment) {
   try { await api.mails.download(props.mail.id, a) } catch { ui.notify(t('mail.downloadFailed'), { tone: 'error' }) }
@@ -179,6 +197,27 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 
         <ThreadMessages :mail="mail" />
 
+        <section v-if="inv" class="invite" :aria-label="t('mail.invitation.title')">
+          <h3 class="ih"><BaseIcon name="calendar" :size="18" />{{ t('mail.invitation.title') }}</h3>
+          <p class="it">{{ inv.title }}</p>
+          <dl class="idl">
+            <dt>{{ t('agenda.when') }}</dt><dd>{{ fmt.dateLong(inv.start) }}, {{ fmt.time(inv.start) }} – {{ fmt.time(inv.end) }}</dd>
+            <template v-if="inv.location"><dt>{{ t('agenda.evPlace') }}</dt><dd>{{ inv.location }}</dd></template>
+            <dt>{{ t('mail.invitation.organizer') }}</dt><dd>{{ inv.organizerName }}</dd>
+          </dl>
+          <p v-for="o in overlaps" :key="o.id" class="warn" role="status"><BaseIcon name="alert" :size="16" /> {{ t('mail.invitation.overlap', { title: o.title, time: fmt.time(o.start) }) }}</p>
+          <p v-if="mail.invitationResponse" class="done" role="status"><BaseIcon name="checkCircle" :size="16" /> {{ t(`mail.invitation.state.${mail.invitationResponse}`) }}</p>
+          <div class="iact">
+            <SelectField v-if="workCalendars.length > 1" id="inv-cal" :model-value="calId" :label="t('mail.invitation.calendar')" :options="workCalendars.map((c) => ({ value: c.id, label: c.label }))" @update:model-value="(v: string) => (calChoice = v)" />
+            <div class="btns">
+              <BaseButton variant="primary" icon="check" :disabled="invBusy" :label="t('mail.invitation.accept')" @click="answer('accepted')" />
+              <BaseButton :disabled="invBusy" :label="t('mail.invitation.maybe')" @click="answer('tentative')" />
+              <BaseButton variant="danger" icon="x" :disabled="invBusy" :label="t('mail.invitation.decline')" @click="answer('declined')" />
+            </div>
+          </div>
+          <p class="hint">{{ t('mail.invitation.help') }}</p>
+        </section>
+
         <section v-if="aiOn && hints.summary" class="summary" :aria-label="t('mail.ai.summary')">
           <p class="sh"><BaseIcon name="sparkles" :size="16" /><strong>{{ t('mail.ai.summary') }}</strong><AiBadge /></p>
           <p>{{ hints.summary }}</p>
@@ -258,6 +297,14 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 .toolbar :deep(.btn) { min-height: 40px; }
 .sep { width: 1px; align-self: stretch; background: var(--c-border); margin: 4px var(--space-1); }
 .body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
+.invite { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-surface); border: var(--bw-card) solid var(--c-primary); }
+.ih { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-md); color: var(--c-accent); }
+.it { font-size: var(--fs-lg); font-weight: 800; margin: 0; }
+.idl { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: 0; }
+.idl dt { color: var(--c-text-muted); } .idl dd { margin: 0; font-weight: 600; }
+.invite .warn, .invite .done { display: flex; gap: var(--space-2); align-items: center; margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--c-text); }
+.invite .warn { background: var(--c-warn-soft); } .invite .done { background: var(--c-success-soft); }
+.iact { display: grid; gap: var(--space-2); } .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .summary { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
 .sh { display: flex; align-items: center; gap: var(--space-2); color: var(--c-ai); }
 .moves { border: 0; padding: 0; margin: 0; display: grid; gap: 2px; }

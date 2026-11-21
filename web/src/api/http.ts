@@ -110,6 +110,8 @@ export function createHttpApi(baseUrl: string): Api {
         const { replaces, ...rest } = p
         await req('POST', '/api/mails/draft', { accountId: accounts[0].id, ...rest, replacesMailId: replaces })
       },
+      invitation: (id) => req('GET', `/api/mails/${encodeURIComponent(id)}/invitation`),
+      replyInvitation: (id, p) => req('POST', `/api/mails/${encodeURIComponent(id)}/invitation/reply`, p),
       async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')
