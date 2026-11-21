@@ -21,6 +21,8 @@ const selected = ref<Connection | null>(null)
 const ICON = { ok: 'checkCircle', syncing: 'refresh', error: 'alert' } as const
 const name = (c: Connection) => t(`status.${c.id}`)
 const label = (c: Connection) => (c.id === 'ai' ? t(`status.aiMode.${settings.s.aiMode}`) : name(c))
+const SERVICE = { mail: 'mail', calendar: 'calendar', google: 'calendar', ai: 'sparkles' } as Record<string, string>
+const shortName = (c: Connection) => t(`status.short.${c.id === 'ai' ? settings.s.aiMode : c.id}`)
 const stateText = (c: Connection) => (c.state === 'ok' && c.id !== 'ai' ? t('status.okShort') : t(`status.${c.state}`))
 const summaryKey = computed(() => (system.hasError ? 'error' : 'ok'))
 
@@ -37,8 +39,11 @@ async function retry(c: Connection) {
   <section class="status" :aria-label="t('status.label')">
     <ul class="conns">
       <li v-for="c in system.connections" :key="c.id">
-        <button type="button" class="conn" :class="c.state" :aria-label="`${label(c)} : ${stateText(c)}. ${t('status.details')}`" @click="selected = c">
-          <BaseIcon :name="ICON[c.state]" :size="16" /><span>{{ label(c) }} : {{ stateText(c) }}</span>
+        <button type="button" class="conn" :class="c.state" :title="`${label(c)} : ${stateText(c)}`" :aria-label="`${label(c)} : ${stateText(c)}. ${t('status.details')}`" @click="selected = c">
+          <BaseIcon :name="SERVICE[c.id] ?? 'alert'" :size="16" :class="{ ai: c.id === 'ai' }" />
+          <span>{{ shortName(c) }}</span>
+          <BaseIcon :name="ICON[c.state]" :size="16" class="state" />
+          <span v-if="c.state !== 'ok'" class="txt">{{ stateText(c) }}</span>
         </button>
       </li>
     </ul>
@@ -61,15 +66,18 @@ async function retry(c: Connection) {
 </template>
 
 <style scoped>
-.status { grid-area: status; position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-1) var(--space-4); background: var(--c-surface-2); border-top: 1px solid var(--c-border); font-size: var(--fs-sm); min-height: 44px; }
-.conns { display: flex; gap: var(--space-2); flex-wrap: wrap; flex: 1; }
-.conn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--target); padding: 0 var(--space-3); border: 0; background: transparent; border-radius: var(--radius-sm); color: var(--c-text-muted); }
-.conn:hover { background: var(--c-surface); }
-.conn.error { color: var(--c-danger); font-weight: 700; }
-.conn.ok svg { color: var(--c-success); }
+.status { grid-area: status; position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-4); background: var(--c-surface-2); border-top: 1px solid var(--c-border); font-size: var(--fs-sm); min-height: 44px; }
+.conns { display: flex; gap: var(--space-2); flex: 1; min-width: 0; overflow-x: auto; }
+.conn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--target); padding: 0 var(--space-3); border: var(--bw) solid var(--c-border); background: var(--c-surface); border-radius: 999px; color: var(--c-text); white-space: nowrap; }
+.conn:hover { background: var(--c-surface-2); border-color: var(--c-text-muted); }
+.conn .state { color: var(--c-text-muted); }
+.conn.ok .state { color: var(--c-success); }
+.conn.error { color: var(--c-danger); font-weight: 700; border-color: var(--c-danger); }
+.conn.error .state { color: var(--c-danger); }
+.conn .ai { color: var(--c-ai); }
 .summary { display: none; align-items: center; gap: 6px; flex: 1; }
 .summary.error { color: var(--c-danger); font-weight: 700; }
-.sync { color: var(--c-text-muted); }
+.sync { color: var(--c-text-muted); white-space: nowrap; }
 .journal { min-height: var(--target); display: inline-flex; align-items: center; }
-@media (max-width: 720px) { .conns { display: none; } .summary { display: inline-flex; } }
+@media (max-width: 720px) { .conns { display: none; } .summary { display: inline-flex; } .sync { display: none; } }
 </style>

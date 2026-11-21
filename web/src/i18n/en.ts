@@ -24,6 +24,7 @@ const en: typeof fr = {
     mail: 'Mailbox', calendar: 'Work calendar', google: 'Google Calendar', ai: 'University AI',
     ok: 'connected', syncing: 'syncing', error: 'reconnection needed', okShort: 'up to date',
     retry: 'Try again', retryOk: '{name}: connected again.', lastOk: 'Last success: {when}', neverOk: 'Never connected',
+    short: { mail: 'Mail', calendar: 'Work', google: 'Google', university: 'AI', external: 'External AI', off: 'AI off' },
     aiMode: { university: 'University AI', external: 'External AI', off: 'AI off' },
   },
   flags: { replyReceived: 'Reply received', late: 'Overdue', relanceDue: 'Reminder due', dueToday: 'Due today' },

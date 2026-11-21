@@ -22,6 +22,7 @@ export default {
     mail: 'Messagerie', calendar: 'Agenda IUT', google: 'Google Agenda', ai: 'IA de l’université',
     ok: 'connecté', syncing: 'synchronisation en cours', error: 'reconnexion nécessaire', okShort: 'à jour',
     retry: 'Réessayer', retryOk: '{name} : de nouveau connecté.', lastOk: 'Dernière réussite : {when}', neverOk: 'Jamais connecté',
+    short: { mail: 'Mail', calendar: 'IUT', google: 'Google', university: 'IA', external: 'IA externe', off: 'IA coupée' },
     aiMode: { university: 'IA de l’université', external: 'IA externe', off: 'IA coupée' },
   },
   flags: {
