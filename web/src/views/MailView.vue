@@ -73,7 +73,7 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
     <ErrorState v-if="mails.error" class="err" @retry="mails.load()" />
     <template v-else>
       <nav class="folders" :aria-label="t('mail.folders')">
-        <BaseButton variant="primary" icon="edit" :icon-only="compact" :label="t('mail.compose')" class="compose" @click="router.push('/ecrire')" />
+        <BaseButton variant="primary" icon="edit" :icon-only="compact" :label="t('mail.compose')" class="compose" :aria-label="t('mail.compose')" @click="router.push('/ecrire')" />
         <ul>
           <li v-for="f in FOLDERS" :key="f">
             <button type="button" class="fbtn" :aria-current="box.mailbox === 'personal' && box.folder === f ? 'true' : undefined" :aria-label="compact ? t(`mail.folder.${f}`) : undefined" @click="pick('personal', f)">
@@ -137,7 +137,7 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
 .none { margin: var(--space-6); align-self: center; }
 .pad { padding: var(--space-4); }
 
-@media (max-width: 1100px) { .mail, .mail.compact { grid-template-columns: 64px minmax(280px, 340px) minmax(0, 1fr); } .lbl, .n, .sec { display: none; } .fbtn { justify-content: center; padding: 0; } .collapse { display: none; } }
+@media (max-width: 1100px) { .mail, .mail.compact { grid-template-columns: 64px minmax(280px, 340px) minmax(0, 1fr); } .lbl, .n, .sec { display: none; } .compose { padding: 0; justify-content: center; } .compose :deep(span) { display: none; } .fbtn { justify-content: center; padding: 0; } .collapse { display: none; } }
 @media (max-width: 720px) {
   .mail, .mail.compact { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .folders { flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: var(--bw) solid var(--c-border); padding: var(--space-2); align-items: center; }

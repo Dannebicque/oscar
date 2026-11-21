@@ -4,6 +4,7 @@ Sans dépendance. Code de sortie ≠ 0 au premier écart. Idempotent : chaque ex
 
   python3 scripts/e2e.py
 """
+import imaplib
 import json
 import sys
 import time
@@ -31,6 +32,25 @@ def call(method, path, token=None, body=None, merge=False):
         return e.code, json.loads(raw) if raw else None
     except urllib.error.URLError as e:
         sys.exit(f"API injoignable sur {API} ({e.reason}). Lance d'abord scripts/dev-up.sh.")
+
+
+def purge():
+    """Retire des boîtes de test les messages laissés par ce script (objet « Test E2E »), pour garder une démo propre."""
+    for user in ("david", "claire", "marc"):
+        try:
+            c = imaplib.IMAP4("127.0.0.1", 1143)
+            c.login(user, "oscar-test")
+        except Exception:
+            continue
+        for line in c.list()[1]:
+            folder = line.decode().rsplit(' "', 1)[-1].strip('" ').split(" ")[-1].strip('"')
+            if c.select(f'"{folder}"')[0] != "OK":
+                continue
+            ids = c.search(None, "SUBJECT", '"Test E2E"')[1][0].split()
+            for i in ids:
+                c.store(i, "+FLAGS", "\\Deleted")
+            c.expunge()
+        c.logout()
 
 
 def check(ok, label):
@@ -122,10 +142,14 @@ def main():
     check(call("POST", "/api/mail-accounts/probe", tok_now, {"imapHost": "127.0.0.1", "imapPort": 1143, "imapEncryption": "none", "smtpHost": "127.0.0.1", "smtpPort": 1025, "smtpEncryption": "none", "username": "david", "password": "faux"})[1]["imap"]["ok"] is False, "un mauvais mot de passe de messagerie est signalé")
     check(call("DELETE", "/api/me", tok_now, {"password": pw_now})[0] == 204, "suppression du compte (nettoyage)")
 
+    purge()
     print()
     print("Tout est bon." if not failures else f"{len(failures)} vérification(s) en échec :\n  - " + "\n  - ".join(failures))
     sys.exit(1 if failures else 0)
 
 
 if __name__ == "__main__":
+    if "--purge" in sys.argv:
+        purge()
+        sys.exit(0)
     main()

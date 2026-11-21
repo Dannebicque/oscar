@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { api, apiMode, session } from '../api'
+import { ApiError } from '../api/types'
 import { authEvents, saveToken } from '../api/session'
 
 /** Connexion : CAS en production, connexion de développement en local. En démo hors ligne, aucune connexion n'est requise. */
@@ -19,7 +20,10 @@ export const useAuthStore = defineStore('auth', () => {
         session.username = me.username
         session.email = me.email ?? null
         session.hasPassword = !!me.hasPassword
-      } catch { saveToken(null) }
+      } catch (e) {
+        // Seul un 401 ferme la session : une panne passagère (502, réseau) ne doit pas déconnecter.
+        if (e instanceof ApiError && e.status === 401) saveToken(null)
+      }
     }
     checked.value = true
   }
