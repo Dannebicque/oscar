@@ -30,6 +30,11 @@ export const useMailsStore = defineStore('mails', () => {
     try { items.value = await api.mails.list(); link() } catch { error.value = true } finally { loading.value = false }
   }
   const put = (m: Mail) => { items.value = items.value.map((x) => (x.id === m.id ? m : x)) }
+  /**
+   * Modifie quelques champs d'un mail en partant de son état ACTUEL au moment de l'écriture. Indispensable quand plusieurs
+   * chargements (corps, suggestions, lu) tournent en parallèle : copier le mail AVANT l'attente écraserait les autres résultats.
+   */
+  const patch = (id: string, fields: Partial<Mail>) => { items.value = items.value.map((x) => (x.id === id ? { ...x, ...fields } : x)) }
 
   /** État de prise en charge d'une demande d'alias, vu par la boîte partagée : « nouveau / pris par X / traité par X ». */
   function teamState(s: Suivi): Pick<Mail, 'claim' | 'notes' | 'activity' | 'composing'> {
@@ -60,7 +65,7 @@ export const useMailsStore = defineStore('mails', () => {
     loadingBody.value = new Set([...loadingBody.value, id])
     bodyError.value.delete(id)
     try {
-      put({ ...byId(id)!, paragraphs: await api.mails.body(id) })
+      patch(id, { paragraphs: await api.mails.body(id) })
     } catch {
       bodyError.value = new Set([...bodyError.value, id])
     } finally {
@@ -75,14 +80,14 @@ export const useMailsStore = defineStore('mails', () => {
     const m = byId(id)
     if (!m || hintsLoaded.value.has(id)) return
     hintsLoaded.value = new Set([...hintsLoaded.value, id])
-    try { put({ ...byId(id)!, hints: await api.mails.hints(id) }) } catch { /* pas de suggestions, pas de blocage */ }
+    try { patch(id, { hints: await api.mails.hints(id) }) } catch { /* pas de suggestions, pas de blocage */ }
   }
 
   async function markRead(id: string) {
     const m = byId(id)
     if (!m?.unread) return
     await api.mails.markRead(id)
-    put({ ...m, unread: false })
+    patch(id, { unread: false })
   }
 
   /** Prise en charge d'une demande d'alias. Rafraîchit les suivis : l'état vient du serveur. */
@@ -117,7 +122,7 @@ export const useMailsStore = defineStore('mails', () => {
       subject: m.subject.replace(/^(re|tr)\s*:\s*/i, ''), contact: m.from.name, direction: 'toHandle', dueAt: opts.dueAt,
       mailId: refOf(m), mailbox: m.mailbox, suggestedByAi: opts.suggestedByAi ?? false, reason: opts.reason ?? null,
     })
-    put({ ...m, suivi: s.id })
+    patch(id, { suivi: s.id })
     return s
   }
 

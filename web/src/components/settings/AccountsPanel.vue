@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAccountsStore } from '../../stores/accounts'
 import { useUiStore } from '../../stores/ui'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseCard from '../ui/BaseCard.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
+import SelectField from '../ui/SelectField.vue'
+import TextField from '../ui/TextField.vue'
 import SwitchField from '../ui/SwitchField.vue'
 import ToneChip from '../ui/ToneChip.vue'
 
@@ -60,6 +62,7 @@ async function remove() {
   } catch { ui.notify(t('settings.accounts.removeFailed'), { tone: 'error' }) }
 }
 const ENC = ['ssl', 'tls', 'none'] as const
+const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings.accounts.enc.${e}`) })))
 </script>
 
 <template>
@@ -116,24 +119,24 @@ const ENC = ['ssl', 'tls', 'none'] as const
 
   <BaseDialog :open="dialog === 'mail'" :title="t('settings.accounts.addMail')" @close="dialog = null">
     <form id="f-mail" class="form" @submit.prevent="addMail">
-      <div class="field"><label for="m-label">{{ t('settings.accounts.fLabel') }}</label><input id="m-label" v-model="mailForm.label" class="input" required /></div>
-      <div class="field"><label for="m-addr">{{ t('settings.accounts.fAddress') }}</label><input id="m-addr" v-model="mailForm.address" type="email" class="input" required autocomplete="email" /></div>
+      <TextField id="m-label" v-model="mailForm.label" :label="t('settings.accounts.fLabel')" required />
+      <TextField id="m-addr" v-model="mailForm.address" :label="t('settings.accounts.fAddress')" type="email" required autocomplete="email" />
       <div class="two">
-        <div class="field"><label for="m-user">{{ t('settings.accounts.fUser') }}</label><input id="m-user" v-model="mailForm.username" class="input" required autocomplete="username" /></div>
-        <div class="field"><label for="m-pass">{{ t('settings.accounts.fPassword') }}</label><input id="m-pass" v-model="mailForm.password" type="password" class="input" required autocomplete="new-password" aria-describedby="m-pass-h" /></div>
+        <TextField id="m-user" v-model="mailForm.username" :label="t('settings.accounts.fUser')" required autocomplete="username" />
+        <TextField id="m-pass" v-model="mailForm.password" :label="t('settings.accounts.fPassword')" type="password" required autocomplete="new-password" />
       </div>
       <p id="m-pass-h" class="hint">{{ t('settings.accounts.passwordHelp') }}</p>
       <fieldset class="srv">
         <legend>IMAP</legend>
-        <div class="field"><label for="m-ih">{{ t('settings.accounts.fHost') }}</label><input id="m-ih" v-model="mailForm.imapHost" class="input" required /></div>
-        <div class="field"><label for="m-ip">{{ t('settings.accounts.fPort') }}</label><input id="m-ip" v-model.number="mailForm.imapPort" type="number" min="1" max="65535" class="input" required /></div>
-        <div class="field"><label for="m-ie">{{ t('settings.accounts.fEncryption') }}</label><select id="m-ie" v-model="mailForm.imapEncryption" class="input"><option v-for="e in ENC" :key="e" :value="e">{{ t(`settings.accounts.enc.${e}`) }}</option></select></div>
+        <TextField id="m-ih" v-model="mailForm.imapHost" :label="t('settings.accounts.fHost')" required />
+        <TextField id="m-ip" v-model.number="mailForm.imapPort" :label="t('settings.accounts.fPort')" type="number" required :min="1" :max="65535" />
+        <SelectField id="m-ie" v-model="mailForm.imapEncryption" :label="t('settings.accounts.fEncryption')" :options="encOptions" />
       </fieldset>
       <fieldset class="srv">
         <legend>SMTP</legend>
-        <div class="field"><label for="m-sh">{{ t('settings.accounts.fHost') }}</label><input id="m-sh" v-model="mailForm.smtpHost" class="input" required /></div>
-        <div class="field"><label for="m-sp">{{ t('settings.accounts.fPort') }}</label><input id="m-sp" v-model.number="mailForm.smtpPort" type="number" min="1" max="65535" class="input" required /></div>
-        <div class="field"><label for="m-se">{{ t('settings.accounts.fEncryption') }}</label><select id="m-se" v-model="mailForm.smtpEncryption" class="input"><option v-for="e in ENC" :key="e" :value="e">{{ t(`settings.accounts.enc.${e}`) }}</option></select></div>
+        <TextField id="m-sh" v-model="mailForm.smtpHost" :label="t('settings.accounts.fHost')" required />
+        <TextField id="m-sp" v-model.number="mailForm.smtpPort" :label="t('settings.accounts.fPort')" type="number" required :min="1" :max="65535" />
+        <SelectField id="m-se" v-model="mailForm.smtpEncryption" :label="t('settings.accounts.fEncryption')" :options="encOptions" />
       </fieldset>
       <SwitchField v-model="mailForm.aiAllowed" :label="t('settings.accounts.aiAllowed')" :help="t('settings.accounts.aiAllowedHelp')" />
     </form>
@@ -145,11 +148,11 @@ const ENC = ['ssl', 'tls', 'none'] as const
 
   <BaseDialog :open="dialog === 'calendar'" :title="t('settings.accounts.addCalendar')" @close="dialog = null">
     <form id="f-cal" class="form" @submit.prevent="addCalendar">
-      <div class="field"><label for="c-label">{{ t('settings.accounts.fLabel') }}</label><input id="c-label" v-model="calForm.label" class="input" required /></div>
-      <div class="field"><label for="c-url">{{ t('settings.accounts.fCalUrl') }}</label><input id="c-url" v-model="calForm.url" type="url" class="input" required /></div>
+      <TextField id="c-label" v-model="calForm.label" :label="t('settings.accounts.fLabel')" required />
+      <TextField id="c-url" v-model="calForm.url" :label="t('settings.accounts.fCalUrl')" type="url" required />
       <div class="two">
-        <div class="field"><label for="c-user">{{ t('settings.accounts.fUser') }}</label><input id="c-user" v-model="calForm.username" class="input" autocomplete="username" /></div>
-        <div class="field"><label for="c-pass">{{ t('settings.accounts.fPassword') }}</label><input id="c-pass" v-model="calForm.password" type="password" class="input" autocomplete="new-password" /></div>
+        <TextField id="c-user" v-model="calForm.username" :label="t('settings.accounts.fUser')" autocomplete="username" />
+        <TextField id="c-pass" v-model="calForm.password" :label="t('settings.accounts.fPassword')" type="password" autocomplete="new-password" />
       </div>
       <SwitchField v-model="calForm.personal" :label="t('settings.accounts.personalCal')" :help="t('settings.accounts.includePersonalHelp')" />
     </form>

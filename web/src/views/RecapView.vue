@@ -8,12 +8,14 @@ import { useFormat } from '../composables/useFormat'
 import { clock } from '../domain/clock'
 import { isoDay } from '../domain/dates'
 import { flagOf } from '../domain/suivi'
+import { useOscar } from '../oscar/useOscar'
 import { useAgendaStore } from '../stores/agenda'
 import { useSettingsStore } from '../stores/settings'
 import { useSuivisStore } from '../stores/suivis'
 import { useTasksStore } from '../stores/tasks'
 
 const { t } = useI18n()
+const { say } = useOscar()
 const fmt = useFormat()
 const suivis = useSuivisStore()
 const tasks = useTasksStore()
@@ -34,7 +36,7 @@ const sections = computed(() => [
 </script>
 
 <template>
-  <PageHeader :title="t('recap.title')" :subtitle="t('recap.intro')">
+  <PageHeader :title="t('recap.title')" :subtitle="say('recapIntro')">
     <SegmentedControl v-model="slot" :options="options" :label="t('recap.title')" />
   </PageHeader>
   <article class="card stack recap">
@@ -48,7 +50,8 @@ const sections = computed(() => [
 </template>
 
 <style scoped>
-.recap { max-width: 720px; }
+.recap { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.recap > .head { grid-column: 1 / -1; }
 .head { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
 h2 { font-size: var(--fs-md); margin-bottom: var(--space-1); }
 ul { display: grid; gap: var(--space-1); list-style: disc; padding-left: var(--space-5); }

@@ -36,10 +36,12 @@ export const useTasksStore = defineStore('tasks', () => {
     items.value = [...items.value, n]
     return n
   }
+  async function update(id: string, patch: Partial<Task>) { put(await api.tasks.update(id, patch)) }
+  async function remove(id: string) { await api.tasks.remove(id); items.value = items.value.filter((t) => t.id !== id) }
   async function setDone(id: string, done: boolean) { put(await api.tasks.update(id, { done })) }
   /** F-35 : accepter une tâche proposée par l'IA. */
   async function confirm(id: string) { put(await api.tasks.update(id, { toConfirm: false })) }
   async function reject(id: string) { put(await api.tasks.update(id, { done: true, toConfirm: false })) }
 
-  return { items, loading, error, sort, filters, visible, projects, tags, today, toConfirm, load, add, setDone, confirm, reject }
+  return { items, loading, error, sort, filters, visible, projects, tags, today, toConfirm, load, add, update, remove, setDone, confirm, reject }
 })

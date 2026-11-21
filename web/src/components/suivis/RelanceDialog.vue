@@ -6,6 +6,7 @@ import type { Suivi } from '../../domain/types'
 import { useSuivisStore } from '../../stores/suivis'
 import { useUiStore } from '../../stores/ui'
 import AiBadge from '../ui/AiBadge.vue'
+import OscarSays from '../ui/OscarSays.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
 
@@ -54,6 +55,7 @@ async function act(kind: 'send' | 'snooze' | 'stop') {
 <template>
   <BaseDialog :open="open" :title="single ? t('mail.draft.title') : t('suivis.relanceMode')" @close="emit('close')">
     <template v-if="current">
+      <OscarSays situation="draftReady" :level="3" suggestion />
       <p class="top">
         <AiBadge />
         <span v-if="!single" class="muted" aria-live="polite">{{ t('suivis.relanceCounter', { i: index, n: total }) }}</span>

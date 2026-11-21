@@ -17,10 +17,9 @@ import { useSuivisStore } from '../../stores/suivis'
 import { useTasksStore } from '../../stores/tasks'
 import { useUiStore } from '../../stores/ui'
 import RelanceDialog from '../suivis/RelanceDialog.vue'
-import AiBadge from '../ui/AiBadge.vue'
 import Avatar from '../ui/Avatar.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
-import Callout from '../ui/Callout.vue'
+import OscarSays from '../ui/OscarSays.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
 import ActivityNotes from './ActivityNotes.vue'
@@ -152,11 +151,9 @@ function sendAvailability() {
           @keep-open="suivis.keepOpen(suivi.id)" @keep-waiting="suivis.keepWaiting(suivi.id)" @reopen="suivis.setStatus(suivi.id, 'inProgress')"
         />
 
-        <Callout v-if="showSuggestFollow" tone="ai" icon="sparkles" :title="t('mail.ai.suggestFollow')">
-          <AiBadge />
-          <p>{{ t('mail.ai.suggestFollowText') }}</p>
+        <OscarSays v-if="showSuggestFollow" situation="suggestFollow" :level="3" suggestion>
           <template #actions><BaseButton variant="primary" :label="t('mail.createSuivi')" @click="createSuivi(true)" /><BaseButton :label="t('common.ignore')" @click="ignore('follow')" /></template>
-        </Callout>
+        </OscarSays>
 
         <div class="body">
           <p v-for="(p, i) in mail.paragraphs" :key="i">{{ p }}</p>
@@ -166,26 +163,28 @@ function sendAvailability() {
           <p v-if="mail.attachments.length" class="cluster"><span v-for="a in mail.attachments" :key="a.name" class="chip"><BaseIcon name="paperclip" :size="14" />{{ a.name }} · {{ a.size }}</span></p>
         </div>
 
-        <Callout v-if="aiOn && hints.availability && !dismissed.has('avail')" tone="ai" icon="sparkles" :title="t('mail.ai.availTitle')">
-          <AiBadge />
-          <p>{{ t('mail.ai.availText', { n: hints.availability.slots.length, date: fmt.date(hints.availability.slots[0].start) }) }}</p>
+        <OscarSays v-if="aiOn && hints.availability && !dismissed.has('avail')" situation="availability" :params="{ who: mail.from.name.split(' ')[0], n: hints.availability.slots.length }" :level="3" suggestion>
           <template #actions><BaseButton variant="primary" icon="sparkles" :label="t('mail.ai.availAction')" @click="showAvail = true" /></template>
-        </Callout>
+        </OscarSays>
 
         <section v-if="aiOn && settings.s.aiSuggestTasks && (hints.event || hints.task)" class="detected" aria-labelledby="det-h">
           <h3 id="det-h">{{ t('mail.ai.detected') }}</h3>
-          <Callout v-if="hints.event && !dismissed.has('event')" tone="ai" icon="calendar" :title="hints.event.title">
-            <AiBadge />
-            <p class="kick">{{ t('mail.ai.eventKicker', { quote: hints.event.quote }) }}</p>
-            <p class="muted">{{ t('mail.ai.eventWhen', { date: fmt.dateLong(hints.event.start), start: fmt.time(hints.event.start), end: fmt.time(hints.event.end), cal: 'CalDAV' }) }}</p>
+          <OscarSays v-if="hints.event && !dismissed.has('event')" situation="suggestEvent" :level="3" suggestion>
+            <template #more>
+              <p class="item"><strong>{{ hints.event.title }}</strong></p>
+              <p class="kick">{{ t('mail.ai.eventKicker', { quote: hints.event.quote }) }}</p>
+              <p class="muted">{{ t('mail.ai.eventWhen', { date: fmt.dateLong(hints.event.start), start: fmt.time(hints.event.start), end: fmt.time(hints.event.end), cal: 'CalDAV' }) }}</p>
+            </template>
             <template #actions><BaseButton variant="primary" :label="t('mail.ai.eventAdd')" @click="addEvent" /><BaseButton :label="t('common.ignore')" @click="ignore('event')" /></template>
-          </Callout>
-          <Callout v-if="hints.task && !dismissed.has('task')" tone="ai" icon="task" :title="hints.task.title">
-            <AiBadge />
-            <p class="kick">{{ t('mail.ai.taskKicker', { quote: hints.task.quote }) }}</p>
-            <p class="muted">{{ t('mail.ai.taskDue', { date: fmt.dateLong(hints.task.dueAt) }) }}</p>
+          </OscarSays>
+          <OscarSays v-if="hints.task && !dismissed.has('task')" situation="suggestTask" :level="3" suggestion>
+            <template #more>
+              <p class="item"><strong>{{ hints.task.title }}</strong></p>
+              <p class="kick">{{ t('mail.ai.taskKicker', { quote: hints.task.quote }) }}</p>
+              <p class="muted">{{ t('mail.ai.taskDue', { date: fmt.dateLong(hints.task.dueAt) }) }}</p>
+            </template>
             <template #actions><BaseButton variant="primary" :label="t('mail.ai.taskAdd')" @click="addTask" /><BaseButton :label="t('common.ignore')" @click="ignore('task')" /></template>
-          </Callout>
+          </OscarSays>
         </section>
 
         <ActivityNotes v-if="shared" :mail="mail" @add-note="(x) => act(() => mails.addNote(mail.id, x), t('mail.notes.added'))" />

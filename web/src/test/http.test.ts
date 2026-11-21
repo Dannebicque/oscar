@@ -140,7 +140,7 @@ describe('Écrire sur l’API', () => {
     await flushPromises()
     const toast = useUiStore().toasts.at(-1)
     expect(toast?.tone).toBe('error')
-    expect(toast?.message).toContain('Rien n’a été créé')
+    expect(toast?.message).toContain('rien n’a été créé')
     expect((wrapper.find('#subject').element as HTMLInputElement).value).toBe('Test')
     expect(router.currentRoute.value.path).toBe('/ecrire')
     expect(calls.some((c) => c.url.endsWith('/api/suivis'))).toBe(false)
@@ -174,3 +174,46 @@ describe('Écrire sur l’API', () => {
 })
 
 void createMockApi
+
+describe('chargements parallèles d’un mail (régression : le corps disparaissait)', () => {
+  it('le corps, les suggestions et l’état « lu » qui arrivent dans le désordre ne s’écrasent pas', async () => {
+    const { pinia } = await mountApp({ template: '<div/>' })
+    const deferred = <T,>() => { let resolve!: (v: T) => void; const promise = new Promise<T>((r) => (resolve = r)); return { promise, resolve } }
+    const body = deferred<string[]>()
+    const hints = deferred<Record<string, unknown>>()
+    const read = deferred<void>()
+    const base = createMockApi()
+    resetApi({ ...base, mails: { ...base.mails, async list() { return [{ ...(await base.mails.list())[0], id: 'x', paragraphs: [], hints: {}, unread: true, suivi: null }] }, body: () => body.promise, hints: () => hints.promise as never, markRead: () => read.promise } })
+    const mails = useMailsStore(pinia)
+    await mails.load()
+    const all = Promise.all([mails.loadBody('x'), mails.loadHints('x'), mails.markRead('x')])
+    body.resolve(['Voici le texte du message.'])   // le corps arrive d'abord et s'affiche
+    await flushPromises()
+    expect(mails.byId('x')?.paragraphs).toEqual(['Voici le texte du message.'])
+    hints.resolve({ suggestFollow: true })          // puis les suggestions, avec leur propre copie : elles ne doivent pas effacer le corps
+    read.resolve()
+    await all
+    const m = mails.byId('x')!
+    expect(m.paragraphs).toEqual(['Voici le texte du message.'])
+    expect(m.hints).toEqual({ suggestFollow: true })
+    expect(m.unread).toBe(false)
+  })
+
+  it('un ordre inverse donne le même résultat', async () => {
+    const { pinia } = await mountApp({ template: '<div/>' })
+    const deferred = <T,>() => { let resolve!: (v: T) => void; const promise = new Promise<T>((r) => (resolve = r)); return { promise, resolve } }
+    const body = deferred<string[]>()
+    const hints = deferred<Record<string, unknown>>()
+    const base = createMockApi()
+    resetApi({ ...base, mails: { ...base.mails, async list() { return [{ ...(await base.mails.list())[0], id: 'y', paragraphs: [], hints: {}, suivi: null }] }, body: () => body.promise, hints: () => hints.promise as never } })
+    const mails = useMailsStore(pinia)
+    await mails.load()
+    const all = Promise.all([mails.loadBody('y'), mails.loadHints('y')])
+    hints.resolve({ suggestFollow: false })
+    await flushPromises()
+    body.resolve(['Texte'])
+    await all
+    expect(mails.byId('y')?.paragraphs).toEqual(['Texte'])
+    expect(mails.byId('y')?.hints).toEqual({ suggestFollow: false })
+  })
+})

@@ -6,12 +6,16 @@ import { ApiError } from '../api'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import CheckboxField from '../components/ui/CheckboxField.vue'
+import SelectField from '../components/ui/SelectField.vue'
+import TextField from '../components/ui/TextField.vue'
+import TextareaField from '../components/ui/TextareaField.vue'
 import RecipientInput from '../components/ui/RecipientInput.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { useFormat } from '../composables/useFormat'
 import { clock } from '../domain/clock'
 import { addDays, isoDay } from '../domain/dates'
 import { searchDirectory } from '../domain/directory'
+import { useOscar } from '../oscar/useOscar'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
 import { useUiStore } from '../stores/ui'
@@ -23,6 +27,7 @@ const fmt = useFormat()
 const mails = useMailsStore()
 const settings = useSettingsStore()
 const ui = useUiStore()
+const { say } = useOscar()
 
 const to = ref<string[]>([])
 const cc = ref<string[]>([])
@@ -54,6 +59,7 @@ const dueDate = computed(() => isoDay(addDays(clock.now(), Math.ceil(delayHours.
 const invalid = computed(() => submitted.value && (!subject.value.trim() || to.value.length === 0))
 const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.name ?? to.value[0] : '…'))
 const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { v: 168, k: 'd7' }]
+const delayOptions = computed(() => DELAYS.map((d) => ({ value: d.v, label: t(`compose.delays.${d.k}`) })))
 
 async function send() {
   submitted.value = true
@@ -65,12 +71,12 @@ async function send() {
       followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
     })
-    ui.notify(r.followDueAt ? t('compose.sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
+    ui.notify(r.followDueAt ? say('sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
     router.push({ name: 'mails' })
   } catch (e) {
     // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour, avec une action (§5, F-79).
     const noAccount = e instanceof ApiError && e.message === 'no-account'
-    ui.notify(t(noAccount ? 'compose.noAccount' : 'compose.notSent'), { tone: 'error' })
+    ui.notify(noAccount ? t('compose.noAccount') : say('errorSend'), { tone: 'error' })
   } finally {
     sending.value = false
   }
@@ -83,56 +89,48 @@ function saveDraft() {
 <template>
   <PageHeader :title="t('compose.title')" />
   <form class="form" novalidate @submit.prevent="send">
-    <div class="field">
-      <label for="to">{{ t('compose.to') }}</label>
-      <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />
-      <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
-    </div>
-    <BaseButton v-if="!showCc" class="cc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
-    <template v-else>
-      <div class="field"><label for="cc">{{ t('compose.cc') }}</label><RecipientInput id="cc" v-model="cc" :label="t('compose.cc')" /></div>
-      <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><RecipientInput id="bcc" v-model="bcc" :label="t('compose.bcc')" /></div>
-    </template>
-    <div class="field">
-      <label for="subject">{{ t('compose.subject') }}</label>
-      <input id="subject" v-model="subject" class="input" required :aria-invalid="submitted && !subject.trim()" autocomplete="off" />
-    </div>
-    <p v-if="invalid" class="error-text" role="alert">{{ t('compose.required') }}</p>
-    <div class="field">
-      <label for="body">{{ t('compose.body') }}</label>
-      <textarea id="body" v-model="body" class="input" rows="12" />
-    </div>
-
-    <fieldset class="card pad-sm flat follow">
-      <legend class="sr-only">{{ t('compose.follow') }}</legend>
-      <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
-      <p v-if="aiPicked && follow" class="hint">{{ t('compose.followAi') }}</p>
-      <template v-if="follow">
-        <div class="field inline">
-          <label for="delay">{{ t('compose.followDelay') }}</label>
-          <select id="delay" v-model.number="delayHours" class="input">
-            <option v-for="d in DELAYS" :key="d.v" :value="d.v">{{ t(`compose.delays.${d.k}`) }}</option>
-          </select>
-        </div>
-        <p class="hint" aria-live="polite">{{ t('compose.followInfo', { date: fmt.dateLong(dueDate) }) }}</p>
+    <div class="main stack">
+      <div class="field">
+        <label for="to">{{ t('compose.to') }}</label>
+        <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />
+        <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
+      </div>
+      <BaseButton v-if="!showCc" class="cc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
+      <template v-else>
+        <div class="field"><label for="cc">{{ t('compose.cc') }}</label><RecipientInput id="cc" v-model="cc" :label="t('compose.cc')" /></div>
+        <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><RecipientInput id="bcc" v-model="bcc" :label="t('compose.bcc')" /></div>
       </template>
-    </fieldset>
-
-    <div class="actions">
-      <BaseButton variant="primary" type="submit" icon="send" :disabled="sending" :label="t('compose.send')" />
-      <BaseButton icon="paperclip" :label="t('compose.attach')" @click="ui.notify(t('compose.attach'), { tone: 'info' })" />
-      <BaseButton :label="t('compose.saveDraft')" @click="saveDraft" />
-      <BaseButton variant="ghost" :label="t('common.cancel')" @click="router.back()" />
+      <TextField id="subject" v-model="subject" :label="t('compose.subject')" required :error="submitted && !subject.trim() ? t('compose.subjectRequired') : ''" />
+      <p v-if="invalid" class="error-text" role="alert">{{ t('compose.required') }}</p>
+      <TextareaField id="body" v-model="body" :label="t('compose.body')" :rows="14" />
     </div>
+
+    <aside class="side stack">
+      <fieldset class="card pad-sm flat follow">
+        <legend class="sr-only">{{ t('compose.follow') }}</legend>
+        <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
+        <p v-if="aiPicked && follow" class="hint">{{ say('followAi') }}</p>
+        <template v-if="follow">
+          <SelectField id="delay" v-model="delayHours" :label="t('compose.followDelay')" :options="delayOptions" />
+          <p class="hint" aria-live="polite">{{ t('compose.followInfo', { date: fmt.dateLong(dueDate) }) }}</p>
+        </template>
+      </fieldset>
+      <div class="actions">
+        <BaseButton variant="primary" type="submit" icon="send" :disabled="sending" :label="t('compose.send')" />
+        <BaseButton icon="paperclip" :label="t('compose.attach')" @click="ui.notify(t('compose.attach'), { tone: 'info' })" />
+        <BaseButton :label="t('compose.saveDraft')" @click="saveDraft" />
+        <BaseButton variant="ghost" :label="t('common.cancel')" @click="router.back()" />
+      </div>
+      <p class="hint">{{ say('neverSend') }}</p>
+    </aside>
   </form>
 </template>
 
 <style scoped>
-.form { display: grid; gap: var(--space-4); max-width: 760px; }
+.form { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1000px) { .form { grid-template-columns: minmax(0, 1fr) 340px; } .side { position: sticky; top: 0; } }
 .cc { justify-self: start; }
-.follow { display: grid; gap: var(--space-2); margin: 0; }
-.check { display: flex; gap: var(--space-2); align-items: center; min-height: var(--target); flex-wrap: wrap; }
-.inline { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
-.inline .input { width: auto; }
+.follow { display: grid; gap: var(--space-3); margin: 0; }
+.check { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 </style>

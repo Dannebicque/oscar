@@ -14,12 +14,14 @@ import FlagChip from '../components/ui/FlagChip.vue'
 import StatusChip from '../components/ui/StatusChip.vue'
 import { LOCALES } from '../i18n'
 import { DENSITIES, THEMES } from '../themes'
+import { useOscar } from '../oscar/useOscar'
 import { useSettingsStore } from '../stores/settings'
 import { useSystemStore } from '../stores/system'
 
 const { t } = useI18n()
 const { s } = useSettingsStore()
 const system = useSystemStore()
+const { say } = useOscar()
 
 const sections = ['accounts', 'relances', 'recap', 'ai', 'look', 'journal'] as const
 const themeOpts = computed(() => THEMES.map((x) => ({ value: x.id, label: t(`settings.look.themes.${x.id}`), icon: x.icon })))
@@ -27,6 +29,7 @@ const densityOpts = computed(() => DENSITIES.map((d) => ({ value: d, label: t(`s
 const langOpts = computed(() => LOCALES.map((l) => ({ value: l, label: l === 'fr' ? 'Français' : 'English' })))
 const delayOpts = computed(() => ([24, 48, 72, 168] as const).map((h) => ({ value: h, label: t(`settings.relances.h${h}`) })))
 const capOpts = [3, 5, 10].map((n) => ({ value: n as 3 | 5 | 10, label: String(n) }))
+const toneOpts = computed(() => (['light', 'neutral'] as const).map((k) => ({ value: k, label: t(`oscar.tones.${k}`), help: say('noMeeting', {}, k) })))
 const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((m) => ({ value: m, label: t(`settings.ai.${m}`), help: t(`settings.ai.${m}Help`) })))
 </script>
 
@@ -107,7 +110,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
 .toc ul { display: grid; gap: 2px; }
 .toc a { display: flex; align-items: center; min-height: var(--target); padding: 0 var(--space-3); border-radius: var(--radius-sm); text-decoration: none; color: var(--c-text); }
 .toc a:hover { background: var(--c-surface-2); }
-.sections { display: grid; gap: var(--space-6); max-width: 760px; }
+.sections { display: grid; gap: var(--space-6); min-width: 0; }
 section { display: grid; gap: var(--space-3); scroll-margin-top: var(--space-4); }
 h2 { font-size: var(--fs-lg); display: flex; gap: var(--space-2); align-items: center; }
 h3 { font-size: var(--fs-md); }

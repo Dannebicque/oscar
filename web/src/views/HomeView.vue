@@ -7,7 +7,10 @@ import NextEventCard from '../components/suivis/NextEventCard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
-import Callout from '../components/ui/Callout.vue'
+import OscarSays from '../components/ui/OscarSays.vue'
+import { useOscar } from '../oscar/useOscar'
+import type { Situation } from '../oscar/situations'
+import { useSettingsStore } from '../stores/settings'
 import BaseIcon from '../components/ui/BaseIcon.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
@@ -34,6 +37,8 @@ const agenda = useAgendaStore()
 const mails = useMailsStore()
 const accounts = useAccountsStore()
 const ui = useUiStore()
+const settings = useSettingsStore()
+const { say } = useOscar()
 
 type Mode = 'auto' | 'busy' | 'calm' | 'first'
 const mode = ref<Mode>('auto')
@@ -47,12 +52,14 @@ const noAccount = computed(() => apiMode === 'http' && accounts.loaded && accoun
 const state = computed<'busy' | 'calm' | 'first'>(() => (mode.value !== 'auto' ? mode.value : noAccount.value ? 'first' : top.value.length ? 'busy' : 'calm'))
 
 /** Texte d'Oscar : une phrase courte, jamais de reproche, une action proposée (§5). */
+const speak = (situation: Situation, params: Record<string, string | number> = {}) => ({ situation, params })
 const assistant = computed(() => {
+  if (state.value === 'first') return speak('firstLaunch')
   const first = suivis.mine.find((s) => suivis.flag(s) === 'replyReceived')
-  if (first) return t('home.assistantReply', { who: first.contact })
+  if (first) return speak('replyReceived', { who: first.contact })
   const rel = suivis.relances[0]
-  if (rel) return t('home.assistantRelance', { who: rel.contact })
-  return t('home.assistantQuiet')
+  if (rel) return speak('relanceDue', { who: rel.contact, n: Math.max(1, Math.ceil(settings.s.relanceHours / 24)) })
+  return speak('quiet')
 })
 const today = computed(() => isoDay(now.value))
 const counters = computed(() => [
@@ -79,7 +86,7 @@ function open(i: PriorityItem) {
 async function close(i: PriorityItem) {
   if (i.kind === 'mail') {
     const undo = await suivis.close(i.refId)
-    ui.notify(t('suivis.closed', { subject: i.title }), { undo: undo && (() => undo()) })
+    ui.notify(say('closed', { subject: i.title }), { undo: undo && (() => undo()) })
   } else if (i.kind === 'task') {
     await tasks.setDone(i.refId, true)
     ui.notify(t('tasks.doneToast', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
@@ -105,10 +112,9 @@ async function quickAdd() {
   <div class="grid">
     <NextEventCard :now="now" class="span" />
 
-    <Callout :level="2" class="span" tone="ai" icon="sparkles" :title="t('home.assistant')">
-      <p class="say">{{ state === 'first' ? t('home.startTitle') : assistant }}</p>
-      <template #actions><AiBadge /><BaseButton v-if="state !== 'first'" :label="t('home.assistantRecap')" @click="router.push('/recap')" /></template>
-    </Callout>
+    <OscarSays class="span" :situation="assistant.situation" :params="assistant.params" suggestion>
+      <template #actions><BaseButton v-if="state !== 'first'" :label="t('home.assistantRecap')" @click="router.push('/recap')" /></template>
+    </OscarSays>
 
     <section v-if="state === 'busy'" aria-labelledby="first-h">
       <header class="sec-head">
@@ -122,7 +128,7 @@ async function quickAdd() {
 
     <BaseCard v-else-if="state === 'calm'" class="stack" aria-labelledby="calm-h">
       <h2 id="calm-h">{{ t('home.calmTitle') }}</h2>
-      <p>{{ t('home.calmText') }}</p>
+      <p>{{ say('calm') }}</p>
       <ul class="ideas">
         <li><ToneChip tone="neutral" icon="task" :label="t('kinds.task')" /> {{ tasks.items.find((x) => !x.done && x.dueAt)?.title }}</li>
         <li><ToneChip tone="neutral" icon="calendar" :label="t('kinds.rdv')" /> {{ agenda.work[0]?.title }}</li>

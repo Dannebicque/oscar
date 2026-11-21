@@ -105,6 +105,7 @@ export function createHttpApi(baseUrl: string): Api {
       list: () => req<Task[]>('GET', '/api/tasks'),
       create: (t) => req<Task>('POST', '/api/tasks', t),
       update: (id, patch) => req<Task>('PATCH', `/api/tasks/${encodeURIComponent(id)}`, patch, { merge: true }),
+      remove: async (id) => { await req('DELETE', `/api/tasks/${encodeURIComponent(id)}`) },
     },
     agenda: {
       async sources(): Promise<CalendarSource[]> {

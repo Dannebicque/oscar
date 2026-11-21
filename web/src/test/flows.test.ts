@@ -100,7 +100,7 @@ describe('Écrire (F-73)', () => {
   it('refuse un envoi sans destinataire ni objet, avec une erreur annoncée', async () => {
     const { wrapper } = await mountApp(ComposeView, '/ecrire')
     await wrapper.find('form').trigger('submit')
-    expect(wrapper.find('[role="alert"]').text()).toContain('au moins un destinataire')
+    expect(wrapper.findAll('[role="alert"]').map((a) => a.text()).join(' | ')).toContain('au moins un destinataire')
     expect(useSuivisStore().items.length).toBe(0)
   })
 })

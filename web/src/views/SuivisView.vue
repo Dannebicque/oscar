@@ -8,6 +8,8 @@ import RelanceDialog from '../components/suivis/RelanceDialog.vue'
 import SuiviBoard from '../components/suivis/SuiviBoard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import Callout from '../components/ui/Callout.vue'
+import OscarSays from '../components/ui/OscarSays.vue'
+import { useOscar } from '../oscar/useOscar'
 import BaseButton from '../components/ui/BaseButton.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
@@ -33,6 +35,7 @@ const tasks = useTasksStore()
 const agenda = useAgendaStore()
 const mails = useMailsStore()
 const ui = useUiStore()
+const { say } = useOscar()
 const accounts = useAccountsStore()
 const now = useNow()
 
@@ -102,7 +105,7 @@ async function done(i: PriorityItem) {
   if (i.kind === 'mail') {
     const subject = i.title
     const undo = await store.close(i.refId)
-    ui.notify(t('suivis.closed', { subject }), { undo: undo && (async () => { await undo(); ui.notify(t('suivis.reopened')) }) })
+    ui.notify(say('closed', { subject }), { undo: undo && (async () => { await undo(); ui.notify(t('suivis.reopened')) }) })
   } else if (i.kind === 'task') {
     await tasks.setDone(i.refId, true)
     ui.notify(t('tasks.doneToast', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
@@ -135,24 +138,23 @@ function suggest(accept: boolean) {
       <NextEventCard v-if="store.scope === 'mine'" :now="now" />
 
       <Callout :level="2" v-if="store.scope === 'mine' && store.relances.length" tone="warn" icon="clock" :title="t('suivis.relancesTitle', { n: store.relances.length }, store.relances.length)">
-        <p>{{ t('suivis.relancesHelp') }}</p>
+        <p>{{ say('relancesMany', { n: store.relances.length }) }}</p>
         <template #actions><BaseButton variant="primary" :label="t('suivis.relancesStart')" @click="showRelances = true" /></template>
       </Callout>
 
-      <Callout :level="2" v-if="apiMode === 'mock' && suggestion === 'open' && store.scope === 'mine'" tone="ai" icon="sparkles" :title="t('common.aiBadge')">
-        <p>{{ t('suivis.suggestionTitle') }}</p>
+      <OscarSays v-if="apiMode === 'mock' && suggestion === 'open' && store.scope === 'mine'" situation="suggestGroup" suggestion>
         <template #actions>
           <BaseButton variant="primary" :label="t('suivis.suggestionCreate')" @click="suggest(true)" />
           <BaseButton :label="t('common.ignore')" @click="suggest(false)" />
         </template>
-      </Callout>
+      </OscarSays>
 
       <p class="muted" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
 
       <template v-if="view === 'priorities'">
         <SegmentedControl v-model="kind" :options="kindOptions" :label="t('suivis.filterKind')" />
         <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
-        <EmptyState v-else-if="all.length === 0" :text="t('suivis.empty')" />
+        <EmptyState v-else-if="all.length === 0" :text="say('calm')" />
         <EmptyState v-else-if="shown.length === 0" icon="list" :text="t('suivis.emptyCategory')" />
         <ol v-else class="rows" :aria-label="t('suivis.priorities')">
           <SuiviRow v-for="(i, n) in shown" :key="i.key" :item="i" :rank="n + 1" :extra="teamExtra(i)" @open="open" @done="done" />

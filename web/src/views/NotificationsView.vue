@@ -49,7 +49,7 @@ async function markAll() {
 </template>
 
 <style scoped>
-.list { display: grid; gap: var(--gap); max-width: 760px; }
+.list { display: grid; gap: var(--gap); }
 .main { flex: 1; display: grid; gap: 2px; }
 .chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .txt { font-weight: 600; }

@@ -8,6 +8,8 @@ import BaseIcon from '../components/ui/BaseIcon.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
+import SelectField from '../components/ui/SelectField.vue'
+import TextField from '../components/ui/TextField.vue'
 import ToneChip from '../components/ui/ToneChip.vue'
 import { useFormat } from '../composables/useFormat'
 import { conflictIds } from '../domain/agenda'
@@ -104,17 +106,14 @@ async function create() {
 
   <BaseDialog :open="showNew" :title="t('agenda.add')" @close="showNew = false">
     <form id="new-event" class="form" @submit.prevent="create">
-      <div class="field"><label for="ev-title">{{ t('agenda.evTitle') }}</label><input id="ev-title" v-model="form.title" class="input" required autocomplete="off" /></div>
-      <div class="field"><label for="ev-day">{{ t('agenda.evDay') }}</label><input id="ev-day" v-model="form.day" type="date" class="input" /></div>
+      <TextField id="ev-title" v-model="form.title" :label="t('agenda.evTitle')" required />
+      <TextField id="ev-day" v-model="form.day" type="date" :label="t('agenda.evDay')" />
       <div class="two">
-        <div class="field"><label for="ev-s">{{ t('agenda.evStart') }}</label><input id="ev-s" v-model="form.start" type="time" class="input" /></div>
-        <div class="field"><label for="ev-e">{{ t('agenda.evEnd') }}</label><input id="ev-e" v-model="form.end" type="time" class="input" /></div>
+        <TextField id="ev-s" v-model="form.start" type="time" :label="t('agenda.evStart')" />
+        <TextField id="ev-e" v-model="form.end" type="time" :label="t('agenda.evEnd')" />
       </div>
-      <div class="field"><label for="ev-p">{{ t('agenda.evPlace') }}</label><input id="ev-p" v-model="form.location" class="input" autocomplete="off" /></div>
-      <div class="field">
-        <label for="ev-c">{{ t('agenda.evCalendar') }}</label>
-        <select id="ev-c" v-model="form.calendar" class="input" required><option v-for="s in store.sources" :key="s.id" :value="s.id">{{ s.label }}</option></select>
-      </div>
+      <TextField id="ev-p" v-model="form.location" :label="t('agenda.evPlace')" />
+      <SelectField id="ev-c" v-model="form.calendar" :label="t('agenda.evCalendar')" :options="store.sources.map((s) => ({ value: s.id, label: s.label }))" required />
     </form>
     <template #footer>
       <BaseButton :label="t('common.cancel')" @click="showNew = false" />

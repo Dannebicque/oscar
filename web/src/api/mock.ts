@@ -8,7 +8,8 @@ import type {
 export const ME = 'David'
 export const SHARED = { id: 'contact', address: 'contact@iut-troyes.fr', members: ['Claire', 'Marc', 'Léa', ME] }
 
-const clone = <T>(v: T): T => structuredClone(v)
+/** Copie profonde tolérante : les objets réactifs de Vue (proxys) ne passent pas par structuredClone. */
+const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
 const uid = (p: string) => `${p}${Math.random().toString(36).slice(2, 8)}`
 
 export function createMockApi(now: Date = new Date()): Api {
@@ -148,6 +149,7 @@ export function createMockApi(now: Date = new Date()): Api {
       async list() { return clone(tasks) },
       async create(t) { const n = { ...t, id: uid('t') }; tasks = [...tasks, n]; return clone(n) },
       async update(id, patch) { tasks = tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)); return clone(tasks.find((t) => t.id === id)!) },
+      async remove(id) { tasks = tasks.filter((t) => t.id !== id) },
     },
     agenda: {
       async sources() { return clone(sources) },

@@ -92,8 +92,8 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
 .shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'nav main' 'status status'; height: 100dvh; }
 .topbar { display: none; }
 .nav { grid-area: nav; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-2); background: var(--c-surface); border-right: var(--bw) solid var(--c-border); }
-main { grid-area: main; padding: var(--space-5) var(--space-6); min-width: 0; min-height: 0; overflow-y: auto; scroll-padding-top: var(--space-5); }
-.page { max-width: var(--content-w); margin-inline: auto; }
+main { grid-area: main; padding: var(--space-5) var(--space-5); min-width: 0; min-height: 0; overflow-y: auto; scroll-padding-top: var(--space-5); }
+.page { width: 100%; }
 main.bleed { padding: 0; overflow: hidden; }
 main.bleed .page { max-width: none; height: 100%; margin: 0; }
 .brand { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; color: var(--c-text); font-weight: 800; }

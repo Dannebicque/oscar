@@ -6,6 +6,7 @@ import { addDays, isoDay } from '../../domain/dates'
 import type { Direction, NewSuivi } from '../../domain/types'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
+import TextField from '../ui/TextField.vue'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: []; create: [n: NewSuivi] }>()
@@ -30,19 +31,9 @@ function submit() {
 <template>
   <BaseDialog :open="open" :title="t('suivis.newTitle')" @close="emit('close')">
     <form id="new-suivi" novalidate @submit.prevent="submit">
-      <div class="field">
-        <label for="ns-subject">{{ t('suivis.newSubject') }}</label>
-        <input id="ns-subject" v-model="subject" class="input" required :aria-invalid="submitted && !subject.trim()" aria-describedby="ns-err" autocomplete="off" />
-      </div>
-      <div class="field">
-        <label for="ns-contact">{{ t('suivis.newContact') }}</label>
-        <input id="ns-contact" v-model="contact" class="input" required :aria-invalid="submitted && !contact.trim()" aria-describedby="ns-err" autocomplete="off" />
-      </div>
-      <p id="ns-err" class="error-text" role="alert">{{ invalid ? t('suivis.fieldRequired') : '' }}</p>
-      <div class="field">
-        <label for="ns-due">{{ t('suivis.newDue') }}</label>
-        <input id="ns-due" v-model="dueAt" type="date" class="input" />
-      </div>
+      <TextField id="ns-subject" v-model="subject" :label="t('suivis.newSubject')" required :error="submitted && !subject.trim() ? t('suivis.fieldRequired') : ''" />
+      <TextField id="ns-contact" v-model="contact" :label="t('suivis.newContact')" required :error="submitted && !contact.trim() ? t('suivis.fieldRequired') : ''" />
+      <TextField id="ns-due" v-model="dueAt" type="date" :label="t('suivis.newDue')" />
       <fieldset class="field">
         <legend>{{ t('suivis.newDirection') }}</legend>
         <label class="radio"><input v-model="direction" type="radio" value="waiting" /> {{ t('direction.waiting') }}</label>

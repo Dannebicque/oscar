@@ -53,6 +53,7 @@ export interface TasksApi {
   list(): Promise<Task[]>
   create(t: Omit<Task, 'id'>): Promise<Task>
   update(id: string, patch: Partial<Task>): Promise<Task>
+  remove(id: string): Promise<void>
 }
 
 export interface AgendaApi {
