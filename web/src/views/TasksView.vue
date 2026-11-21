@@ -86,7 +86,7 @@ async function reject(task: Task) { await store.reject(task.id); ui.notify(t('ta
     <section v-for="g in groups" :key="g.key" class="group" :aria-labelledby="`g-${g.key}`">
       <h2 :id="`g-${g.key}`">{{ t(`tasks.groups.${g.key}`) }}</h2>
       <ul>
-        <li v-for="task in g.items" :key="task.id" class="task" :class="{ done: task.done, confirm: task.toConfirm }">
+        <li v-for="task in g.items" :key="task.id" class="row task" :class="{ done: task.done, dim: task.done, confirm: task.toConfirm }">
           <CheckboxField
             :id="`c-${task.id}`" :model-value="task.done" :disabled="task.toConfirm" hide-label
             :label="task.done ? t('tasks.markUndone', { title: task.title }) : t('tasks.markDone', { title: task.title })" @update:model-value="(v) => setDone(task, v)"
@@ -128,7 +128,6 @@ legend { float: left; margin-right: var(--space-2); font-weight: 600; padding: 0
 .group { margin-top: var(--space-5); }
 .group h2 { font-size: var(--fs-md); margin-bottom: var(--space-2); }
 ul { display: grid; gap: var(--gap); }
-.task { display: flex; gap: var(--space-3); align-items: center; padding: var(--row-y) var(--space-4); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
 .task.confirm { border-color: var(--c-ai); background: var(--c-ai-soft); }
 .task.done .line strong { text-decoration: line-through; color: var(--c-text-muted); }
 .main { flex: 1; min-width: 0; }

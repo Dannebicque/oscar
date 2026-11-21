@@ -5,7 +5,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAccountsStore } from '../../stores/accounts'
 import { useAuthStore } from '../../stores/auth'
 import { useSettingsStore } from '../../stores/settings'
+import { useShortcuts } from '../../composables/useShortcuts'
 import { useSystemStore } from '../../stores/system'
+import ShortcutsDialog from './ShortcutsDialog.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
 import ToastHost from '../ui/ToastHost.vue'
 import OscarMark from '../OscarMark.vue'
@@ -20,6 +22,7 @@ const auth = useAuthStore()
 const settings = useSettingsStore()
 const accounts = useAccountsStore()
 const router = useRouter()
+useShortcuts()
 
 /** Charge les données de la session, puis les rafraîchit chaque minute (le temps réel viendra avec Mercure). */
 let poll: ReturnType<typeof setInterval> | undefined
@@ -73,9 +76,10 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
       <button v-if="session.token" type="button" class="link wide out" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOut') }}</span></button>
     </nav>
 
-    <main id="main" tabindex="-1"><RouterView /></main>
+    <main id="main" tabindex="-1" :class="{ bleed: route.meta.bleed }"><div class="page"><RouterView /></div></main>
     <StatusBar />
   </div>
+  <ShortcutsDialog />
   <ToastHost />
 </template>
 
@@ -84,25 +88,28 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
 .skip:focus { top: var(--space-2); }
 .skip + .skip:focus { left: 200px; }
 
-.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); grid-template-rows: 1fr auto; grid-template-areas: 'nav main' 'status status'; min-height: 100vh; }
+/* L'application occupe la fenêtre : la zone centrale défile, la barre d'état reste visible (standard des clients de messagerie). */
+.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'nav main' 'status status'; height: 100dvh; }
 .topbar { display: none; }
-.nav { grid-area: nav; position: sticky; top: 0; align-self: start; height: calc(100vh - 44px); display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-2); background: var(--c-surface); border-right: 1px solid var(--c-border); }
-main { grid-area: main; padding: var(--space-5) var(--space-6); min-width: 0; max-width: calc(var(--content-w) + 2 * var(--space-6)); width: 100%; margin: 0 auto; }
+.nav { grid-area: nav; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-2); background: var(--c-surface); border-right: var(--bw) solid var(--c-border); }
+main { grid-area: main; padding: var(--space-5) var(--space-6); min-width: 0; min-height: 0; overflow-y: auto; scroll-padding-top: var(--space-5); }
+.page { max-width: var(--content-w); margin-inline: auto; }
+main.bleed { padding: 0; overflow: hidden; }
+main.bleed .page { max-width: none; height: 100%; margin: 0; }
 .brand { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; color: var(--c-text); font-weight: 800; }
 .rail-brand { justify-content: center; margin-bottom: var(--space-3); }
-.logo { width: 36px; height: 36px; border-radius: 10px; background: var(--c-primary); display: inline-flex; align-items: center; justify-content: center; color: var(--c-on-primary); }
-.link { position: relative; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: 0.75rem; color: var(--c-text-muted); text-decoration: none; border-radius: var(--radius-md); font-weight: 600; }
+.logo { width: 38px; height: 38px; border-radius: var(--radius-md); background: var(--c-primary); display: inline-flex; align-items: center; justify-content: center; color: var(--c-on-primary); box-shadow: var(--glow); }
+.link { position: relative; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: 0.75rem; color: var(--c-text-muted); text-decoration: none; border-radius: var(--radius-md); font-weight: 600; border: var(--bw) solid transparent; }
 .link:hover { background: var(--c-surface-2); }
-.link.current { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; }
+.link.current { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; border-color: color-mix(in srgb, var(--c-accent) 40%, transparent); }
 .spacer { margin-top: auto; }
 .out { border: 0; background: transparent; font: inherit; font-size: 0.75rem; cursor: pointer; }
-.badge { position: absolute; top: 6px; right: 14px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--c-danger); color: #fff; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
-:root[data-theme='contrast'] .badge { background: #fff; color: #000; }
+.badge { position: absolute; top: 6px; right: 14px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--c-danger-solid); color: var(--c-on-danger-solid); font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+:root[data-theme='contrast'] .badge { background: var(--c-text); color: var(--c-bg); }
 
 @media (max-width: 720px) {
   /* La barre du bas et la barre d'état restent visibles : seule la zone centrale défile (U-01). */
-  .shell { height: 100dvh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: 'top' 'main' 'nav' 'status'; }
-  main { overflow-y: auto; }
+  .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: 'top' 'main' 'nav' 'status'; }
   .topbar { grid-area: top; display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-4); background: var(--c-surface); border-bottom: 1px solid var(--c-border); }
   .top-actions { display: flex; gap: var(--space-1); }
   .icon-link { position: relative; width: var(--target); height: var(--target); display: inline-flex; align-items: center; justify-content: center; color: var(--c-text); border-radius: var(--radius-sm); }
@@ -114,6 +121,7 @@ main { grid-area: main; padding: var(--space-5) var(--space-6); min-width: 0; ma
   .link.center { margin-top: -14px; background: var(--c-primary); color: var(--c-on-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); }
   .link.center.current { background: var(--c-primary-hover); color: var(--c-on-primary); }
   main { padding: var(--space-4); }
+  main.bleed { padding: 0; }
 }
 @media (min-width: 721px) { .word { display: none; } .topbar { display: none; } }
 </style>

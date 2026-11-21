@@ -10,7 +10,7 @@ export const router = createRouter({
   routes: [
     { path: '/connexion', name: 'login', component: () => import('./views/LoginView.vue'), meta: { title: 'login.title', public: true } },
     { path: '/', name: 'home', component: () => import('./views/HomeView.vue'), meta: { title: 'nav.home' } },
-    { path: '/mails/:id?', name: 'mails', component: () => import('./views/MailView.vue'), meta: { title: 'nav.mails' }, props: true },
+    { path: '/mails/:id?', name: 'mails', component: () => import('./views/MailView.vue'), meta: { title: 'nav.mails', bleed: true }, props: true },
     { path: '/suivis', name: 'suivis', component: () => import('./views/SuivisView.vue'), meta: { title: 'nav.suivis' } },
     { path: '/agenda', name: 'agenda', component: () => import('./views/AgendaView.vue'), meta: { title: 'nav.agenda' } },
     { path: '/taches', name: 'tasks', component: () => import('./views/TasksView.vue'), meta: { title: 'nav.tasks' } },

@@ -3,13 +3,17 @@ import { reactive, watch } from 'vue'
 import { api, apiMode } from '../api'
 import type { ServerSettings } from '../api/types'
 import { setLocale, type Locale } from '../i18n'
-import { applyAppearance, DENSITIES, isThemePreference, type Density, type ThemePreference } from '../themes'
+import { applyAppearance, DENSITIES, isHexAccent, isPaletteId, isStyleId, isThemePreference, type Density, type PaletteId, type StyleId, type ThemePreference } from '../themes'
 
 export type AiMode = 'university' | 'external' | 'off'
 
 export interface Settings {
   locale: Locale
   theme: ThemePreference
+  /** Style visuel (forme, relief, typographie) et palette d'accent ; `customAccent` sert quand palette = « custom ». */
+  style: StyleId
+  palette: PaletteId
+  customAccent: string
   density: Density
   aiMode: AiMode
   /** Délai avant relance, en heures (F-54). */
@@ -26,10 +30,12 @@ export interface Settings {
   aiSuggestFollow: boolean
   aiSuggestTasks: boolean
   aiDraftRelance: boolean
+  /** Raccourcis clavier à une touche : désactivables (WCAG 2.1.4). */
+  shortcuts: boolean
 }
 
 export const DEFAULTS: Settings = {
-  locale: 'fr', theme: 'system', density: 'normal', aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
+  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', shortcuts: true, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
   recapMorning: '08:00', recapEvening: '17:30', recapEmail: true, recapHome: true, includePersonalCalendar: false,
   shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true,
 }
@@ -52,6 +58,9 @@ export function parseSettings(raw: string | null): Settings {
       if (typeof v[k] === typeof DEFAULTS[k]) (out as unknown as Record<string, unknown>)[k] = v[k]
     }
     if (!isThemePreference(out.theme)) out.theme = DEFAULTS.theme
+    if (!isStyleId(out.style)) out.style = DEFAULTS.style
+    if (!isPaletteId(out.palette)) out.palette = DEFAULTS.palette
+    if (!isHexAccent(out.customAccent)) out.customAccent = DEFAULTS.customAccent
     if (!DENSITIES.includes(out.density)) out.density = DEFAULTS.density
     if (out.locale !== 'fr' && out.locale !== 'en') out.locale = DEFAULTS.locale
     if (!['university', 'external', 'off'].includes(out.aiMode)) out.aiMode = DEFAULTS.aiMode
@@ -70,7 +79,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const media = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null
 
   function apply() {
-    applyAppearance(document.documentElement, s.theme, s.density, media?.matches ?? false)
+    applyAppearance(document.documentElement, s, media?.matches ?? false)
     setLocale(s.locale)
   }
   apply()

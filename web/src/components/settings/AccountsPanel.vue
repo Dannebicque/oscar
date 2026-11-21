@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useAccountsStore } from '../../stores/accounts'
 import { useUiStore } from '../../stores/ui'
 import BaseButton from '../ui/BaseButton.vue'
+import BaseCard from '../ui/BaseCard.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
 import SwitchField from '../ui/SwitchField.vue'
 import ToneChip from '../ui/ToneChip.vue'
@@ -62,12 +63,12 @@ const ENC = ['ssl', 'tls', 'none'] as const
 </script>
 
 <template>
-  <div class="panel">
-    <div class="card">
+  <div class="accounts">
+    <BaseCard class="stack">
       <div class="head"><h3>{{ t('settings.accounts.mailAccounts') }}</h3><BaseButton icon="plus" :label="t('settings.accounts.addMail')" @click="dialog = 'mail'" /></div>
       <p v-if="accounts.mail.length === 0" class="muted">{{ t('settings.accounts.noMail') }}</p>
       <ul class="list">
-        <li v-for="a in accounts.mail" :key="a.id" class="acc">
+        <li v-for="a in accounts.mail" :key="a.id" class="row acc">
           <div class="main">
             <strong>{{ a.label }}</strong>
             <span class="muted">{{ a.address }} · IMAP {{ a.imapHost }}:{{ a.imapPort }} · SMTP {{ a.smtpHost }}:{{ a.smtpPort }}</span>
@@ -80,13 +81,13 @@ const ENC = ['ssl', 'tls', 'none'] as const
           </div>
         </li>
       </ul>
-    </div>
+    </BaseCard>
 
-    <div class="card">
+    <BaseCard class="stack">
       <div class="head"><h3>{{ t('settings.accounts.calendars') }}</h3><BaseButton icon="plus" :label="t('settings.accounts.addCalendar')" @click="dialog = 'calendar'" /></div>
       <p v-if="accounts.calendar.length === 0" class="muted">{{ t('settings.accounts.noCalendar') }}</p>
       <ul class="list">
-        <li v-for="c in accounts.calendar" :key="c.id" class="acc">
+        <li v-for="c in accounts.calendar" :key="c.id" class="row acc">
           <div class="main">
             <strong>{{ c.label }} · {{ c.kind === 'google' ? 'Google Agenda' : 'CalDAV' }}</strong>
             <span class="muted">{{ c.personal ? t('agenda.private') : t('settings.accounts.work') }}<template v-if="c.url"> · {{ c.url }}</template></span>
@@ -95,13 +96,13 @@ const ENC = ['ssl', 'tls', 'none'] as const
           <div class="acts"><BaseButton variant="danger" icon="trash" :label="t('common.remove')" @click="confirmRemove = { kind: 'calendar', id: c.id, label: c.label }" /></div>
         </li>
       </ul>
-    </div>
+    </BaseCard>
 
-    <div class="card">
+    <BaseCard class="stack">
       <h3>{{ t('settings.accounts.sharedBoxes') }}</h3>
       <p v-if="accounts.shared.length === 0" class="muted">{{ t('settings.accounts.noShared') }}</p>
       <ul class="list">
-        <li v-for="b in accounts.shared" :key="b.id" class="acc">
+        <li v-for="b in accounts.shared" :key="b.id" class="row acc">
           <div class="main">
             <strong>{{ b.name }} · {{ b.address }}</strong>
             <ToneChip tone="info" icon="users" :label="b.role === 'admin' ? t('settings.accounts.roleAdmin') : t('settings.accounts.roleMember')" />
@@ -110,7 +111,7 @@ const ENC = ['ssl', 'tls', 'none'] as const
         </li>
       </ul>
       <p class="hint">{{ t('settings.accounts.sharedHelp') }}</p>
-    </div>
+    </BaseCard>
   </div>
 
   <BaseDialog :open="dialog === 'mail'" :title="t('settings.accounts.addMail')" @close="dialog = null">
@@ -168,12 +169,10 @@ const ENC = ['ssl', 'tls', 'none'] as const
 </template>
 
 <style scoped>
-.panel { display: grid; gap: var(--space-4); width: 100%; }
-.card { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-lg); }
+.accounts { display: grid; gap: var(--space-4); width: 100%; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 h3 { font-size: var(--fs-md); }
 .list { display: grid; gap: var(--space-2); }
-.acc { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; flex-wrap: wrap; padding: var(--space-3); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
 .main { display: grid; gap: 2px; min-width: 0; justify-items: start; }
 .acts { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .form { display: grid; gap: var(--space-3); }

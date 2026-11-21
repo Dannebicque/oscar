@@ -49,11 +49,21 @@ Sans API, `VITE_USE_MOCK=true npm run dev` lance la démo simulée hors ligne. P
 
 Les widgets interactifs reposent sur des bibliothèques maintenues plutôt que sur du code maison : **Reka UI** (MIT, composants accessibles sans style : fenêtres modales, interrupteurs, cases à cocher, choix exclusifs, notifications, pastilles de destinataires) et **FullCalendar 6** (MIT : agenda). Ils sont habillés par nos jetons de thème (`web/src/components/ui`, `web/src/components/agenda`).
 
-## Thèmes
+## Thèmes et design system
 
-Les couleurs ne vivent que dans des jetons (`web/src/styles/tokens.css`). Un thème est un bloc `[data-theme]` dans
-`web/src/styles/themes.css`, une entrée dans `web/src/themes/index.ts` et un libellé `settings.look.themes.<id>`.
-Livrés : automatique, clair, sombre, contraste élevé.
+Un thème = un **style** (forme, relief, typographie : Moderne, Rétro, Néon) × une **palette** d'accent (Azur, Émeraude, Ambre, Corail,
+Graphite, ou une couleur libre) × un **mode** (automatique, clair, sombre, contraste élevé). Tout est calculé dans
+`web/src/themes/engine.ts` et appliqué par jetons CSS sur `<html>` ; un accent choisi librement est corrigé pour rester lisible.
+**Chaque combinaison est vérifiée par test contre WCAG 2.2 AA** (`web/src/test/themes.test.ts` : 60 combinaisons + accents libres).
+
+L'aspect des cartes, bandeaux, lignes, pastilles et boutons vit en un seul endroit, `web/src/styles/components.css`
+(composants `BaseCard`, `Callout`, `BaseButton`, `ToneChip`…). Un test (`designSystem.test.ts`) interdit de les redéfinir dans une
+vue et de coder une couleur ou une police en dur. Polices embarquées (Inter, JetBrains Mono, Space Grotesk), aucun appel externe.
+
+Ajouter un style : une entrée dans `engine.ts` (STYLES, neutrals, styleTokens) et un libellé `settings.look.styles.<id>`.
+Ajouter une palette : une entrée dans PALETTES et un libellé `settings.look.palettes.<id>`.
+
+Raccourcis clavier alignés sur Gmail (c, /, j, k, r, g puis i/s/t/a/h, ?), désactivables dans Réglages (WCAG 2.1.4).
 
 ## Sécurité
 

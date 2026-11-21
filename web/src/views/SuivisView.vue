@@ -7,7 +7,7 @@ import NextEventCard from '../components/suivis/NextEventCard.vue'
 import RelanceDialog from '../components/suivis/RelanceDialog.vue'
 import SuiviBoard from '../components/suivis/SuiviBoard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
-import AiBadge from '../components/ui/AiBadge.vue'
+import Callout from '../components/ui/Callout.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
@@ -134,22 +134,18 @@ function suggest(accept: boolean) {
     <div class="stack">
       <NextEventCard v-if="store.scope === 'mine'" :now="now" />
 
-      <section v-if="store.scope === 'mine' && store.relances.length" class="relances" aria-labelledby="rel-h">
-        <div>
-          <h2 id="rel-h">{{ t('suivis.relancesTitle', { n: store.relances.length }, store.relances.length) }}</h2>
-          <p class="muted">{{ t('suivis.relancesHelp') }}</p>
-        </div>
-        <BaseButton variant="primary" icon="clock" :label="t('suivis.relancesStart')" @click="showRelances = true" />
-      </section>
+      <Callout :level="2" v-if="store.scope === 'mine' && store.relances.length" tone="warn" icon="clock" :title="t('suivis.relancesTitle', { n: store.relances.length }, store.relances.length)">
+        <p>{{ t('suivis.relancesHelp') }}</p>
+        <template #actions><BaseButton variant="primary" :label="t('suivis.relancesStart')" @click="showRelances = true" /></template>
+      </Callout>
 
-      <section v-if="apiMode === 'mock' && suggestion === 'open' && store.scope === 'mine'" class="ai-card" aria-labelledby="sug-h">
-        <AiBadge />
-        <p id="sug-h">{{ t('suivis.suggestionTitle') }}</p>
-        <div class="row-actions">
+      <Callout :level="2" v-if="apiMode === 'mock' && suggestion === 'open' && store.scope === 'mine'" tone="ai" icon="sparkles" :title="t('common.aiBadge')">
+        <p>{{ t('suivis.suggestionTitle') }}</p>
+        <template #actions>
           <BaseButton variant="primary" :label="t('suivis.suggestionCreate')" @click="suggest(true)" />
           <BaseButton :label="t('common.ignore')" @click="suggest(false)" />
-        </div>
-      </section>
+        </template>
+      </Callout>
 
       <p class="muted" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
 
@@ -158,7 +154,7 @@ function suggest(accept: boolean) {
         <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
         <EmptyState v-else-if="all.length === 0" :text="t('suivis.empty')" />
         <EmptyState v-else-if="shown.length === 0" icon="list" :text="t('suivis.emptyCategory')" />
-        <ol v-else class="list" :aria-label="t('suivis.priorities')">
+        <ol v-else class="rows" :aria-label="t('suivis.priorities')">
           <SuiviRow v-for="(i, n) in shown" :key="i.key" :item="i" :rank="n + 1" :extra="teamExtra(i)" @open="open" @done="done" />
         </ol>
       </template>
@@ -180,11 +176,6 @@ function suggest(accept: boolean) {
 <style scoped>
 .toolbar { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
 .stack { display: grid; gap: var(--space-4); }
-.list { display: grid; gap: var(--gap); }
-.relances { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); border: 1px solid var(--c-warn); background: var(--c-warn-soft); color: var(--c-warn); border-radius: var(--radius-md); }
-.relances .muted { color: var(--c-text); }
-.ai-card { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); border: 1px solid var(--c-ai); background: var(--c-ai-soft); border-radius: var(--radius-md); justify-items: start; }
-.row-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 h2 { margin-bottom: var(--space-2); font-size: var(--fs-md); }
 .activity { display: grid; gap: var(--space-2); font-size: var(--fs-sm); }
 </style>

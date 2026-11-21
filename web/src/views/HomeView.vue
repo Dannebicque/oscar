@@ -6,6 +6,8 @@ import { apiMode, session } from '../api'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
+import BaseCard from '../components/ui/BaseCard.vue'
+import Callout from '../components/ui/Callout.vue'
 import BaseIcon from '../components/ui/BaseIcon.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
@@ -103,23 +105,22 @@ async function quickAdd() {
   <div class="grid">
     <NextEventCard :now="now" class="span" />
 
-    <section class="oscar span" aria-labelledby="oscar-h">
-      <div class="oscar-head"><AiBadge /><h2 id="oscar-h">{{ t('home.assistant') }}</h2></div>
+    <Callout :level="2" class="span" tone="ai" icon="sparkles" :title="t('home.assistant')">
       <p class="say">{{ state === 'first' ? t('home.startTitle') : assistant }}</p>
-      <BaseButton v-if="state !== 'first'" icon="sparkles" :label="t('home.assistantRecap')" @click="router.push('/recap')" />
-    </section>
+      <template #actions><AiBadge /><BaseButton v-if="state !== 'first'" :label="t('home.assistantRecap')" @click="router.push('/recap')" /></template>
+    </Callout>
 
-    <section v-if="state === 'busy'" class="first" aria-labelledby="first-h">
+    <section v-if="state === 'busy'" aria-labelledby="first-h">
       <header class="sec-head">
         <h2 id="first-h">{{ t('home.firstTitle') }}</h2>
         <RouterLink to="/suivis">{{ t('home.allSuivis', { n: suivis.mine.length }) }}</RouterLink>
       </header>
-      <ol class="list">
+      <ol class="rows">
         <SuiviRow v-for="(i, n) in top" :key="i.key" :item="i" :rank="n + 1" compact @open="open" @done="close" />
       </ol>
     </section>
 
-    <section v-else-if="state === 'calm'" class="calm" aria-labelledby="calm-h">
+    <BaseCard v-else-if="state === 'calm'" class="stack" aria-labelledby="calm-h">
       <h2 id="calm-h">{{ t('home.calmTitle') }}</h2>
       <p>{{ t('home.calmText') }}</p>
       <ul class="ideas">
@@ -127,33 +128,33 @@ async function quickAdd() {
         <li><ToneChip tone="neutral" icon="calendar" :label="t('kinds.rdv')" /> {{ agenda.work[0]?.title }}</li>
       </ul>
       <BaseButton icon="edit" :label="t('home.calmWrite')" @click="router.push('/ecrire')" />
-    </section>
+    </BaseCard>
 
-    <section v-else class="start" aria-labelledby="start-h">
+    <BaseCard v-else class="stack" aria-labelledby="start-h">
       <h2 id="start-h">{{ t('home.startTitle') }}</h2>
       <p>{{ t('home.startText', { done: doneSteps }) }}</p>
       <ol class="steps">
         <li v-for="(s, n) in steps" :key="s.key"><span class="n" aria-hidden="true">{{ n + 1 }}</span>{{ t(`home.startSteps.${s.key}`) }} <RouterLink :to="s.to">{{ t('home.startGo') }}</RouterLink></li>
       </ol>
-    </section>
+    </BaseCard>
 
-    <section class="glance" aria-labelledby="glance-h">
+    <BaseCard class="stack glance" aria-labelledby="glance-h">
       <h2 id="glance-h">{{ t('home.glance') }}</h2>
       <ul>
         <li v-for="c in counters" :key="c.key">
           <RouterLink :to="c.to" class="count"><BaseIcon :name="c.icon" :size="18" /><strong>{{ c.n }}</strong><span>{{ t(`home.counters.${c.key}`) }}</span></RouterLink>
         </li>
       </ul>
-    </section>
+    </BaseCard>
 
-    <section class="capture span" aria-labelledby="cap-h">
+    <BaseCard class="span stack capture" aria-labelledby="cap-h">
       <h2 id="cap-h">{{ t('home.quickCapture') }}</h2>
       <form @submit.prevent="quickAdd">
         <label for="capture" class="sr-only">{{ t('home.quickPlaceholder') }}</label>
         <input id="capture" v-model="capture" class="input" :placeholder="t('home.quickPlaceholder')" autocomplete="off" />
         <BaseButton variant="primary" type="submit" icon="plus" :label="t('home.quickAdd')" />
       </form>
-    </section>
+    </BaseCard>
   </div>
 </template>
 
@@ -161,24 +162,16 @@ async function quickAdd() {
 .grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
 .span { grid-column: 1 / -1; }
 .demo { font-size: var(--fs-sm); }
-.oscar { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-5); border: 1px solid var(--c-ai); background: var(--c-ai-soft); border-radius: var(--radius-lg); justify-items: start; }
-.oscar-head { display: flex; gap: var(--space-2); align-items: center; }
-.oscar h2 { font-size: var(--fs-md); }
-.say { font-size: var(--fs-lg); }
+.say { font-size: var(--fs-lg); font-weight: 600; }
 .sec-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-3); gap: var(--space-3); flex-wrap: wrap; }
 h2 { font-size: var(--fs-md); }
-.list { display: grid; gap: var(--gap); }
-.calm, .start, .glance, .capture { padding: var(--space-4) var(--space-5); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-lg); display: grid; gap: var(--space-3); justify-items: start; }
-.ideas { display: grid; gap: var(--space-2); }
-.steps { display: grid; gap: var(--space-2); }
+.ideas, .steps { display: grid; gap: var(--space-2); }
 .steps li { display: flex; gap: var(--space-3); align-items: center; min-height: var(--target); }
 .n { width: 28px; height: 28px; border-radius: 50%; background: var(--c-primary-soft); color: var(--c-on-primary-soft); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
-.glance { justify-items: stretch; }
 .glance ul { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
-.count { display: flex; flex-direction: column; gap: 2px; min-height: var(--target); padding: var(--space-3); background: var(--c-surface-2); border-radius: var(--radius-md); text-decoration: none; color: var(--c-text); }
+.count { display: flex; flex-direction: column; gap: 2px; min-height: var(--target); padding: var(--space-3); background: var(--c-surface-2); border: var(--bw) solid var(--c-border); border-radius: var(--radius-md); text-decoration: none; color: var(--c-text); }
 .count strong { font-size: var(--fs-xl); line-height: 1; }
 .count span { font-size: var(--fs-sm); color: var(--c-text-muted); }
-.capture { justify-items: stretch; }
 .capture form { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .capture .input { flex: 1; min-width: 220px; }
 @media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }

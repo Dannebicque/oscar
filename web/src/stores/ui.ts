@@ -14,6 +14,8 @@ export const useUiStore = defineStore('ui', () => {
   const toasts = ref<Toast[]>([])
   /** Texte de la zone live unique (N-02) : annonce sans voler le focus. */
   const announcement = ref('')
+  /** Fenêtre d'aide des raccourcis clavier. */
+  const shortcutsOpen = ref(false)
 
   function announce(message: string) {
     // Vider puis remplir force la relecture, même si le message est identique.
@@ -33,5 +35,5 @@ export const useUiStore = defineStore('ui', () => {
     return t.id
   }
 
-  return { toasts, announcement, announce, dismiss, notify }
+  return { toasts, announcement, shortcutsOpen, announce, dismiss, notify }
 })

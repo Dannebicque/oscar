@@ -21,7 +21,7 @@ const columns = computed(() => groupByStatus(props.items))
     <section v-for="c in columns" :key="c.status" class="col" :aria-labelledby="`col-${c.status}`">
       <h3 :id="`col-${c.status}`"><StatusChip :status="c.status" /> <span class="n">{{ c.items.length }}</span></h3>
       <ul v-if="c.items.length">
-        <li v-for="s in c.items" :key="s.id" class="card">
+        <li v-for="s in c.items" :key="s.id" class="card pad-sm flat">
           <button type="button" class="open" @click="$emit('open', s)">
             <strong>{{ s.subject }}</strong>
             <span class="muted">{{ s.contact }} · {{ fmt.date(s.dueAt) }}</span>
@@ -40,6 +40,6 @@ const columns = computed(() => groupByStatus(props.items))
 h3 { display: flex; align-items: center; gap: var(--space-2); }
 .n { font-weight: 800; }
 ul { display: grid; gap: var(--space-2); }
-.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); display: grid; gap: var(--space-1); }
+
 .open { display: grid; gap: 2px; text-align: left; background: none; border: 0; padding: 0; min-height: var(--target); }
 </style>

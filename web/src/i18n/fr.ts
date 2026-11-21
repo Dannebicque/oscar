@@ -85,6 +85,7 @@ export default {
     teamOwnerNone: 'Personne ne l’a pris', teamTakenBy: 'Pris par {who}', teamHandledBy: 'Traité par {who}', teamAge: 'Depuis {n} h',
   },
   mail: {
+    expand: 'Développer les dossiers', collapse: 'Réduire',
     title: 'Mails', folders: 'Dossiers', compose: 'Écrire', list: 'Liste des messages', reading: 'Lecture',
     folder: { inbox: 'Boîte de réception', sent: 'Envoyés', drafts: 'Brouillons', archive: 'Archives', trash: 'Corbeille', suivis: 'Suivis' },
     shared: 'Boîtes partagées', sharedMembers: 'Membres : {names}. Tout le monde reçoit chaque mail.',
@@ -181,6 +182,10 @@ export default {
     actions: { retry: 'Réessaie depuis la barre d’état.', reconnect: 'Reconnecte le compte dans Réglages.', none: 'Rien à faire.' },
     types: { send: 'Envoi', calendar: 'Agenda', auth: 'Authentification', sync: 'Synchronisation' }, back: 'Retour aux réglages',
   },
+  shortcuts: {
+    title: 'Raccourcis clavier', help: 'Les mêmes que Gmail, pour garder tes repères. Ils ne fonctionnent pas dans un champ de saisie.', then: 'puis', off: 'Tu peux les désactiver dans Réglages > Apparence et accessibilité.',
+    keys: { c: 'Écrire un message', '/': 'Rechercher dans les mails', j: 'Message suivant', k: 'Message précédent', r: 'Répondre', gi: 'Aller aux mails', gs: 'Aller aux suivis', gt: 'Aller aux tâches', ga: 'Aller à l’agenda', gh: 'Aller à l’accueil', '?': 'Afficher cette aide' },
+  },
   login: { title: 'Connexion', cas: 'Se connecter avec le compte de l’établissement (CAS)', dev: 'Connexion de développement', username: 'Identifiant', devSubmit: 'Entrer', devHelp: 'Disponible seulement en local : crée l’utilisateur s’il n’existe pas.', casRefused: 'Le CAS a refusé la connexion. Réessaie.', failed: 'Je n’ai pas pu te connecter. Réessaie dans un instant.' },
   settings: {
     title: 'Réglages', sections: 'Sections',
@@ -217,6 +222,14 @@ export default {
       never: 'Oscar lit tes mails pour proposer, jamais pour agir. Aucun mail n’est envoyé et aucun suivi n’est créé sans ton clic.',
     },
     look: {
+      shortcuts: 'Raccourcis clavier', shortcutsHelp: 'Touches simples comme celles de Gmail (c, j, k, r, /). Désactive-les si elles gênent ta dictée vocale ou ton clavier adapté.',
+      style: 'Style', styleHelp: 'La forme, le relief et la typographie. Les couleurs se règlent à part.',
+      styles: { modern: 'Moderne', retro: 'Rétro', neon: 'Néon' },
+      styleDesc: { modern: 'Sobre et net, proche des maquettes.', retro: 'Papier chaud, traits épais, police à chasse fixe.', neon: 'Nuit profonde, bords lumineux, accents vifs.' },
+      palette: 'Palette d’accent', palettes: { azur: 'Azur', emeraude: 'Émeraude', ambre: 'Ambre', corail: 'Corail', graphite: 'Graphite', custom: 'Personnalisée' },
+      customColor: 'Ta couleur', customHex: 'Code couleur hexadécimal',
+      adjusted: 'Ajustée en {color} pour rester lisible (contraste {ratio}:1).', readable: 'Lisible : contraste {ratio}:1.',
+      sampleAction: 'Action principale', sampleSecondary: 'Action secondaire',
       theme: 'Thème', themeHelp: 'Le thème de base est neutre. D’autres thèmes colorés viendront.', themes: { system: 'Automatique', light: 'Clair', dark: 'Sombre', contrast: 'Contraste élevé' },
       density: 'Densité', densities: { comfortable: 'Confortable', normal: 'Normale', compact: 'Compacte' }, language: 'Langue', languageHelp: 'La langue de l’interface. Le ton d’Oscar est relu pour chaque langue.',
       preview: 'Aperçu', previewText: 'Voici à quoi ressemblent les éléments : un suivi, un signal, une suggestion.',

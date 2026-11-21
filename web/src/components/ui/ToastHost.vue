@@ -40,10 +40,10 @@ async function undo(toast: (typeof ui.toasts)[number]) {
 .toasts { position: fixed; z-index: 70; left: 50%; transform: translateX(-50%); bottom: 72px; display: grid; gap: var(--space-2); width: min(560px, calc(100vw - 32px)); margin: 0; padding: 0; list-style: none; outline: none; }
 .toast { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); background: var(--c-text); color: var(--c-bg); border-radius: var(--radius-md); box-shadow: var(--shadow-2); }
 .toast-text { flex: 1; margin: 0; }
-.toast.error { background: var(--c-danger); color: #fff; }
+.toast.error { background: var(--c-danger-solid); color: var(--c-on-danger-solid); }
 .toast-btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--target); min-width: var(--target); justify-content: center; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; font-weight: 600; }
 .toast-btn:hover { background: color-mix(in srgb, currentColor 15%, transparent); }
 .toast[data-state='closed'] { display: none; }
-:root[data-theme='contrast'] .toast { border: 2px solid #fff; }
+:root[data-theme='contrast'] .toast { border: 2px solid var(--c-text); }
 @media (max-width: 720px) { .toasts { bottom: 128px; } }
 </style>

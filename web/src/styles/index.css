@@ -1,3 +1,7 @@
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import '@fontsource-variable/space-grotesk/wght.css';
 @import './tokens.css';
-@import './themes.css';
 @import './base.css';
+@import './components.css';
+@layer reset, base, components, utilities;

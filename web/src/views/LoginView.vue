@@ -44,7 +44,7 @@ const casUrl = () => `${api}/api/auth/cas/login?return=${encodeURIComponent(`${l
 
 <template>
   <main class="login" id="main">
-    <div class="card">
+    <div class="card stack login-card">
       <span class="logo"><OscarMark /></span>
       <h1>{{ t('login.title') }}</h1>
       <p class="muted">{{ t('app.tagline') }}</p>
@@ -65,8 +65,8 @@ const casUrl = () => `${api}/api/auth/cas/login?return=${encodeURIComponent(`${l
 
 <style scoped>
 .login { min-height: 100vh; display: grid; place-items: center; padding: var(--space-4); }
-.card { width: min(420px, 100%); display: grid; gap: var(--space-4); padding: var(--space-6); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-lg); justify-items: start; }
-.logo { width: 44px; height: 44px; border-radius: 12px; background: var(--c-primary); color: var(--c-on-primary); display: inline-flex; align-items: center; justify-content: center; }
+.login-card { width: min(420px, 100%); padding: var(--space-6); justify-items: start; }
+.logo { width: 44px; height: 44px; border-radius: 12px; background: var(--c-primary); color: var(--c-on-primary); display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--glow); }
 .cas { display: inline-flex; align-items: center; justify-content: center; min-height: var(--target); padding: 0 var(--space-5); border-radius: var(--radius-sm); background: var(--c-primary); color: var(--c-on-primary); font-weight: 700; text-decoration: none; }
 .dev { display: grid; gap: var(--space-3); width: 100%; border-top: 1px solid var(--c-border); padding-top: var(--space-4); }
 h2 { font-size: var(--fs-md); }

@@ -85,6 +85,7 @@ const en: typeof fr = {
     teamOwnerNone: 'Nobody has taken it', teamTakenBy: 'Taken by {who}', teamHandledBy: 'Handled by {who}', teamAge: 'For {n} h',
   },
   mail: {
+    expand: 'Expand folders', collapse: 'Collapse',
     title: 'Mail', folders: 'Folders', compose: 'Write', list: 'Message list', reading: 'Reading',
     folder: { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', archive: 'Archive', trash: 'Trash', suivis: 'Follow-ups' },
     shared: 'Shared mailboxes', sharedMembers: 'Members: {names}. Everyone receives every mail.',
@@ -181,6 +182,10 @@ const en: typeof fr = {
     actions: { retry: 'Try again from the status bar.', reconnect: 'Reconnect the account in Settings.', none: 'Nothing to do.' },
     types: { send: 'Sending', calendar: 'Calendar', auth: 'Authentication', sync: 'Synchronization' }, back: 'Back to settings',
   },
+  shortcuts: {
+    title: 'Keyboard shortcuts', help: 'The same as Gmail, so you keep your bearings. They do not work inside a text field.', then: 'then', off: 'You can turn them off in Settings > Appearance and accessibility.',
+    keys: { c: 'Write a message', '/': 'Search mail', j: 'Next message', k: 'Previous message', r: 'Reply', gi: 'Go to mail', gs: 'Go to follow-ups', gt: 'Go to tasks', ga: 'Go to calendar', gh: 'Go to home', '?': 'Show this help' },
+  },
   login: { title: 'Sign in', cas: 'Sign in with your institution account (CAS)', dev: 'Development sign-in', username: 'Username', devSubmit: 'Enter', devHelp: 'Only available locally: creates the user if missing.', casRefused: 'CAS refused the sign-in. Try again.', failed: 'I couldn’t sign you in. Try again in a moment.' },
   settings: {
     title: 'Settings', sections: 'Sections',
@@ -217,6 +222,14 @@ const en: typeof fr = {
       never: 'Oscar reads your mail to suggest, never to act. No mail is sent and no follow-up is created without your click.',
     },
     look: {
+      shortcuts: 'Keyboard shortcuts', shortcutsHelp: 'Single keys like Gmail’s (c, j, k, r, /). Turn them off if they get in the way of voice dictation or an adapted keyboard.',
+      style: 'Style', styleHelp: 'Shape, depth and typography. Colors are set separately.',
+      styles: { modern: 'Modern', retro: 'Retro', neon: 'Neon' },
+      styleDesc: { modern: 'Clean and calm, close to the mockups.', retro: 'Warm paper, thick strokes, monospaced type.', neon: 'Deep night, glowing edges, vivid accents.' },
+      palette: 'Accent palette', palettes: { azur: 'Azure', emeraude: 'Emerald', ambre: 'Amber', corail: 'Coral', graphite: 'Graphite', custom: 'Custom' },
+      customColor: 'Your color', customHex: 'Hexadecimal color code',
+      adjusted: 'Adjusted to {color} to stay readable ({ratio}:1 contrast).', readable: 'Readable: {ratio}:1 contrast.',
+      sampleAction: 'Primary action', sampleSecondary: 'Secondary action',
       theme: 'Theme', themeHelp: 'The base theme is neutral. More colorful themes are coming.', themes: { system: 'Automatic', light: 'Light', dark: 'Dark', contrast: 'High contrast' },
       density: 'Density', densities: { comfortable: 'Comfortable', normal: 'Normal', compact: 'Compact' }, language: 'Language', languageHelp: 'The interface language. Oscar’s tone is reviewed for each language.',
       preview: 'Preview', previewText: 'This is how things look: a follow-up, a signal, a suggestion.',

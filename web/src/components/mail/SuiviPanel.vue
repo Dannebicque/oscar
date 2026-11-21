@@ -12,7 +12,7 @@ const fmt = useFormat()
 </script>
 
 <template>
-  <aside class="panel" :aria-label="t('mail.suiviPanel')">
+  <aside class="side" :aria-label="t('mail.suiviPanel')">
     <h3>{{ t('mail.suiviPanel') }}</h3>
     <StatusChip :status="suivi.status" />
     <dl>
@@ -25,7 +25,7 @@ const fmt = useFormat()
       </dd>
     </dl>
     <h3>{{ t('suivis.journal') }}</h3>
-    <p class="muted help">{{ t('suivis.journalHelp') }}</p>
+    <p class="hint">{{ t('suivis.journalHelp') }}</p>
     <ol class="log">
       <li v-for="(e, i) in suivi.journal" :key="i"><time :datetime="e.at" class="muted">{{ fmt.dateTime(e.at) }}</time><br />{{ fmt.journal(e) }} · {{ e.author }}</li>
     </ol>
@@ -33,11 +33,10 @@ const fmt = useFormat()
 </template>
 
 <style scoped>
-.panel { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-4); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
-h3 { font-size: var(--fs-md); margin-top: var(--space-2); }
+.side { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-4); border-left: var(--bw) solid var(--c-border); background: var(--c-surface); min-height: 0; overflow-y: auto; }
+h3 { margin-top: var(--space-2); }
 dl { display: grid; gap: 2px; margin: 0; }
 dt { font-size: var(--fs-sm); color: var(--c-text-muted); margin-top: var(--space-2); }
 dd { margin: 0; font-weight: 600; }
-.help { font-size: var(--fs-sm); }
 .log { display: grid; gap: var(--space-2); font-size: var(--fs-sm); border-left: 2px solid var(--c-border); padding-left: var(--space-3); }
 </style>

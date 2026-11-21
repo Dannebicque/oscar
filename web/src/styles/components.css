@@ -1,0 +1,89 @@
+/*
+ * Composants partagés : UN seul endroit pour l'aspect des cartes, bandeaux, lignes, pastilles et boutons.
+ * Les vues et composants n'ont plus de CSS de cartes ou de bandeaux qui leur soit propre : ils choisissent une classe.
+ * Tout passe par des jetons, donc par le style (Moderne, Rétro, Néon), la palette et le mode choisis.
+ */
+@layer components {
+  /* ── Surfaces ───────────────────────────────────────────────── */
+  .card {
+    background: var(--c-surface); color: var(--c-text); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1); padding: var(--space-4) var(--space-5);
+  }
+  .card.flat { box-shadow: none; }
+  .card.pad-sm { padding: var(--space-3) var(--space-4); }
+  .card.pad-0 { padding: 0; overflow: hidden; }
+  .card.clickable { transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+  .card.clickable:hover { transform: translateY(var(--hover-lift)); }
+  :root[data-style='retro'] .card, :root[data-style='retro'] .callout, :root[data-style='retro'] .panel { border-color: var(--c-border-strong); }
+  :root[data-style='neon'][data-theme='dark'] .card { box-shadow: var(--glow); }
+
+  /* Panneau d'application : colonne bordée, sans ombre (rail, dossiers, liste, lecture). */
+  .panel { background: var(--c-surface); border-right: var(--bw) solid var(--c-border); min-width: 0; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: var(--bw) solid var(--c-border); }
+
+  /* ── Bandeaux (info, attention, danger, succès, IA) ────────── */
+  .callout {
+    --tone: var(--c-primary); --tone-soft: var(--c-primary-soft); --tone-fg: var(--c-on-primary-soft);
+    display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4);
+    background: var(--tone-soft); color: var(--c-text); border: var(--bw) solid var(--tone); border-radius: var(--radius-md);
+  }
+  .callout > svg { color: var(--tone-fg); flex: none; }
+  .callout .callout-body { flex: 1; min-width: 200px; display: grid; gap: 2px; }
+  .callout .callout-title { font-weight: 700; color: var(--tone-fg); }
+  .callout .callout-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .callout[data-tone='warn'] { --tone: var(--c-warn); --tone-soft: var(--c-warn-soft); --tone-fg: var(--c-warn); }
+  .callout[data-tone='danger'] { --tone: var(--c-danger); --tone-soft: var(--c-danger-soft); --tone-fg: var(--c-danger); }
+  .callout[data-tone='success'] { --tone: var(--c-success); --tone-soft: var(--c-success-soft); --tone-fg: var(--c-success); }
+  .callout[data-tone='ai'] { --tone: var(--c-ai); --tone-soft: var(--c-ai-soft); --tone-fg: var(--c-ai); }
+  .callout[data-tone='neutral'] { --tone: var(--c-border-strong); --tone-soft: var(--c-surface-2); --tone-fg: var(--c-text); }
+
+  /* ── Lignes de liste (suivis, tâches, alertes, comptes) ────── */
+  .row {
+    display: flex; align-items: center; gap: var(--space-4); padding: var(--row-y) var(--space-4); background: var(--c-surface);
+    border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-md);
+  }
+  .row.hot { border-inline-start: 4px solid var(--c-accent); }
+  .row.dim { opacity: 0.85; }
+  .rows { display: grid; gap: var(--gap); }
+
+  /* ── Pastilles ──────────────────────────────────────────────── */
+  .chip {
+    --tone-bg: var(--c-neutral-soft); --tone-fg: var(--c-text-muted);
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: var(--radius-pill); font-size: var(--fs-sm); font-weight: 700;
+    background: var(--tone-bg); color: var(--tone-fg); border: var(--bw) solid transparent; white-space: nowrap;
+  }
+  .chip[data-tone='info'] { --tone-bg: var(--c-primary-soft); --tone-fg: var(--c-on-primary-soft); }
+  .chip[data-tone='warn'] { --tone-bg: var(--c-warn-soft); --tone-fg: var(--c-warn); }
+  .chip[data-tone='danger'] { --tone-bg: var(--c-danger-soft); --tone-fg: var(--c-danger); }
+  .chip[data-tone='success'] { --tone-bg: var(--c-success-soft); --tone-fg: var(--c-success); }
+  .chip[data-tone='ai'] { --tone-bg: var(--c-ai-soft); --tone-fg: var(--c-ai); }
+  .chip[data-tone='cal2'] { --tone-bg: var(--c-cal2-soft); --tone-fg: var(--c-cal2); }
+  :root[data-theme='contrast'] .chip, :root[data-style='retro'] .chip { border-color: currentColor; }
+  :root[data-style='neon'][data-theme='dark'] .chip { border-color: color-mix(in srgb, currentColor 45%, transparent); }
+
+  /* ── Boutons ────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--target); min-width: var(--target); padding: 0 var(--space-4);
+    background: var(--c-surface); color: var(--c-text); border: var(--bw) solid var(--c-border-strong); border-radius: var(--radius-sm); font-weight: 600;
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .btn:hover:not(:disabled) { background: var(--c-surface-2); transform: translateY(var(--hover-lift)); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn.icon { padding: 0; }
+  .btn.primary { background: var(--c-primary); border-color: var(--c-primary); color: var(--c-on-primary); }
+  .btn.primary:hover:not(:disabled) { background: var(--c-primary-hover); border-color: var(--c-primary-hover); }
+  .btn.ghost { background: transparent; border-color: transparent; }
+  .btn.ghost:hover:not(:disabled) { background: var(--c-surface-2); }
+  .btn.danger { color: var(--c-danger); border-color: var(--c-danger); }
+  .btn[aria-pressed='true'] { background: var(--c-primary-soft); color: var(--c-on-primary-soft); border-color: var(--c-accent); }
+  :root[data-style='retro'] .btn { box-shadow: var(--shadow-1); }
+  :root[data-style='retro'] .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+  :root[data-style='neon'][data-theme='dark'] .btn.primary { box-shadow: var(--glow); }
+
+  /* ── Divers ─────────────────────────────────────────────────── */
+  .kbd { display: inline-block; min-width: 1.6em; padding: 0 6px; text-align: center; font: 600 0.8rem/1.6 var(--font-sans); background: var(--c-surface-2); border: var(--bw) solid var(--c-border-strong); border-bottom-width: 2px; border-radius: 6px; }
+  .avatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; flex: none; }
+  .divider { border: 0; border-top: var(--bw) solid var(--c-border); margin: 0; }
+  .stack { display: grid; gap: var(--space-4); align-content: start; }
+  .cluster { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+}

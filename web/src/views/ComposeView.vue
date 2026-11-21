@@ -88,7 +88,7 @@ function saveDraft() {
       <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />
       <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
     </div>
-    <BaseButton v-if="!showCc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
+    <BaseButton v-if="!showCc" class="cc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
     <template v-else>
       <div class="field"><label for="cc">{{ t('compose.cc') }}</label><RecipientInput id="cc" v-model="cc" :label="t('compose.cc')" /></div>
       <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><RecipientInput id="bcc" v-model="bcc" :label="t('compose.bcc')" /></div>
@@ -103,7 +103,7 @@ function saveDraft() {
       <textarea id="body" v-model="body" class="input" rows="12" />
     </div>
 
-    <fieldset class="follow">
+    <fieldset class="card pad-sm flat follow">
       <legend class="sr-only">{{ t('compose.follow') }}</legend>
       <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
       <p v-if="aiPicked && follow" class="hint">{{ t('compose.followAi') }}</p>
@@ -129,7 +129,8 @@ function saveDraft() {
 
 <style scoped>
 .form { display: grid; gap: var(--space-4); max-width: 760px; }
-.follow { border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: var(--space-4); display: grid; gap: var(--space-2); margin: 0; background: var(--c-surface); }
+.cc { justify-self: start; }
+.follow { display: grid; gap: var(--space-2); margin: 0; }
 .check { display: flex; gap: var(--space-2); align-items: center; min-height: var(--target); flex-wrap: wrap; }
 .inline { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
 .inline .input { width: auto; }

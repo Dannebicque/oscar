@@ -39,7 +39,7 @@ function exportLog() {
     <select id="acc" v-model="account" class="input"><option value="all">{{ t('common.all') }}</option><option v-for="a in accounts" :key="a" :value="a">{{ a }}</option></select>
   </div>
   <EmptyState v-if="rows.length === 0" icon="list" :text="t('journal.empty')" />
-  <div v-else class="scroll">
+  <div v-else class="card pad-0 scroll">
     <table>
       <thead><tr><th scope="col">{{ t('journal.date') }}</th><th scope="col">{{ t('journal.account') }}</th><th scope="col">{{ t('journal.type') }}</th><th scope="col">{{ t('journal.message') }}</th><th scope="col">{{ t('journal.action') }}</th></tr></thead>
       <tbody>
@@ -54,7 +54,7 @@ function exportLog() {
 
 <style scoped>
 .filter { max-width: 320px; margin-bottom: var(--space-4); }
-.scroll { overflow-x: auto; border: 1px solid var(--c-border); border-radius: var(--radius-md); background: var(--c-surface); }
+.scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--c-border); vertical-align: top; }
 th { background: var(--c-surface-2); font-size: var(--fs-sm); }

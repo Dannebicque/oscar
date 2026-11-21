@@ -37,7 +37,7 @@ const sections = computed(() => [
   <PageHeader :title="t('recap.title')" :subtitle="t('recap.intro')">
     <SegmentedControl v-model="slot" :options="options" :label="t('recap.title')" />
   </PageHeader>
-  <article class="recap">
+  <article class="card stack recap">
     <p class="head"><AiBadge /><span class="muted">{{ t('recap.sentTo', { time: slot === 'morning' ? settings.s.recapMorning : settings.s.recapEvening }) }}</span></p>
     <section v-for="s in sections" :key="s.key" :aria-labelledby="`r-${s.key}`">
       <h2 :id="`r-${s.key}`">{{ t(`recap.${s.key}`) }}</h2>
@@ -48,7 +48,7 @@ const sections = computed(() => [
 </template>
 
 <style scoped>
-.recap { display: grid; gap: var(--space-4); max-width: 720px; padding: var(--space-5); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-lg); }
+.recap { max-width: 720px; }
 .head { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
 h2 { font-size: var(--fs-md); margin-bottom: var(--space-1); }
 ul { display: grid; gap: var(--space-1); list-style: disc; padding-left: var(--space-5); }
