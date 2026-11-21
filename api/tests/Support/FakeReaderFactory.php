@@ -4,6 +4,7 @@ namespace App\Tests\Support;
 
 use App\Entity\MailAccount;
 use App\Mail\MailboxAppender;
+use App\Mail\MailboxMover;
 use App\Mail\MailboxReader;
 use App\Mail\MailboxReaderFactory;
 use App\Security\CredentialVault;
@@ -14,19 +15,31 @@ final class FakeReaderFactory extends MailboxReaderFactory
     public static bool $appendFails = false;
     /** @var list<array{string, string}> */
     public static array $appended = [];
+    /** @var list<array{string, int, string}> */
+    public static array $moved = [];
+    public static bool $moveFails = false;
 
     public function __construct(CredentialVault $vault)
     {
         parent::__construct($vault);
     }
 
-    public function create(MailAccount $a): MailboxReader&MailboxAppender
+    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover
     {
         if ($a->getImapPort() === 1) {
             throw new \RuntimeException('connexion refusée (port 1, simulé)');
         }
 
-        return new class implements MailboxReader, MailboxAppender {
+        return new class implements MailboxReader, MailboxAppender, MailboxMover {
+            public function move(string $folder, int $uid, string $messageId, string $target): ?int
+            {
+                if (FakeReaderFactory::$moveFails) {
+                    throw new \RuntimeException('imap down');
+                }
+                FakeReaderFactory::$moved[] = [$folder, $uid, $target];
+
+                return 500 + $uid;
+            }
             public function fetchAfter(string $folder, int $afterUid): array { return []; }
             public function fetchBody(string $folder, int $uid): ?string { return 'Corps simulé'; }
             public function append(string $folder, string $rawMessage): void

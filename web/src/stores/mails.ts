@@ -94,6 +94,16 @@ export const useMailsStore = defineStore('mails', () => {
     }
   }
 
+  /** Déplace un message (archives, corbeille, boîte de réception). Renvoie l'annulation : remettre en boîte de réception. */
+  async function moveTo(id: string, folder: 'inbox' | 'archive' | 'trash') {
+    const m = byId(id)
+    if (!m) return null
+    const from = m.folder as 'inbox' | 'archive' | 'trash'
+    await api.mails.move(id, folder)
+    patch(id, { folder })
+    return async () => { await api.mails.move(id, from); patch(id, { folder: from }) }
+  }
+
   /** Suggestions de l'IA pour ce mail, une fois par mail. Une panne n'empêche jamais de lire le message. */
   async function loadHints(id: string) {
     const m = byId(id)
@@ -157,5 +167,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

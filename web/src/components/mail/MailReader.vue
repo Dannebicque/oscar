@@ -65,7 +65,20 @@ const showSuggestFollow = computed(
 )
 const aiOn = computed(() => settings.s.aiMode !== 'off')
 
-const stub = (key: string) => ui.notify(t('mail.actionDone', { action: t(`mail.${key}`), subject: props.mail.subject }), { tone: 'info' })
+const showMove = ref(false)
+const moveTarget = ref<'inbox' | 'archive' | 'trash'>('archive')
+/** Archiver, corbeille ou classement : message parti d'ici, annulation possible depuis la notification. */
+async function relocate(folder: 'inbox' | 'archive' | 'trash') {
+  showMove.value = false
+  try {
+    const undo = await mails.moveTo(props.mail.id, folder)
+    ui.notify(t('mail.moved', { subject: props.mail.subject, folder: t(`mail.folder.${folder}`) }), { undo: undo ? async () => { await undo(); ui.notify(t('mail.movedBack')) } : undefined })
+    router.push({ name: 'mails' })
+  } catch (e) {
+    ui.notify(e instanceof Error && e.message ? e.message : t('common.actionFailed'), { tone: 'error' })
+  }
+}
+const forward = () => router.push({ name: 'compose', query: { forward: props.mail.id } })
 
 function reply(ai = false) {
   if (collision.value) { showCollision.value = true; return }
@@ -137,11 +150,11 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
         <ToolbarButton as-child><BaseButton icon="reply" :label="t('mail.reply')" @click="reply" /></ToolbarButton>
         <ToolbarButton v-if="canDraft" as-child><BaseButton variant="ai" icon="sparkles" :label="t('mail.ai.suggestReply')" @click="reply(true)" /></ToolbarButton>
         <ToolbarButton as-child><BaseButton icon="replyAll" :label="t('mail.replyAll')" @click="reply" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="forward" :label="t('mail.forward')" @click="stub('forward')" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="forward" :label="t('mail.forward')" @click="forward" /></ToolbarButton>
         <ToolbarSeparator class="sep" />
-        <ToolbarButton as-child><BaseButton icon="archive" :label="t('mail.archive')" @click="stub('archive')" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="folder" :label="t('mail.move')" @click="stub('move')" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="trash" :label="t('mail.delete')" @click="stub('delete')" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="archive" :label="t('mail.archive')" @click="relocate('archive')" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="folder" :label="t('mail.move')" @click="showMove = true" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="trash" :label="t('mail.delete')" @click="relocate('trash')" /></ToolbarButton>
         <ToolbarButton v-if="!suivi && !shared" as-child><BaseButton variant="primary" icon="follow" :label="t('mail.createSuivi')" @click="createSuivi(false)" /></ToolbarButton>
       </ToolbarRoot>
 
@@ -205,6 +218,17 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
     <SuiviPanel v-if="suivi && panel" :suivi="suivi" />
   </article>
 
+  <BaseDialog :open="showMove" :title="t('mail.move')" @close="showMove = false">
+    <fieldset class="moves">
+      <legend>{{ t('mail.moveTo') }}</legend>
+      <label v-for="f in (['inbox', 'archive', 'trash'] as const).filter((x) => x !== mail.folder)" :key="f" class="check"><input v-model="moveTarget" type="radio" name="move" :value="f" /> {{ t(`mail.folder.${f}`) }}</label>
+    </fieldset>
+    <template #footer>
+      <BaseButton :label="t('common.cancel')" @click="showMove = false" />
+      <BaseButton variant="primary" icon="folder" :label="t('mail.move')" @click="relocate(moveTarget)" />
+    </template>
+  </BaseDialog>
+
   <RelanceDialog v-if="suivi" :open="showDraft" :queue="[suivi]" single @close="showDraft = false" />
   <AvailabilityDialog :open="showAvail" :mail="mail" @close="showAvail = false" @pick="prepareAvailability" />
 
@@ -232,6 +256,9 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 .body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
 .summary { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
 .sh { display: flex; align-items: center; gap: var(--space-2); color: var(--c-ai); }
+.moves { border: 0; padding: 0; margin: 0; display: grid; gap: 2px; }
+.moves legend { font-weight: 700; margin-bottom: var(--space-2); }
+.check { display: flex; gap: var(--space-2); align-items: center; min-height: var(--target); }
 .detected { display: grid; gap: var(--space-2); }
 .kick { font-size: var(--fs-sm); font-weight: 700; color: var(--c-ai); }
 .back { display: none; }

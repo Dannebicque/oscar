@@ -86,6 +86,7 @@ export function createHttpApi(baseUrl: string): Api {
       async body(id) { return (await req<{ paragraphs: string[] }>('GET', `/api/mails/${encodeURIComponent(id)}/body`)).paragraphs },
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
       async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
+      async move(id, folder) { await req('POST', `/api/mails/${encodeURIComponent(id)}/move`, { folder: { inbox: 'INBOX', archive: 'Archive', trash: 'Trash' }[folder] }) },
       async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')

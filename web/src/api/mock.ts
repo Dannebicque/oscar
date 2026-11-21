@@ -129,6 +129,7 @@ export function createMockApi(now: Date = new Date()): Api {
           ? `Bonjour ${first},\n\n${list ? `Disponible :\n${list}` : 'Bien reçu, je reviens vers toi vite.'}\n\nDavid`
           : `Bonjour ${first},\n\n${list ? `Voici mes disponibilités :\n${list}\n\nDis-moi ce qui te convient, je confirme aussitôt.` : 'Merci pour ton message. Je regarde cela et je reviens vers toi rapidement.'}\n\nCordialement,\nDavid`
       },
+      async move(id, folder) { mails = mails.map((x) => (x.id === id ? { ...x, folder } : x)) },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
       async claim(mailId, _suiviId, action) {
         const m = findMail(mailId)

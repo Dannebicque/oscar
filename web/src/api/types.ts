@@ -44,6 +44,8 @@ export interface MailApi {
   /** Brouillon de réponse préparé par Oscar (jamais envoyé) ; `slots` : créneaux choisis, déjà formatés. */
   replyDraft(id: string, p: { tone: 'warm' | 'short'; slots: string[] }): Promise<string>
   markRead(id: string): Promise<void>
+  /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
+  move(id: string, folder: 'inbox' | 'archive' | 'trash'): Promise<void>
   /** Boîte partagée : prise en charge. Lève ApiError 409 (« Claire s'en occupe ») si quelqu'un d'autre l'a prise. */
   claim(mailId: string, suiviId: string | null, action: ClaimAction): Promise<void>
   addNote(mailId: string, suiviId: string | null, text: string): Promise<void>

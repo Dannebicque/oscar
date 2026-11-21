@@ -58,6 +58,12 @@ const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ va
 
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
+  const fwd = route.query.forward ? mails.byId(String(route.query.forward)) : undefined
+  if (fwd) {
+    subject.value = /^(tr|fwd?)\s*:/i.test(fwd.subject) ? fwd.subject : `Tr : ${fwd.subject}`
+    body.value = `\n\n${t('compose.signature')}\n\n${t('compose.forwarded', { who: fwd.from.name, date: fmt.dateTime(fwd.at) })}\n${fwd.paragraphs.join('\n')}`
+    return
+  }
   const o = original.value
   if (o) {
     to.value = [o.from.address]

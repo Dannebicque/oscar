@@ -6,7 +6,7 @@ use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Message;
 
 /** Lecture IMAP via webklex/php-imap (PHP pur, sans l'extension imap retirée du noyau). */
-final class WebklexMailboxReader implements MailboxReader, MailboxAppender
+final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover
 {
     private ?\Webklex\PHPIMAP\Client $client = null;
 
@@ -45,6 +45,19 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender
     {
         $box = $this->client()->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
         $box->appendMessage($rawMessage, ['\\Seen']);
+    }
+
+    public function move(string $folder, int $uid, string $messageId, string $target): ?int
+    {
+        $client = $this->client();
+        $from = $client->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
+        $dest = $client->getFolderByPath($target) ?? $client->createFolder($target, false);
+        $m = $from->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(false)->get()->first() ?? throw new \RuntimeException('Message introuvable sur le serveur.');
+        $m->move($dest->path, true);
+        $dest = $client->getFolderByPath($target) ?? $dest;
+        $moved = $dest->messages()->whereMessageId($messageId)->leaveUnread()->setFetchBody(false)->get()->first();
+
+        return $moved === null ? null : (int) $moved->getUid();
     }
 
     public function fetchBody(string $folder, int $uid): ?string

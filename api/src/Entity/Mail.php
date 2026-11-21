@@ -76,6 +76,8 @@ class Mail implements OwnedInterface
     public function getMailbox(): string { return $this->sharedMailbox?->getSlug() ?? 'personal'; }
     public function getAccountId(): string { return $this->account->getId(); }
     public function getFolder(): string { return $this->folder; }
+    /** Après un déplacement côté serveur : le message change de dossier, donc d'UID. */
+    public function relocate(string $folder, int $uid): static { $this->folder = $folder; $this->uid = $uid; return $this; }
     public function getUid(): int { return $this->uid; }
     public function getMessageId(): string { return $this->messageId; }
     public function getInReplyTo(): ?string { return $this->inReplyTo; }
