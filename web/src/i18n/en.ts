@@ -101,7 +101,7 @@ const en: typeof fr = {
     folder: { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', archive: 'Archive', trash: 'Trash', suivis: 'Follow-ups', scheduled: 'Scheduled' },
     shared: 'Shared mailboxes', sharedMembers: 'Members: {names}. Everyone receives every mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Shared mailbox · {n} members',
-    filters: { all: 'All', unread: 'Unread', attach: 'Attachment', week: 'This week' }, filterLabel: 'Filter',
+    filters: { all: 'All', unread: 'Unread', attach: 'With file', week: '7 days' }, filterLabel: 'Filter',
     adv: { toggle: 'Advanced filters', active: '{n} active', reset: 'Clear all', from: 'From', subject: 'Subject', after: 'Received after', before: 'Received before', attachment: 'With attachment', followed: 'With a follow-up', unread: 'Unread only', help: 'Tip: type from:claire, subject:quote, after:2026-11-01, before:2026-11-30, pj, suivi or nonlu straight into the search.' },
     search: 'Search mail', searchPlaceholder: 'Search',
     unread: 'unread', attachment: 'attachment', from: 'From {who}', via: 'via contact{\'@\'}',

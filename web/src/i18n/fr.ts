@@ -101,7 +101,7 @@ export default {
     folder: { inbox: 'Boîte de réception', sent: 'Envoyés', drafts: 'Brouillons', archive: 'Archives', trash: 'Corbeille', suivis: 'Suivis', scheduled: 'Programmés' },
     shared: 'Boîtes partagées', sharedMembers: 'Membres : {names}. Tout le monde reçoit chaque mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Boîte partagée · {n} membres',
-    filters: { all: 'Tous', unread: 'Non lus', attach: 'Pièce jointe', week: 'Cette semaine' }, filterLabel: 'Filtrer',
+    filters: { all: 'Tous', unread: 'Non lus', attach: 'Avec PJ', week: '7 jours' }, filterLabel: 'Filtrer',
     adv: { toggle: 'Filtres avancés', active: '{n} actif(s)', reset: 'Tout effacer', from: 'Expéditeur', subject: 'Objet', after: 'Reçu après le', before: 'Reçu avant le', attachment: 'Avec pièce jointe', followed: 'Avec un suivi', unread: 'Non lus seulement', help: 'Astuce : tape de:claire, objet:devis, apres:2026-11-01, avant:2026-11-30, pj, suivi ou nonlu directement dans la recherche.' },
     search: 'Rechercher dans les mails', searchPlaceholder: 'Rechercher',
     unread: 'non lu', attachment: 'pièce jointe', from: 'De {who}', via: 'via contact{\'@\'}',

@@ -100,6 +100,8 @@ defineExpose({ visible })
 .search { position: relative; display: flex; align-items: center; }
 .search svg { position: absolute; left: var(--space-3); color: var(--c-text-muted); pointer-events: none; }
 .search .input { padding-left: 36px; }
+.tools :deep(.seg) { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+.tools :deep(.seg-item) { flex: 1 1 auto; padding: 0 var(--space-2); white-space: nowrap; }
 .adv-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
 .adv-toggle, .adv-reset { min-height: var(--target); display: inline-flex; align-items: center; gap: var(--space-2); background: transparent; border: 0; color: var(--c-accent-text, var(--c-accent)); font: inherit; font-weight: 700; text-decoration: underline; padding: 0 var(--space-2); }
 .adv-n { font-weight: 800; color: var(--c-text); text-decoration: none; }

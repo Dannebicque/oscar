@@ -26,7 +26,7 @@ describe('actions sur un mail (F-16)', () => {
     await flushPromises()
     const s = useMailsStore()
     await s.load()
-    await wrapper.findAll('button').find((b) => b.text() === 'Supprimer')!.trigger('click')
+    await wrapper.findAll('button').find((b) => b.attributes('aria-label') === 'Supprimer')!.trigger('click')
     await flushPromises()
     expect(s.byId('m1')?.folder).toBe('trash')
   })

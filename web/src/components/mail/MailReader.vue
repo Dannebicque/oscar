@@ -182,12 +182,12 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
       <ToolbarRoot class="toolbar" :aria-label="t('mail.reading')">
         <ToolbarButton as-child><BaseButton icon="reply" :label="t('mail.reply')" @click="reply" /></ToolbarButton>
         <ToolbarButton v-if="canDraft" as-child><BaseButton variant="ai" icon="sparkles" :label="t('mail.ai.suggestReply')" @click="reply(true)" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="replyAll" :label="t('mail.replyAll')" @click="reply" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="forward" :label="t('mail.forward')" @click="forward" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="replyAll" icon-only :title="t('mail.replyAll')" :label="t('mail.replyAll')" @click="reply" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="forward" icon-only :title="t('mail.forward')" :label="t('mail.forward')" @click="forward" /></ToolbarButton>
         <ToolbarSeparator class="sep" />
-        <ToolbarButton as-child><BaseButton icon="archive" :label="t('mail.archive')" @click="relocate('archive')" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="folder" :label="t('mail.move')" @click="showMove = true" /></ToolbarButton>
-        <ToolbarButton as-child><BaseButton icon="trash" :label="t('mail.delete')" @click="relocate('trash')" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="archive" icon-only :title="t('mail.archive')" :label="t('mail.archive')" @click="relocate('archive')" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="folder" icon-only :title="t('mail.move')" :label="t('mail.move')" @click="showMove = true" /></ToolbarButton>
+        <ToolbarButton as-child><BaseButton icon="trash" icon-only :title="t('mail.delete')" :label="t('mail.delete')" @click="relocate('trash')" /></ToolbarButton>
         <ToolbarButton v-if="!suivi && !shared" as-child><BaseButton variant="primary" icon="follow" :label="t('mail.createSuivi')" @click="createSuivi(false)" /></ToolbarButton>
       </ToolbarRoot>
 
@@ -304,7 +304,7 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 .title { flex: 1; min-width: 0; }
 .title h2 { overflow-wrap: anywhere; }
 .addr { overflow-wrap: anywhere; }
-.toolbar { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; padding-bottom: var(--space-3); border-bottom: var(--bw) solid var(--c-border); }
+.toolbar { display: flex; flex-wrap: wrap; row-gap: var(--space-1); gap: var(--space-1); align-items: center; padding-bottom: var(--space-3); border-bottom: var(--bw) solid var(--c-border); }
 .toolbar :deep(.btn) { min-height: 40px; }
 .sep { width: 1px; align-self: stretch; background: var(--c-border); margin: 4px var(--space-1); }
 .body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
