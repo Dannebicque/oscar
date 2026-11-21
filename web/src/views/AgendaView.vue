@@ -15,18 +15,43 @@ import { useFormat } from '../composables/useFormat'
 import { conflictIds } from '../domain/agenda'
 import { isoDay } from '../domain/dates'
 import { useAgendaStore } from '../stores/agenda'
+import { useSuivisStore } from '../stores/suivis'
+import { useTasksStore } from '../stores/tasks'
 import { useUiStore } from '../stores/ui'
 
 const { t } = useI18n()
 const fmt = useFormat()
 const store = useAgendaStore()
 const ui = useUiStore()
-onMounted(() => store.load())
+const tasks = useTasksStore()
+const suivis = useSuivisStore()
+onMounted(() => Promise.all([store.load(), tasks.load(), suivis.load()]))
 
 const narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches
 const view = ref<GridView>(narrow ? 'timeGridDay' : 'timeGridWeek')
 const grid = ref<InstanceType<typeof CalendarGrid> | null>(null)
 const title = ref('')
+const range = ref<{ start: Date; end: Date } | null>(null)
+/** Calendriers masqués (bascule par source) : la grille n'affiche que ceux qui restent actifs. */
+const hidden = ref<Set<string>>(new Set())
+const shownEvents = computed(() => store.events.filter((e) => !hidden.value.has(e.calendar)))
+function toggleSource(id: string) {
+  const next = new Set(hidden.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  hidden.value = next
+}
+/** Échéances de la période affichée : tâches non terminées et suivis ouverts dont l'échéance tombe dans la période. */
+const dues = computed(() => {
+  if (!range.value) return []
+  const from = isoDay(range.value.start)
+  const to = isoDay(new Date(range.value.end.getTime() - 1))
+  const rows = [
+    ...tasks.items.filter((x) => !x.done && !x.toConfirm && x.dueAt && x.dueAt >= from && x.dueAt <= to).map((x) => ({ key: `t${x.id}`, label: x.title, tag: t('agenda.dueTask'), at: x.dueAt!, to: '/taches' })),
+    ...suivis.items.filter((x) => x.status !== 'done' && x.dueAt >= from && x.dueAt <= to).map((x) => ({ key: `s${x.id}`, label: x.subject, tag: t('agenda.dueSuivi'), at: x.dueAt, to: '/suivis' })),
+  ]
+  return rows.sort((a, b) => a.at.localeCompare(b.at)).slice(0, 8)
+})
 const viewOptions = computed(() => ([['timeGridWeek', 'week'], ['timeGridDay', 'day'], ['dayGridMonth', 'month'], ['listWeek', 'list']] as const).map(([value, k]) => ({ value: value as GridView, label: t(`agenda.${k}`) })))
 const conflicts = computed(() => conflictIds(store.events))
 
@@ -81,28 +106,54 @@ async function create() {
       </div>
       <h2 class="when" aria-live="polite">{{ title }}</h2>
     </div>
-    <ul class="sources" :aria-label="t('agenda.sources')">
-      <li v-for="s in store.sources" :key="s.id"><ToneChip :tone="s.personal ? 'neutral' : 'info'" :icon="s.personal ? 'user' : 'calendar'" :label="`${s.label} · ${s.kind === 'google' ? 'Google' : 'CalDAV'}${s.personal ? ' · ' + t('agenda.private') : ''}`" /></li>
-    </ul>
-    <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
-    <CalendarGrid
-      ref="grid" :events="store.events" :sources="store.sources" :view="view" :conflicts="conflicts"
-      @open="openId = $event" @select="startCreate" @dates="title = $event.title"
-    />
-    <p class="hint note">{{ t('agenda.freeBusy') }}</p>
-  </template>
+    <div class="layout">
+      <div class="main">
+        <ul class="sources" :aria-label="t('agenda.sources')">
+          <li v-for="s in store.sources" :key="s.id">
+            <button type="button" class="src" :class="{ off: hidden.has(s.id), personal: s.personal }" :aria-pressed="!hidden.has(s.id)" @click="toggleSource(s.id)">
+              <span class="bar" aria-hidden="true" />
+              <BaseIcon :name="s.personal ? 'user' : 'calendar'" :size="16" />
+              <span>{{ s.label }}<template v-if="s.personal"> · {{ t('agenda.private') }}</template></span>
+            </button>
+          </li>
+        </ul>
+        <p v-if="store.sources.length === 0" class="muted">{{ t('agenda.noSource') }} <RouterLink to="/reglages#set-accounts">{{ t('agenda.addSource') }}</RouterLink></p>
+        <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
+        <CalendarGrid
+          ref="grid" :events="shownEvents" :sources="store.sources" :view="view" :conflicts="conflicts"
+          @open="openId = $event" @select="startCreate" @dates="(d) => { title = d.title; range = { start: d.start, end: d.end } }"
+        />
+        <p class="hint note">{{ t('agenda.legend') }} {{ t('agenda.freeBusy') }}</p>
+      </div>
 
-  <BaseDialog :open="opened !== null" :title="opened?.title ?? ''" @close="openId = null">
-    <dl v-if="opened" class="detail">
-      <dt>{{ t('agenda.when') }}</dt>
-      <dd><BaseIcon name="clock" :size="14" /> {{ fmt.dateLong(opened.start) }}, {{ fmt.time(opened.start) }} – {{ fmt.time(opened.end) }}</dd>
-      <template v-if="opened.location"><dt>{{ t('agenda.evPlace') }}</dt><dd><BaseIcon name="mapPin" :size="14" /> {{ opened.location }}</dd></template>
-      <dt>{{ t('agenda.evCalendar') }}</dt>
-      <dd><ToneChip :tone="openedSource?.personal ? 'neutral' : 'info'" :icon="openedSource?.personal ? 'user' : 'calendar'" :label="openedSource?.label ?? ''" /></dd>
-    </dl>
-    <p v-if="opened && conflicts.has(opened.id)" class="conflict"><ToneChip tone="warn" icon="alert" :label="t('agenda.conflict')" /></p>
-    <template #footer><BaseButton :label="t('common.close')" @click="openId = null" /></template>
-  </BaseDialog>
+      <aside class="side" :aria-label="t('agenda.sidePanel')">
+        <section class="card stack" aria-labelledby="sel-h">
+          <h2 id="sel-h">{{ t('agenda.selected') }}</h2>
+          <p v-if="!opened" class="muted">{{ t('agenda.selectHint') }}</p>
+          <template v-else>
+            <p class="evt">{{ opened.title }}</p>
+            <dl class="detail">
+              <dt>{{ t('agenda.when') }}</dt>
+              <dd><BaseIcon name="clock" :size="14" /> {{ fmt.dateLong(opened.start) }}, {{ fmt.time(opened.start) }} – {{ fmt.time(opened.end) }}</dd>
+              <template v-if="opened.location"><dt>{{ t('agenda.evPlace') }}</dt><dd><BaseIcon name="mapPin" :size="14" /> {{ opened.location }}</dd></template>
+              <dt>{{ t('agenda.evCalendar') }}</dt>
+              <dd><ToneChip :tone="openedSource?.personal ? 'neutral' : 'info'" :icon="openedSource?.personal ? 'user' : 'calendar'" :label="openedSource?.label ?? ''" /></dd>
+            </dl>
+            <p v-if="conflicts.has(opened.id)" class="conflict"><ToneChip tone="warn" icon="alert" :label="t('agenda.conflict')" /></p>
+            <div><BaseButton icon="x" :label="t('common.close')" @click="openId = null" /></div>
+          </template>
+        </section>
+
+        <section class="card stack" aria-labelledby="due-h">
+          <h2 id="due-h">{{ t('agenda.dues') }}</h2>
+          <p v-if="dues.length === 0" class="muted">{{ t('agenda.noDues') }}</p>
+          <ul v-else class="dues">
+            <li v-for="d in dues" :key="d.key"><RouterLink :to="d.to" class="due"><span class="dl">{{ d.label }}</span><span class="dt muted">{{ d.tag }} · {{ fmt.date(d.at) }}</span></RouterLink></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </template>
 
   <BaseDialog :open="showNew" :title="t('agenda.add')" @close="showNew = false">
     <form id="new-event" class="form" @submit.prevent="create">
@@ -126,7 +177,23 @@ async function create() {
 .bar { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-3); }
 .nav { display: flex; gap: var(--space-1); }
 .when { font-size: var(--fs-md); flex: 1; min-width: 200px; text-transform: capitalize; }
-.sources { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.layout { display: grid; gap: var(--space-4); align-items: start; }
+.main { min-width: 0; }
+.side { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
+@media (min-width: 1200px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } .side { position: sticky; top: 0; } }
+.sources { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.src { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target); padding: 0 var(--space-4); border-radius: var(--radius-pill); border: var(--bw) solid var(--c-border-strong); background: var(--c-primary-soft); color: var(--c-on-primary-soft); font: inherit; font-weight: 700; cursor: pointer; }
+.src.personal { background: var(--c-surface-2); color: var(--c-text); }
+.src .bar { width: 4px; height: 18px; border-radius: 2px; background: var(--c-cal2, var(--c-primary)); }
+.src:not(.personal) .bar { background: var(--c-primary); }
+.src.off { background: var(--c-surface); color: var(--c-text-muted); text-decoration: line-through; }
+.src.off .bar { background: var(--c-border-strong); }
+.evt { font-size: var(--fs-lg); font-weight: 800; margin: 0; }
+.dues { list-style: none; margin: 0; padding: 0; display: grid; }
+.due { display: grid; gap: 2px; min-height: var(--target); padding: var(--space-2) 0; border-top: var(--bw) solid var(--c-border); color: var(--c-text); text-decoration: none; }
+.due:hover .dl { text-decoration: underline; }
+.dl { font-weight: 600; } .dt { font-size: var(--fs-sm); }
+.side h2 { font-size: var(--fs-md); }
 .note { margin-top: var(--space-4); }
 .detail { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: 0; }
 .detail dt { color: var(--c-text-muted); }

@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Calendar\CalendarSynchronizer;
+use App\Entity\CalendarAccount;
 use App\Entity\MailAccount;
 use App\Entity\SharedMailbox;
 use App\Entity\Task;
@@ -23,6 +25,7 @@ final class DevSetupCommand extends Command
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly CredentialVault $vault,
+        private readonly CalendarSynchronizer $calendars,
         #[Autowire('%kernel.environment%')] private readonly string $env,
     ) {
         parent::__construct();
@@ -61,6 +64,18 @@ final class DevSetupCommand extends Command
             ] as [$title, $prio, $due, $project, $tags, $origin, $confirm, $source]) {
                 $this->em->persist((new Task())->setOwner($david)->setTitle($title)->setPriority($prio)->setDueAt($due === null ? null : $d($due))
                     ->setProject($project)->setTags($tags)->setOrigin($origin)->setToConfirm($confirm)->setSource($source));
+            }
+        }
+        // Deux agendas de démonstration (pro et perso) : événements recalculés autour d'aujourd'hui, sans serveur CalDAV.
+        foreach ([['IUT · CalDAV', 'caldav', 'demo://iut', false], ['Perso · Google Agenda', 'google', 'demo://perso', true]] as [$label, $kind, $url, $personal]) {
+            if ($this->em->getRepository(CalendarAccount::class)->findOneBy(['owner' => $david, 'url' => $url]) === null) {
+                $this->em->persist((new CalendarAccount())->setOwner($david)->setLabel($label)->setKind($kind)->setUrl($url)->setUsername('demo')->setPersonal($personal));
+            }
+        }
+        $this->em->flush();
+        foreach ($this->em->getRepository(CalendarAccount::class)->findBy(['owner' => $david]) as $cal) {
+            if (str_starts_with($cal->getUrl(), 'demo://')) {
+                $this->calendars->sync($cal);
             }
         }
         // L'alias contact@ servi par les quatre comptes de test (F-44, F-67).

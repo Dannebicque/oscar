@@ -11,12 +11,15 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /** Client CalDAV minimal (REPORT calendar-query, PUT) avec sabre/vobject pour iCalendar. */
 final class CalDavProvider implements CalendarProvider
 {
-    public function __construct(private readonly HttpClientInterface $http, private readonly CredentialVault $vault)
+    public function __construct(private readonly HttpClientInterface $http, private readonly CredentialVault $vault, private readonly DemoCalendar $demo = new DemoCalendar())
     {
     }
 
     public function events(CalendarAccount $account, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
+        if (str_starts_with($account->getUrl(), 'demo://')) {
+            return $this->demo->events($account->getUrl(), $from, $to); // agenda de démonstration, développement seulement
+        }
         $body = sprintf(
             '<?xml version="1.0" encoding="utf-8"?><c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop><c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT"><c:time-range start="%s" end="%s"/></c:comp-filter></c:comp-filter></c:filter></c:calendar-query>',
             $from->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\THis\Z'),
@@ -32,6 +35,9 @@ final class CalDavProvider implements CalendarProvider
 
     public function create(CalendarAccount $account, CalendarEventData $e): void
     {
+        if (str_starts_with($account->getUrl(), 'demo://')) {
+            return; // démonstration : l'événement reste en base jusqu'à la prochaine synchronisation
+        }
         $cal = new VCalendar();
         $cal->add('VEVENT', [
             'UID' => $e->uid, 'SUMMARY' => $e->title, 'DTSTART' => $e->start->setTimezone(new \DateTimeZone('UTC')), 'DTEND' => $e->end->setTimezone(new \DateTimeZone('UTC')),

@@ -98,18 +98,23 @@ describe('grille de calendrier (FullCalendar)', () => {
 })
 
 describe('écran Agenda', () => {
-  it('ouvre le détail d’un événement au clic et le ferme', async () => {
+  it('affiche le détail d’un événement dans le panneau latéral, se ferme, et masque un calendrier à la bascule', async () => {
     const { wrapper } = await mountApp(AgendaView, '/agenda')
     await flushPromises()
     const ev = wrapper.findAll('.fc-event').find((e) => e.text().includes('Point équipe'))
     expect(ev).toBeTruthy()
     await ev!.trigger('click')
     await flushPromises()
-    // Reka UI téléporte la fenêtre dans <body> : on la cherche dans le document.
-    const dlg = document.body.querySelector('[role="dialog"]')!
-    expect(dlg.querySelector('h2')?.textContent).toBe('Point équipe')
-    expect(dlg.textContent).toContain('IUT')
-    expect(dlg.getAttribute('aria-labelledby')).toBeTruthy()
+    // Le détail s'affiche dans le panneau latéral (plus de fenêtre) : titre, calendrier et bouton pour fermer.
+    const side = wrapper.find('aside')
+    expect(side.text()).toContain('Point équipe')
+    expect(side.text()).toContain('IUT')
+    await side.findAll('button').find((b) => b.text() === 'Fermer')!.trigger('click')
+    expect(wrapper.find('aside').text()).toContain('Clique sur un événement')
+    // La bascule de calendrier masque ses événements.
+    await wrapper.find('button.src').trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('.fc-event').some((e) => e.text().includes('Point équipe'))).toBe(false)
   })
 
   it('les boutons de période et de vue pilotent la grille', async () => {

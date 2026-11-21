@@ -43,10 +43,10 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | ID | P | État | Remarques |
 |---|---|---|---|
 | F-20 | M | ✅ | CalDAV lecture/création (récurrences, écriture serveur d'abord). Testé contre des réponses simulées, **jamais contre un vrai serveur**. Google : ❌ (v2). Un événement existant ne se modifie ni ne se supprime. |
-| F-21 | S | ❌ | Détection de conflits d'horaire. |
+| F-21 | S | ✅ | Chevauchements signalés dans la grille et dans le détail de l'événement. |
 | F-22 | S | ✅ | Créneaux libres proposés depuis une demande de disponibilités (libre/occupé seulement). |
 | F-23 | C | ❌ | Tâches de préparation générées par un événement. |
-| F-24 | S | 🟡 | Sources avec drapeau « perso » ; une seule couleur de source dans la grille, pas de bascule par calendrier ni d'écriture dans l'agenda choisi. |
+| F-24 | S | 🟡 | Plusieurs agendas affichés ensemble, bascule par calendrier, création dans l'agenda choisi ✅ ; une seule couleur par type (pro / perso), pas une couleur par source. |
 | F-25 | S | ❌ | Invitations (envoyer, accepter, refuser, iCalendar reçu). Seul le type de notification existe. |
 | F-26 | C | ❌ | Partage d'agenda (libre/occupé) avec l'équipe. |
 
@@ -152,7 +152,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Mes suivis | ✅ | |
 | Tâches | ✅ | Listes + détail comme la maquette. |
 | Réglages | 🟡 | Section « Mon compte » ✅. Manquent : champs LDAP, règles de création automatique de suivis, délai par compte, canaux de notification par type. |
-| Agenda | 🟡 | Grille ✅ ; invitations, bascule par calendrier, panneau « événement sélectionné », échéances de la semaine ❌. |
+| Agenda | 🟡 | Grille, bascule par calendrier, panneau « événement sélectionné », échéances de la période, conflits signalés ✅ ; invitations ❌. |
 | Équipe | 🟡 | Périmètre « Équipe » de la page Suivis ; pas d'écran dédié. |
 | Écrire | 🟡 | Voir F-73. |
 | Récapitulatif | ✅ | |
@@ -174,7 +174,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | DesktopAccueil / Main | vu | Fait : trois états. Reste : bloc « Recommandations » dédié (la synthèse d'Oscar le remplace). |
 | DesktopComposer | partiel | Reste : bloc « Suggéré par l'IA · à vérifier » pour la tâche à créer à l'envoi, bandeau LDAP, identité d'expéditeur. |
 | DesktopAlias | non comparé | Les états nouveau / pris / traité, notes et collision existent ; pas d'écran dédié « boîte partagée ». |
-| DesktopAgenda / MobAgenda | partiel | Reste : bascule de calendriers, invitation reçue à accepter, panneau de l'événement sélectionné, échéances de la semaine. |
+| DesktopAgenda / MobAgenda | partiel | Fait : bascule de calendriers, panneau de l'événement sélectionné, échéances de la période. Reste : invitation reçue à accepter. |
 | DesktopNotifs | non comparé | Reste : « Comment être prévenu » (canal par type). |
 | DesktopReglages | non comparé | Voir tableau des écrans (LDAP, règles, délai par compte). |
 | MobTaches, Suivis (mobile), Relance | partiel | Relance : brouillon, envoyer, reporter, ne plus relancer présents. Mise en page mobile contrôlée seulement par les tests de gabarit. |

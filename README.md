@@ -76,3 +76,7 @@ données isolées par utilisateur ; connexion par CAS en production (connexion d
 - `APP_REGISTRATION=open|closed` ferme l'inscription (à fermer en production CAS seul). `FRONT_URL` et `MAILER_FROM` servent au courriel de réinitialisation (`MAILER_DSN` pour l'envoi réel ; en développement, le lien s'affiche à l'écran).
 - Connexion : message identique que le compte existe ou non, cinq essais par quart d'heure, lien de réinitialisation à usage unique valable une heure, sessions fermées après un changement de mot de passe.
 - **Assistant de connexion de la messagerie** (`/bienvenue`) : les serveurs sont devinés d'après le domaine, les deux serveurs sont testés **avant** d'enregistrer le compte. En production, les adresses privées ou réservées et les ports qui ne sont pas ceux d'un serveur de messagerie sont refusés (anti-SSRF, `HostGuard`).
+
+### Données de démonstration
+
+`php bin/console app:dev:setup` (lancé par `scripts/dev-up.sh`) crée aussi deux agendas de démonstration pour david, `demo://iut` (pro) et `demo://perso` (perso) : un emploi du temps recalculé autour d'aujourd'hui, avec un conflit d'horaire et deux rendez-vous dans l'heure qui vient, sans serveur CalDAV. Un événement créé dans un agenda de démonstration disparaît à la synchronisation suivante.
