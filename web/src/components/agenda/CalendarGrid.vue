@@ -90,7 +90,7 @@ defineExpose({
           <span class="ev-meta ev-source">
             <BaseIcon :name="arg.event.extendedProps.personal ? 'user' : 'calendar'" :size="12" />{{ arg.event.extendedProps.source }}
           </span>
-          <span v-if="arg.event.extendedProps.conflict" class="ev-meta ev-warn"><BaseIcon name="alert" :size="12" />{{ t('agenda.conflict') }}</span>
+          <span v-if="arg.event.extendedProps.conflict" class="ev-meta ev-warn" :title="t('agenda.conflict')"><BaseIcon name="alert" :size="12" /><span class="ev-warn-txt">{{ t('agenda.conflict') }}</span></span>
         </div>
       </template>
     </FullCalendar>
@@ -139,7 +139,7 @@ defineExpose({
 .grid-wrap .ev-time { font-weight: 700; font-size: 0.75rem; }
 .grid-wrap .ev-title { font-weight: 800; overflow-wrap: break-word; hyphens: auto; }
 .grid-wrap .fc-event { container-type: inline-size; }
-@container (max-width: 110px) { .ev-meta, .ev-time { display: none !important; } .ev-title { font-size: 0.75rem; } }
+@container (max-width: 110px) { .ev-meta:not(.ev-warn), .ev-time { display: none !important; } .ev-warn-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ev-title { font-size: 0.75rem; } }
 .grid-wrap .fc-timegrid-event-short .ev-meta, .grid-wrap .fc-timegrid-col-events .fc-timegrid-event.fc-event-end .ev-source { display: none; }
 .grid-wrap .fc-timegrid-event .ev-warn { display: inline-flex; background: var(--c-warn-soft); color: var(--c-text); border-radius: 999px; padding: 0 6px; width: fit-content; }
 .grid-wrap .fc-timegrid-event-short .ev-warn { display: inline-flex; }
