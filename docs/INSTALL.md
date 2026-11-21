@@ -83,4 +83,3 @@ docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
 - Construire et essayer l'image, corriger ce qui sera signalé.
 - Essayer le CAS de l'établissement et le LDAP réels.
 - Journaux centralisés et supervision (le journal d'erreurs d'Oscar est dans l'application, pas dans un outil externe).
-- Fichier `LICENSE` (AGPL) à la racine du dépôt.

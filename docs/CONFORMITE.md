@@ -124,7 +124,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | N-08 | ✅ | Aucun récap ni alerte en double (unicité testée). |
 | N-09 | 🟡 | Service worker : coque de l'application en cache, lectures d'API (tâches, suivis, mails récents, agenda…) servies du cache hors ligne, effacées à la déconnexion ; file d'envoi (F-80). Écrit et construit, **non vérifié dans un navigateur** (le service worker n'a pas pu s'enregistrer dans le navigateur intégré de l'outil de développement). Pas de synchronisation des modifications faites hors ligne (tâches, suivis). |
 | N-10 | ✅ | fr/en, aucune chaîne en dur, clés vérifiées par test. |
-| N-11 | 🟡 | Dev en une commande ✅. Image de production (`Dockerfile`, FrankenPHP), `compose.prod.yaml` (base, application, worker), modèle `docker/prod/env.example` et guide `docs/INSTALL.md` écrits ; Compose validé, **image jamais construite ni essayée**. CI écrite, jamais exécutée sur GitHub. Fichier `LICENSE` (AGPL) absent. |
+| N-11 | 🟡 | Dev en une commande ✅. Image de production (`Dockerfile`, FrankenPHP), `compose.prod.yaml` (base, application, worker), modèle `docker/prod/env.example` et guide `docs/INSTALL.md` écrits ; Compose validé, **image jamais construite ni essayée**. CI écrite, jamais exécutée sur GitHub.  Fichier `LICENSE` (AGPL v3) ajouté. |
 | N-12 | 🟡 | Interface moderne, accessible, raccourcis Gmail. Gestes webmail courants présents ; vidage de la corbeille et HTML isolé manquent (F-16). |
 
 ## 3. Interface (section 10)
@@ -189,7 +189,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | Mercure (temps réel) | ❌ | Interrogation du serveur chaque minute. |
 | FrankenPHP | 🟡 | Image et Caddyfile écrits (`Dockerfile`, `docker/prod/`) ; jamais construits. `php -S` en développement. |
 | Cache hors ligne (service worker, IndexedDB) | 🟡 | Écrit et testé en unitaire ; non vérifié dans un navigateur. |
-| Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. Le code Rust compile (check, clippy, build sur macOS) ; **fenêtre, trousseau, notifications et raccourci non essayés à la main**. |
+| Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. Le code Rust compile (check, clippy, build) et l'application se lance sur macOS avec le front ; **trousseau, notifications, raccourci global, Windows et Linux non vérifiés**. |
 | Playwright | ❌ | Remplacé par `scripts/e2e.py` (HTTP + IMAP réels). |
 | Affichage HTML isolé (iframe sandbox) | ❌ | Texte brut seulement : aucun contenu actif ne s'exécute. |
 | Identifiants chiffrés, clé hors base | ✅ | |
@@ -209,5 +209,5 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 3. **Tauri** : compiler `desktop/`, corriger, signer, mises à jour automatiques, essais sur les trois systèmes et lecteurs d'écran.
 4. **Agenda** : envoi d'invitations et mises à jour (F-25), vrai serveur CalDAV de test, Google.
 5. Vérifier la PWA et le hors-ligne dans un vrai navigateur ; synchroniser les modifications faites hors ligne.
-6. **Production** : construire et essayer l'image, test du CAS et du LDAP réels, `LICENSE`, durées de conservation (RGPD).
+6. **Production** : construire et essayer l'image, test du CAS et du LDAP réels, durées de conservation (RGPD).
 7. **Suivi** : tâche liée à un suivi (F-36), filtres par compte/projet/étiquette (F-59), regroupement des relances au même destinataire.

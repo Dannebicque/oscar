@@ -14,7 +14,7 @@ Côté web, le pont (`web/src/desktop/bridge.ts`) est **inerte** sans Tauri : le
 
 ## État
 
-Le socle est écrit et le pont côté web est testé (`web/src/test/desktop.test.ts`). Le code Rust **compile** (`cargo check`, `cargo clippy` et `cargo build` sans erreur sur macOS, Rust 1.100, Tauri 2.12), mais la fenêtre n'a pas encore été essayée à la main : lance `npm run dev` (ci-dessous) et déroule la liste de contrôle. Les critères de validation du cahier (installation, notifications, trousseau, accessibilité de la webview) restent à vérifier sur chaque système, en particulier **VoiceOver, NVDA et Orca** : la webview dépend de l'OS (comparatif §3).
+Le socle est écrit et le pont côté web est testé (`web/src/test/desktop.test.ts`). Le code Rust **compile** (`cargo check`, `cargo clippy` et `cargo build` sans erreur sur macOS, Rust 1.100, Tauri 2.12) et l'application **se lance avec le front** (essai à la main sur macOS). Le trousseau, la notification native, le raccourci global et la barre système restent à dérouler avec la liste de contrôle, ainsi que Windows et Linux. Les critères de validation du cahier (installation, notifications, trousseau, accessibilité de la webview) restent à vérifier sur chaque système, en particulier **VoiceOver, NVDA et Orca** : la webview dépend de l'OS (comparatif §3).
 
 ## Lancer
 
@@ -34,5 +34,4 @@ Icônes provisoires : `python3 scripts/make-desktop-icons.py`. Pour des icônes 
 - Compiler et corriger (premier passage).
 - Signature et notarisation des installateurs (macOS, Windows), mises à jour automatiques (`tauri-plugin-updater`).
 - Adresse de l'API de production dans la CSP (`tauri.conf.json`) et dans `VITE_API_URL`.
-- Fichier `LICENSE` (AGPL) à la racine, puis `bundle.licenseFile`.
 - Tests sur les trois systèmes, dont lecteurs d'écran.
