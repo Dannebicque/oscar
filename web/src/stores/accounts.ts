@@ -19,9 +19,10 @@ export const useAccountsStore = defineStore('accounts', () => {
   }
   async function addMail(a: NewMailAccount) { mail.value = [...mail.value, await api.accounts.mail.create(a)] }
   async function removeMail(id: string) { await api.accounts.mail.remove(id); mail.value = mail.value.filter((a) => a.id !== id) }
+  async function updateMail(id: string, patch: Parameters<typeof api.accounts.mail.update>[1]) { const a = await api.accounts.mail.update(id, patch); mail.value = mail.value.map((x) => (x.id === id ? { ...x, ...a } : x)) }
   const testMail = (id: string) => api.accounts.mail.test(id)
   async function addCalendar(a: NewCalendarAccount) { calendar.value = [...calendar.value, await api.accounts.calendar.create(a)] }
   async function removeCalendar(id: string) { await api.accounts.calendar.remove(id); calendar.value = calendar.value.filter((a) => a.id !== id) }
 
-  return { mail, calendar, shared, loaded, load, addMail, removeMail, testMail, addCalendar, removeCalendar }
+  return { mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
 })

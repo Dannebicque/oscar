@@ -69,6 +69,13 @@ class MailAccount implements OwnedInterface, SyncableAccount
     #[ORM\Column]
     private bool $aiAllowed = true;
 
+    /** Délai de relance propre à ce compte (F-12, F-54) ; null = celui des réglages de l'utilisateur. */
+    #[ORM\Column(nullable: true)] #[Assert\Choice(choices: [24, 48, 72, 168])]
+    private ?int $relanceHours = null;
+    /** Jours ouvrés ou heures réelles pour ce compte ; null = réglage de l'utilisateur. */
+    #[ORM\Column(nullable: true)]
+    private ?bool $businessDays = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $lastSyncAt = null;
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -108,6 +115,10 @@ class MailAccount implements OwnedInterface, SyncableAccount
     public function setPassword(?string $v): static { $this->password = $v; return $this; }
     public function isAiAllowed(): bool { return $this->aiAllowed; }
     public function setAiAllowed(bool $v): static { $this->aiAllowed = $v; return $this; }
+    public function getRelanceHours(): ?int { return $this->relanceHours; }
+    public function setRelanceHours(?int $v): static { $this->relanceHours = $v; return $this; }
+    public function getBusinessDays(): ?bool { return $this->businessDays; }
+    public function setBusinessDays(?bool $v): static { $this->businessDays = $v; return $this; }
     public function getLastSyncAt(): ?\DateTimeImmutable { return $this->lastSyncAt; }
     public function getLastError(): ?string { return $this->lastError; }
 

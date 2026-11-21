@@ -185,6 +185,8 @@ export default {
     relances: 'Relances dues', nothing: 'Rien à signaler.', intro: 'Voilà ce qui compte maintenant. Je prépare, tu décides.', example: 'Exemple de récap', sentTo: 'Envoyé à david{\'@\'}iut-troyes.fr à {time}.',
   },
   alerts: {
+    channelsTitle: 'Comment être prévenu', channelsHelp: 'Un canal par type d’événement. Les alertes sont regroupées pour ne pas se multiplier.', event: 'Événement', channel: { app: 'Dans l’application', desktop: 'Bureau', email: 'E-mail' },
+    channelsNote: '« Connexion en échec » n’alerte qu’après plusieurs échecs de suite. Le canal « Bureau » concerne l’application de bureau ; l’e-mail est envoyé à l’adresse de ton compte.',
     messages: {
       replyReceived: '{who} a répondu à « {subject} ».',
       relanceDue: 'Relance due : « {subject} » ({who}). | {n} relances à faire.',
@@ -283,6 +285,7 @@ export default {
     title: 'Réglages', sections: 'Sections',
     nav: { myaccount: 'Mon compte', accounts: 'Comptes et agendas', relances: 'Relances et suivi', recap: 'Récapitulatifs', ai: 'Oscar, l’assistant IA', look: 'Apparence et accessibilité', journal: 'État des connexions et journal' },
     accounts: {
+      relanceBtn: 'Relances', relanceLabel: 'Relance', inherit: 'Comme dans mes réglages', inheritShort: 'réglage général', bizOn: 'Jours ouvrés', bizOff: 'Heures réelles', relanceTitle: 'Relances du compte « {name} »', relanceHelp: 'Ce compte peut avoir son propre délai. Sans choix, le réglage général s’applique.', relanceSaved: 'Relances du compte « {name} » enregistrées.',
       mailAccounts: 'Comptes de messagerie', addMail: 'Ajouter un compte de messagerie', addCalendar: 'Ajouter un agenda', noMail: 'Aucun compte de messagerie pour l’instant. Ajoute le tien pour que je lise tes mails.',
       noCalendar: 'Aucun agenda connecté.', work: 'Agenda pro', sharedBoxes: 'Boîtes partagées', noShared: 'Tu n’es membre d’aucune boîte partagée.', roleAdmin: 'Administrateur', roleMember: 'Membre',
       added: 'Compte « {name} » ajouté.', addFailed: 'Je n’ai pas pu ajouter ce compte. Vérifie les champs, puis réessaie.', testFailed: 'Connexion impossible. Vérifie le serveur, le port, le chiffrement et le mot de passe.',
@@ -295,6 +298,16 @@ export default {
       calendars: 'Agendas', caldav: 'IUT · CalDAV', caldavHelp: 'Invitations acceptables et partage d’agenda selon les droits du serveur', google: 'Perso · Google Agenda', googleHelp: 'Compte perso, lu séparément du pro',
       includePersonal: 'Inclure l’agenda perso dans « Prochain RDV »', includePersonalHelp: 'Désactivé par défaut. Les rendez-vous perso restent hors des priorités et du tableau de suivi.',
       shareBusy: 'Partager mon agenda pro avec l’équipe', shareBusyHelp: 'Les autres voient mes créneaux occupés, pas le détail des rendez-vous.',
+    },
+    directory: {
+      title: 'Annuaire de l’établissement (LDAP)', on: 'Annuaire connecté', off: 'Annuaire non configuré', help: 'Les suggestions de destinataires viennent de l’annuaire de ton établissement.', helpOff: 'L’administrateur du serveur le branche (LDAP_URL, LDAP_BASE_DN). En attendant, la saisie utilise une courte liste de démonstration.',
+      minimum: 'Nom, prénom et e-mail sont toujours affichés. Choisis ce qui s’ajoute pour distinguer deux homonymes.', department: 'Service ou département', departmentHelp: 'Affiché sous le nom, pour distinguer deux homonymes.', phone: 'Téléphone', phoneHelp: 'Affiché dans la liste de suggestions.',
+    },
+    rules: {
+      title: 'Création automatique de suivis', help: 'Par défaut, Oscar suggère et tu valides. Ces règles créent le suivi tout de suite, sans validation, pour les expéditeurs que tu choisis.',
+      kind: { domain: 'Tout un domaine', sender: 'Un expéditeur' }, kindLabel: 'Quand le mail vient de', valueLabel: 'Domaine ou adresse', add: 'Ajouter la règle', added: 'Règle ajoutée.', removed: 'Règle supprimée.',
+      when: { domain: 'Tout mail reçu de {\'@\'}{value}', sender: 'Tout mail reçu de {value}' }, alias: 'Tout mail arrivant sur {address}', on: 'Activée', off: 'Désactivée', remove: 'Supprimer la règle {value}', none: 'Aucune règle pour l’instant.',
+      never: 'Une règle ne crée qu’un suivi « à traiter ». Rien n’est envoyé, rien n’est clos, et les messages automatiques (absence, newsletters) sont ignorés.',
     },
     relances: {
       delay: 'Délai avant relance', delayHelp: 'Par défaut, pour le compte david{\'@\'}iut-troyes.fr', h24: '24 heures', h48: '48 heures', h72: '3 jours', h168: '1 semaine',

@@ -185,6 +185,8 @@ const en: typeof fr = {
     relances: 'Reminders due', nothing: 'Nothing to report.', intro: 'Here is what matters now. I prepare, you decide.', example: 'Recap example', sentTo: 'Sent to david{\'@\'}iut-troyes.fr at {time}.',
   },
   alerts: {
+    channelsTitle: 'How to be notified', channelsHelp: 'One channel per kind of event. Alerts are grouped so they don’t pile up.', event: 'Event', channel: { app: 'In the app', desktop: 'Desktop', email: 'Email' },
+    channelsNote: '“Connection failed” only alerts after several failures in a row. “Desktop” applies to the desktop app; email goes to your account address.',
     messages: {
       replyReceived: '{who} replied to “{subject}”.',
       relanceDue: 'Reminder due: “{subject}” ({who}). | {n} reminders to send.',
@@ -283,6 +285,7 @@ const en: typeof fr = {
     title: 'Settings', sections: 'Sections',
     nav: { myaccount: 'My account', accounts: 'Accounts and calendars', relances: 'Reminders and follow-up', recap: 'Recaps', ai: 'Oscar, the AI assistant', look: 'Appearance and accessibility', journal: 'Connection status and log' },
     accounts: {
+      relanceBtn: 'Reminders', relanceLabel: 'Reminder', inherit: 'Same as my settings', inheritShort: 'general setting', bizOn: 'Business days', bizOff: 'Real hours', relanceTitle: 'Reminders for “{name}”', relanceHelp: 'This account can have its own delay. Without a choice, the general setting applies.', relanceSaved: 'Reminders for “{name}” saved.',
       mailAccounts: 'Mail accounts', addMail: 'Add a mail account', addCalendar: 'Add a calendar', noMail: 'No mail account yet. Add yours so I can read your mail.',
       noCalendar: 'No calendar connected.', work: 'Work calendar', sharedBoxes: 'Shared mailboxes', noShared: 'You are not a member of any shared mailbox.', roleAdmin: 'Administrator', roleMember: 'Member',
       added: 'Account “{name}” added.', addFailed: 'I couldn’t add this account. Check the fields, then try again.', testFailed: 'Connection failed. Check the server, port, encryption and password.',
@@ -295,6 +298,16 @@ const en: typeof fr = {
       calendars: 'Calendars', caldav: 'Work · CalDAV', caldavHelp: 'Acceptable invitations and calendar sharing depend on the server’s rights', google: 'Personal · Google Calendar', googleHelp: 'Personal account, read separately from work',
       includePersonal: 'Include the personal calendar in “Next event”', includePersonalHelp: 'Off by default. Personal events stay out of priorities and the follow-up board.',
       shareBusy: 'Share my work calendar with the team', shareBusyHelp: 'Others see my busy slots, not the details of my events.',
+    },
+    directory: {
+      title: 'Institution directory (LDAP)', on: 'Directory connected', off: 'Directory not configured', help: 'Recipient suggestions come from your institution’s directory.', helpOff: 'The server administrator connects it (LDAP_URL, LDAP_BASE_DN). Until then, the field uses a short demo list.',
+      minimum: 'First name, last name and email are always shown. Pick what to add to tell namesakes apart.', department: 'Department', departmentHelp: 'Shown under the name, to tell namesakes apart.', phone: 'Phone', phoneHelp: 'Shown in the suggestions list.',
+    },
+    rules: {
+      title: 'Automatic follow-up rules', help: 'By default, Oscar suggests and you confirm. These rules create the follow-up straight away, without confirmation, for the senders you pick.',
+      kind: { domain: 'A whole domain', sender: 'One sender' }, kindLabel: 'When the mail comes from', valueLabel: 'Domain or address', add: 'Add the rule', added: 'Rule added.', removed: 'Rule removed.',
+      when: { domain: 'Any mail from {\'@\'}{value}', sender: 'Any mail from {value}' }, alias: 'Any mail arriving at {address}', on: 'On', off: 'Off', remove: 'Delete the rule {value}', none: 'No rules yet.',
+      never: 'A rule only creates a “to handle” follow-up. Nothing is sent, nothing is closed, and automatic messages (out-of-office, newsletters) are ignored.',
     },
     relances: {
       delay: 'Delay before a reminder', delayHelp: 'Default for the account david{\'@\'}iut-troyes.fr', h24: '24 hours', h48: '48 hours', h72: '3 days', h168: '1 week',

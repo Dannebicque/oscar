@@ -25,6 +25,7 @@ final class MailSynchronizer
         private readonly MailRepository $mails,
         private readonly SuiviRepository $suivis,
         private readonly AliasRouter $aliases,
+        private readonly \App\Notification\NotificationCenter $center,
         private readonly ReplyDetector $detector = new ReplyDetector(),
     ) {
     }
@@ -38,7 +39,10 @@ final class MailSynchronizer
                 $mail = Mail::fromHeader($account, $header);
                 $this->em->persist($mail);
                 if ($header->folder === 'INBOX') {
-                    $this->aliases->route($account->getOwner(), $mail);
+                    $routed = $this->aliases->route($account->getOwner(), $mail);
+                    if ($routed === null && !$header->autoSubmitted) {
+                        $this->applyRules($account->getOwner(), $mail);
+                    }
                 }
                 ++$fetched;
             }
@@ -49,12 +53,32 @@ final class MailSynchronizer
         return ['fetched' => $fetched, 'replies' => $this->markReplies($account->getOwner())];
     }
 
+    /** Règles de création automatique (F-66) : un expéditeur ou un domaine suivi d'office, jamais pour un message automatique ni déjà suivi. */
+    private function applyRules(User $owner, Mail $mail): void
+    {
+        $rules = $this->em->getRepository(\App\Entity\FollowRule::class)->findBy(['owner' => $owner, 'enabled' => true]);
+        foreach ($rules as $rule) {
+            if (!$rule->matches($mail->getFromAddress())) {
+                continue;
+            }
+            if ($this->suivis->findOneBy(['owner' => $owner, 'mailId' => $mail->getMessageId()]) !== null) {
+                return;
+            }
+            $who = $mail->getFromName() !== '' ? $mail->getFromName() : $mail->getFromAddress();
+            $s = (new Suivi())->setOwner($owner)->setSubject(preg_replace('/^(re|tr)\s*:\s*/i', '', $mail->getSubject()) ?? $mail->getSubject())
+                ->setContact($who)->setDirection(SuiviDirection::ToHandle)->setStatus(SuiviStatus::New)->setMailId($mail->getMessageId())
+                ->setResponsible($owner->getDisplayName())->setDueAt($mail->getDate()->modify('+2 days')->setTime(0, 0));
+            $s->log($who, 'received', $mail->getDate());
+            $this->em->persist($s);
+
+            return;
+        }
+    }
+
     private function notifyReply(User $owner, Suivi $s, MailHeader $reply): void
     {
         $key = 'reply:'.$s->getId().':'.$reply->key();
-        if ($this->em->getRepository(\App\Entity\Notification::class)->findOneBy(['owner' => $owner, 'dedupeKey' => $key]) === null) {
-            $this->em->persist((new \App\Entity\Notification('replyReceived', ['who' => $reply->fromName !== '' ? $reply->fromName : $reply->fromAddress, 'subject' => $s->getSubject()], 'suivis', $key))->setOwner($owner));
-        }
+        $this->center->deliver($owner, new \App\Entity\Notification('replyReceived', ['who' => $reply->fromName !== '' ? $reply->fromName : $reply->fromAddress, 'subject' => $s->getSubject()], 'suivis', $key));
     }
 
     /** Un suivi « en attente » dont le fil a reçu une vraie réponse passe en « réponse reçue ». */

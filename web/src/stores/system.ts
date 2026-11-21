@@ -4,7 +4,11 @@ import { api } from '../api'
 import type { AppNotification, Connection, LogEntry } from '../domain/types'
 
 export const useSystemStore = defineStore('system', () => {
-  const notifications = ref<AppNotification[]>([])
+  /** Tout ce que le serveur a remis ; le panneau n'affiche que ce que l'utilisateur veut y voir (canal « application »). */
+  const all = ref<AppNotification[]>([])
+  const notifications = computed(() => all.value.filter((n) => n.inApp !== false))
+  /** Pour le bureau (Tauri) : ce qui doit devenir une notification native. */
+  const desktopFeed = computed(() => all.value.filter((n) => n.desktop !== false))
   const connections = ref<Connection[]>([])
   const log = ref<LogEntry[]>([])
   const syncing = ref(false)
@@ -16,12 +20,12 @@ export const useSystemStore = defineStore('system', () => {
   /** Rafraîchit alertes, connexions et journal. Une panne réseau ne vide jamais l'écran : on garde le dernier état connu. */
   async function load() {
     try {
-      ;[notifications.value, connections.value, log.value] = await Promise.all([api.system.notifications(), api.system.connections(), api.system.log()])
+      ;[all.value, connections.value, log.value] = await Promise.all([api.system.notifications(), api.system.connections(), api.system.log()])
     } catch { /* dernier état conservé */ }
   }
   async function markAllRead() {
     await api.system.markAllRead()
-    notifications.value = notifications.value.map((n) => ({ ...n, read: true }))
+    all.value = all.value.map((n) => ({ ...n, read: true }))
   }
   /** « Réessayer » : resynchronise maintenant et renvoie l'état réel. */
   async function syncNow() {
@@ -33,5 +37,5 @@ export const useSystemStore = defineStore('system', () => {
       syncing.value = false
     }
   }
-  return { notifications, connections, log, syncing, unreadCount, hasError, lastSync, load, markAllRead, syncNow }
+  return { notifications, desktopFeed, connections, log, syncing, unreadCount, hasError, lastSync, load, markAllRead, syncNow }
 })

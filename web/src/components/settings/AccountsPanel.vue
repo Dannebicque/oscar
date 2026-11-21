@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { MailAccount } from '../../domain/types'
 import { useAccountsStore } from '../../stores/accounts'
 import { useUiStore } from '../../stores/ui'
 import BaseButton from '../ui/BaseButton.vue'
@@ -61,6 +62,30 @@ async function remove() {
     ui.notify(t('settings.accounts.removed', { name: r.label }), { tone: 'info' })
   } catch { ui.notify(t('settings.accounts.removeFailed'), { tone: 'error' }) }
 }
+const relanceFor = ref<MailAccount | null>(null)
+const relanceForm = reactive({ hours: '' as string, days: '' as string })
+const HOURS = ['', '24', '48', '72', '168'] as const
+const hoursOptions = computed(() => HOURS.map((h) => ({ value: h, label: h === '' ? t('settings.accounts.inherit') : t(`settings.relances.h${h}`) })))
+const daysOptions = computed(() => [{ value: '', label: t('settings.accounts.inherit') }, { value: 'biz', label: t('settings.accounts.bizOn') }, { value: 'real', label: t('settings.accounts.bizOff') }])
+function openRelance(a: MailAccount) {
+  relanceFor.value = a
+  relanceForm.hours = a.relanceHours ? String(a.relanceHours) : ''
+  relanceForm.days = a.businessDays === true ? 'biz' : a.businessDays === false ? 'real' : ''
+}
+const relanceSummary = (a: MailAccount) => {
+  const h = a.relanceHours ? t(`settings.relances.h${a.relanceHours}`) : t('settings.accounts.inheritShort')
+  const d = a.businessDays === true ? t('settings.accounts.bizOn') : a.businessDays === false ? t('settings.accounts.bizOff') : ''
+  return `${t('settings.accounts.relanceLabel')} : ${h}${d ? ' · ' + d : ''}`
+}
+async function saveRelance() {
+  const a = relanceFor.value
+  if (!a) return
+  try {
+    await accounts.updateMail(a.id, { relanceHours: relanceForm.hours ? Number(relanceForm.hours) : null, businessDays: relanceForm.days === 'biz' ? true : relanceForm.days === 'real' ? false : null })
+    ui.notify(t('settings.accounts.relanceSaved', { name: a.label }))
+    relanceFor.value = null
+  } catch { ui.notify(t('settings.accounts.addFailed'), { tone: 'error' }) }
+}
 const ENC = ['ssl', 'tls', 'none'] as const
 const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings.accounts.enc.${e}`) })))
 </script>
@@ -75,10 +100,12 @@ const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings
           <div class="main">
             <strong>{{ a.label }}</strong>
             <span class="muted">{{ a.address }} · IMAP {{ a.imapHost }}:{{ a.imapPort }} · SMTP {{ a.smtpHost }}:{{ a.smtpPort }}</span>
+            <span class="muted">{{ relanceSummary(a) }}</span>
             <ToneChip v-if="a.lastError" tone="danger" icon="alert" :label="t('status.error')" />
             <ToneChip v-else-if="a.lastSyncAt" tone="success" icon="checkCircle" :label="t('status.ok')" />
           </div>
           <div class="acts">
+            <BaseButton icon="clock" :label="t('settings.accounts.relanceBtn')" @click="openRelance(a)" />
             <BaseButton icon="refresh" :disabled="testing === a.id" :label="t('settings.accounts.test')" @click="test(a.id)" />
             <BaseButton variant="danger" icon="trash" :label="t('common.remove')" @click="confirmRemove = { kind: 'mail', id: a.id, label: a.label }" />
           </div>
@@ -116,6 +143,17 @@ const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings
       <p class="hint">{{ t('settings.accounts.sharedHelp') }}</p>
     </BaseCard>
   </div>
+
+  <BaseDialog :open="relanceFor !== null" :title="t('settings.accounts.relanceTitle', { name: relanceFor?.label ?? '' })" :description="t('settings.accounts.relanceHelp')" @close="relanceFor = null">
+    <form id="relance-form" class="stack" @submit.prevent="saveRelance">
+      <SelectField id="rel-h" v-model="relanceForm.hours" :label="t('settings.relances.delay')" :options="hoursOptions" />
+      <SelectField id="rel-d" v-model="relanceForm.days" :label="t('settings.relances.businessDays')" :options="daysOptions" />
+    </form>
+    <template #footer>
+      <BaseButton :label="t('common.cancel')" @click="relanceFor = null" />
+      <BaseButton variant="primary" type="submit" form="relance-form" :label="t('common.save')" />
+    </template>
+  </BaseDialog>
 
   <BaseDialog :open="dialog === 'mail'" :title="t('settings.accounts.addMail')" @close="dialog = null">
     <form id="f-mail" class="form" @submit.prevent="addMail">

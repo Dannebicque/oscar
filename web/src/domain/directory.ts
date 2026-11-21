@@ -5,6 +5,8 @@
 export interface DirectoryEntry {
   name: string
   address: string
+  /** Service et/ou téléphone, selon le choix de l'utilisateur (annuaire LDAP). */
+  detail?: string | null
 }
 
 export const DIRECTORY: DirectoryEntry[] = [

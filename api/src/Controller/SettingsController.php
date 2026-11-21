@@ -18,7 +18,7 @@ final class SettingsController extends AbstractController
     private const RULES = [
         'relanceHours' => [24, 48, 72, 168], 'dailyCap' => [3, 5, 10], 'aiMode' => ['university', 'external', 'off'], 'locale' => ['fr', 'en'],
     ];
-    private const BOOLS = ['businessDays', 'recapEmail', 'recapHome', 'includePersonalCalendar', 'shareBusy', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance'];
+    private const BOOLS = ['businessDays', 'recapEmail', 'recapHome', 'includePersonalCalendar', 'shareBusy', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'dirShowDepartment', 'dirShowPhone'];
     private const TIMES = ['recapMorning', 'recapEvening'];
 
     #[Route('/api/settings', methods: ['GET'])]
@@ -41,6 +41,22 @@ final class SettingsController extends AbstractController
                 if (!\is_bool($v)) {
                     return $this->invalid($k);
                 }
+            } elseif ($k === 'notifyChannels') {
+                if (!\is_array($v)) {
+                    return $this->invalid($k);
+                }
+                $clean = [];
+                foreach (\App\Notification\NotificationCenter::TYPES as $type) {
+                    foreach (\App\Notification\NotificationCenter::CHANNELS as $ch) {
+                        if (isset($v[$type][$ch])) {
+                            if (!\is_bool($v[$type][$ch])) {
+                                return $this->invalid($k);
+                            }
+                            $clean[$type][$ch] = $v[$type][$ch];
+                        }
+                    }
+                }
+                $v = $clean;
             } elseif ($k === 'timezone') {
                 if (!\is_string($v) || !\in_array($v, \DateTimeZone::listIdentifiers(), true)) {
                     return $this->invalid($k);

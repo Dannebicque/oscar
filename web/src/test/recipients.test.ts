@@ -1,7 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import axe from 'axe-core'
 import { afterEach, describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { h, ref } from 'vue'
+import { resetApi } from '../api'
+import { createMockApi } from '../api/mock'
 import RecipientInput from '../components/ui/RecipientInput.vue'
 import { searchDirectory } from '../domain/directory'
 import { i18n } from '../i18n'
@@ -10,8 +13,11 @@ import { addRecipient } from './helpers'
 afterEach(() => { document.body.innerHTML = '' })
 
 function field(initial: string[] = []) {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  resetApi(createMockApi())
   const value = ref(initial)
-  const w = mount(() => h(RecipientInput, { id: 'to', label: 'À', modelValue: value.value, 'onUpdate:modelValue': (v: string[]) => (value.value = v) }), { global: { plugins: [i18n] }, attachTo: document.body })
+  const w = mount(() => h(RecipientInput, { id: 'to', label: 'À', modelValue: value.value, 'onUpdate:modelValue': (v: string[]) => (value.value = v) }), { global: { plugins: [pinia, i18n] }, attachTo: document.body })
   return { w, value }
 }
 

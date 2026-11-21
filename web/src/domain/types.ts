@@ -99,6 +99,9 @@ export interface MailAccount {
   smtpEncryption: 'none' | 'ssl' | 'tls'
   username: string
   aiAllowed: boolean
+  /** Délai de relance propre à ce compte ; null = réglage de l'utilisateur (F-12, F-54). */
+  relanceHours?: number | null
+  businessDays?: boolean | null
   lastSyncAt?: string | null
   lastError?: string | null
 }
@@ -117,6 +120,8 @@ export type NewCalendarAccount = Omit<CalendarAccount, 'id' | 'kind' | 'lastErro
 
 export interface SharedMailboxInfo {
   id: string
+  /** Règle de création automatique des suivis de cette boîte (F-66). */
+  autoFollow?: boolean
   slug: string
   address: string
   name: string
@@ -201,6 +206,9 @@ export interface AppNotification {
   at: string
   read: boolean
   to: string
+  /** Canaux choisis pour ce type (F-75) : absent = affiché partout. */
+  inApp?: boolean
+  desktop?: boolean
 }
 
 export type ConnectionId = 'mail' | 'calendar' | 'google' | 'ai'

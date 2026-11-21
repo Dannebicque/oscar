@@ -30,6 +30,11 @@ export interface Settings {
   aiSuggestFollow: boolean
   aiSuggestTasks: boolean
   aiDraftRelance: boolean
+  /** Canaux par type de notification (F-75) : { type: { app, desktop, email } } ; ce qui manque prend la valeur par défaut. */
+  notifyChannels: Record<string, Record<string, boolean>>
+  /** Annuaire (F-18) : champs affichés sous le nom. */
+  dirShowDepartment: boolean
+  dirShowPhone: boolean
   /** Ton d'Oscar : léger (pointe d'humour) ou sobre. L'humour disparaît toujours dans une erreur. */
   oscarTone: 'light' | 'neutral'
   /** Raccourcis clavier à une touche : désactivables (WCAG 2.1.4). */
@@ -39,7 +44,7 @@ export interface Settings {
 export const DEFAULTS: Settings = {
   locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
   recapMorning: '08:00', recapEvening: '17:30', recapEmail: true, recapHome: true, includePersonalCalendar: false,
-  shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true,
+  shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true, notifyChannels: {}, dirShowDepartment: true, dirShowPhone: false,
 }
 
 const KEY = 'oscar.settings'
@@ -47,18 +52,20 @@ const KEY = 'oscar.settings'
 /** Réglages que le serveur applique (relances, récaps, mode d'IA). Les autres restent sur l'appareil. */
 export const SERVER_KEYS = [
   'relanceHours', 'businessDays', 'dailyCap', 'recapMorning', 'recapEvening', 'recapEmail', 'recapHome', 'includePersonalCalendar',
-  'shareBusy', 'aiMode', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'locale',
+  'shareBusy', 'aiMode', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'notifyChannels', 'dirShowDepartment', 'dirShowPhone', 'locale',
 ] as const
 
 /** Fusionne des données stockées (non fiables) avec les valeurs par défaut. */
 export function parseSettings(raw: string | null): Settings {
-  const out: Settings = { ...DEFAULTS }
+  const out: Settings = { ...DEFAULTS, notifyChannels: {} }
   if (!raw) return out
   try {
     const v = JSON.parse(raw) as Record<string, unknown>
     for (const k of Object.keys(DEFAULTS) as (keyof Settings)[]) {
       if (typeof v[k] === typeof DEFAULTS[k]) (out as unknown as Record<string, unknown>)[k] = v[k]
     }
+    const nc = out.notifyChannels as unknown
+    out.notifyChannels = nc && typeof nc === 'object' && !Array.isArray(nc) ? JSON.parse(JSON.stringify(nc)) : {}
     if (!isThemePreference(out.theme)) out.theme = DEFAULTS.theme
     if (!isStyleId(out.style)) out.style = DEFAULTS.style
     if (!isPaletteId(out.palette)) out.palette = DEFAULTS.palette

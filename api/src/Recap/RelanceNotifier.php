@@ -16,7 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class RelanceNotifier
 {
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly \App\Notification\NotificationCenter $center)
     {
     }
 
@@ -42,11 +42,6 @@ final class RelanceNotifier
 
     private function once(User $user, Notification $n): int
     {
-        if ($this->em->getRepository(Notification::class)->findOneBy(['owner' => $user, 'dedupeKey' => $n->getDedupeKey()]) !== null) {
-            return 0;
-        }
-        $this->em->persist($n->setOwner($user));
-
-        return 1;
+        return $this->center->deliver($user, $n) ? 1 : 0;
     }
 }

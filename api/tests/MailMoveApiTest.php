@@ -102,4 +102,16 @@ final class MailMoveApiTest extends ApiTestCase
         [$st] = $this->call('POST', '/api/mails/draft', $this->other, ['accountId' => $accountId, 'subject' => 'x']);
         self::assertSame(404, $st, 'compte d’un autre utilisateur');
     }
+
+    public function testAccountBusinessDaysOverridesTheUserSettingWhenComputingTheDueDate(): void
+    {
+        $account = $this->em->getRepository(MailAccount::class)->findAll()[0];
+        $this->call('PUT', '/api/settings', $this->token, ['businessDays' => true]);
+        $account->setBusinessDays(false);
+        $this->em->flush();
+        [$st, $r] = $this->call('POST', '/api/mails/send', $this->token, ['accountId' => $account->getId(), 'to' => ['a@x.fr'], 'subject' => 'Délai', 'body' => 'x', 'followHours' => 24]);
+        self::assertSame(201, $st);
+        $due = new \DateTimeImmutable($r['suivi']['dueAt']);
+        self::assertSame($due->format('Y-m-d'), (new \DateTimeImmutable('+24 hours'))->setTime(0, 0)->format('Y-m-d'), 'heures réelles pour ce compte, même si l’utilisateur compte en jours ouvrés');
+    }
 }

@@ -1,6 +1,6 @@
 import { addDays, atTime, isoDay } from '../domain/dates'
 import { handle as claimHandle, release as claimRelease, reopen as claimReopen, take as claimTake, takeOver as claimTakeOver } from '../domain/claim'
-import type { Api, ServerSettings } from './types'
+import { ApiError, type Api, type ServerSettings } from './types'
 import type {
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
 } from '../domain/types'
@@ -97,6 +97,7 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'iut', label: 'IUT', kind: 'caldav', url: 'https://agenda.iut-troyes.fr/dav/', username: 'david', personal: false },
     { id: 'perso', label: 'Perso', kind: 'google', url: '', username: '', personal: true },
   ]
+  const rules: import('./types').FollowRule[] = [{ id: 'rule1', kind: 'domain', value: 'univ-reims.fr', enabled: true }]
   let aiCfg: import('./types').AiConfig = { kind: 'openai', baseUrl: '', model: '', hasKey: false, configured: false }
   let serverSettings: ServerSettings = {}
   const findMail = (id: string) => mails.find((x) => x.id === id)
@@ -174,6 +175,7 @@ export function createMockApi(now: Date = new Date()): Api {
       mail: {
         async list() { return clone(mailAccounts) },
         async create(a) { const { password: _p, ...rest } = a; const n = { ...rest, id: uid('acc') }; mailAccounts.push(n); return clone(n) },
+        async update(id, patch) { const a = mailAccounts.find((x) => x.id === id)!; Object.assign(a, patch); return clone(a) },
         async remove(id) { const i = mailAccounts.findIndex((a) => a.id === id); if (i >= 0) mailAccounts.splice(i, 1) },
         async test() { return { ok: true } },
       },
@@ -184,8 +186,25 @@ export function createMockApi(now: Date = new Date()): Api {
       },
       shared: { async list() { return [{ id: 'sm1', slug: SHARED.id, address: SHARED.address, name: 'Contact', role: 'admin' as const, aiEnabled: false, members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })) }] } },
     },
+    directory: {
+      async status() { return { configured: false } },
+      async search() { return [] },
+    },
     settings: {
       async get() { return clone(serverSettings) },
+      followRules: {
+        async list() { return clone(rules) },
+        async create(kind, value) {
+          const v = value.trim().toLowerCase().replace(/^@/, '')
+          if (rules.some((r) => r.kind === kind && r.value === v)) throw new ApiError(409, 'Cette règle existe déjà.', { field: 'value' })
+          if (kind === 'sender' ? !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) : !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(v)) throw new ApiError(422, kind === 'sender' ? 'Indique une adresse complète, par exemple sophie@univ-reims.fr.' : 'Indique un domaine, par exemple univ-reims.fr.', { field: 'value' })
+          const r = { id: uid('rule'), kind, value: v, enabled: true }
+          rules.push(r)
+          return clone(r)
+        },
+        async setEnabled(id, enabled) { const r = rules.find((x) => x.id === id)!; r.enabled = enabled; return clone(r) },
+        async remove(id) { const i = rules.findIndex((x) => x.id === id); if (i >= 0) rules.splice(i, 1) },
+      },
       async aiConfig() { return clone(aiCfg) },
       async saveAiConfig(c) { aiCfg = { kind: c.kind, baseUrl: c.baseUrl.replace(/\/$/, ''), model: c.model, hasKey: c.apiKey === undefined ? aiCfg.hasKey : c.apiKey !== '', configured: !!c.baseUrl && !!c.model }; return clone(aiCfg) },
       async testAiConfig() { return aiCfg.configured ? { ok: true, message: 'Le service répond. Oscar pourra l’utiliser.' } : { ok: false, message: 'Renseigne d’abord l’adresse et le modèle, puis enregistre.' } },

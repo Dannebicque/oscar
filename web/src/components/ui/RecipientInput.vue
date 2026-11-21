@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { extractAddress } from '../../api/http'
 import { searchDirectory } from '../../domain/directory'
+import { useDirectoryStore } from '../../stores/directory'
 import BaseIcon from './BaseIcon.vue'
 
 /**
@@ -15,12 +16,14 @@ const props = defineProps<{ modelValue: string[]; id: string; label: string; inv
 const emit = defineEmits<{ 'update:modelValue': [v: string[]] }>()
 const { t } = useI18n()
 
+const dir = useDirectoryStore()
+void dir.load()
 const search = ref('')
 const rejected = ref('')
 const active = ref(-1)
 const dismissed = ref(false)
 const listId = `${props.id}-list`
-const suggestions = computed(() => searchDirectory(search.value).filter((e) => !props.modelValue.includes(e.address)))
+const suggestions = computed(() => dir.results.filter((e) => !props.modelValue.includes(e.address)))
 const open = computed(() => !dismissed.value && search.value.trim().length > 0)
 
 const field = (e: Event) => e.target as HTMLInputElement
@@ -45,6 +48,7 @@ function commit(raw: string, input?: HTMLInputElement | null) {
 }
 function onInput(e: Event) {
   search.value = field(e).value
+  dir.lookup(search.value)
   rejected.value = ''
   active.value = -1
   dismissed.value = false
@@ -81,7 +85,7 @@ function onKey(e: KeyboardEvent) {
         v-for="(e, i) in suggestions" :id="`${id}-opt-${i}`" :key="e.address" role="option" class="ri-item" :aria-selected="i === active" :class="{ on: i === active }"
         @mousedown.prevent="add(e.address)"
       >
-        <strong>{{ e.name }}</strong><span class="muted">{{ e.address }}</span>
+        <strong>{{ e.name }}</strong><span class="muted">{{ e.address }}</span><span v-if="e.detail" class="muted">· {{ e.detail }}</span>
       </li>
     </ul>
     <p v-if="open && suggestions.length === 0" class="ri-empty" role="status">{{ t('compose.noMatch') }}</p>

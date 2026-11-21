@@ -29,6 +29,12 @@ class Notification implements OwnedInterface
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $at;
 
+    /** Canaux choisis par l'utilisateur pour ce type (F-75) : panneau de l'application, et notification du bureau (lue par le client Tauri). */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $inApp = true;
+    #[ORM\Column(options: ['default' => true])]
+    private bool $desktop = true;
+
     /**
      * @param array<string, scalar> $params
      * @param string                $to        écran visé : suivis, journal, agenda…
@@ -53,6 +59,9 @@ class Notification implements OwnedInterface
     public function getParams(): array { return $this->params; }
     public function getTo(): string { return $this->to; }
     #[Ignore] public function getDedupeKey(): string { return $this->dedupeKey; }
+    public function setChannels(bool $inApp, bool $desktop): static { $this->inApp = $inApp; $this->desktop = $desktop; return $this; }
+    public function isInApp(): bool { return $this->inApp; }
+    public function isDesktop(): bool { return $this->desktop; }
     public function isRead(): bool { return $this->read; }
     public function markRead(): void { $this->read = true; }
     public function getAt(): \DateTimeImmutable { return $this->at; }

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
+import NotificationChannels from '../components/settings/NotificationChannels.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import ToneChip from '../components/ui/ToneChip.vue'
 import { useFormat } from '../composables/useFormat'
@@ -46,6 +47,7 @@ async function markAll() {
       <BaseButton :label="t('alerts.open')" @click="router.push('/' + n.to)" />
     </li>
   </ul>
+  <NotificationChannels class="chan" />
 </template>
 
 <style scoped>
@@ -53,5 +55,6 @@ async function markAll() {
 .main { flex: 1; display: grid; gap: 2px; }
 .chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .txt { font-weight: 600; }
+.chan { margin-top: var(--space-5); }
 time { font-size: var(--fs-sm); }
 </style>

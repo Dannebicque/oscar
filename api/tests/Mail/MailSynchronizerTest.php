@@ -112,4 +112,27 @@ final class MailSynchronizerTest extends KernelTestCase
         $this->suivi('<sent-1>');
         self::assertSame(0, $this->sync->sync($this->account, $this->reader([self::header('<mine>', 'Sent', 1, '<sent-1>')]))['replies']);
     }
+
+    public function testFollowRulesCreateASuiviForASenderOrDomainButNeverForAutomaticMailOrTwice(): void
+    {
+        $this->em->persist(new \App\Entity\FollowRule($this->user, 'domain', 'X.fr'));
+        $off = (new \App\Entity\FollowRule($this->user, 'sender', 'autre@y.fr'))->setEnabled(false);
+        $this->em->persist($off);
+        $this->em->flush();
+        $this->sync->sync($this->account, $this->reader([self::header('<r1@x>', 'INBOX', 1), self::header('<r2@x>', 'INBOX', 2, null, true)]));
+        $suivis = $this->em->getRepository(Suivi::class)->findBy(['owner' => $this->user]);
+        self::assertCount(1, $suivis, 'le message automatique ne crée rien');
+        self::assertSame('<r1@x>', $suivis[0]->getMailId());
+        self::assertSame(SuiviDirection::ToHandle, $suivis[0]->getDirection());
+        $this->sync->sync($this->account, $this->reader([self::header('<r1@x>', 'INBOX', 1)]));
+        self::assertCount(1, $this->em->getRepository(Suivi::class)->findBy(['owner' => $this->user]), 'pas de doublon');
+    }
+
+    public function testADisabledRuleCreatesNothing(): void
+    {
+        $this->em->persist((new \App\Entity\FollowRule($this->user, 'sender', 'marc@x.fr'))->setEnabled(false));
+        $this->em->flush();
+        $this->sync->sync($this->account, $this->reader([self::header('<r3@x>', 'INBOX', 1)]));
+        self::assertCount(0, $this->em->getRepository(Suivi::class)->findBy(['owner' => $this->user]));
+    }
 }

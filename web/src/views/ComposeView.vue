@@ -18,6 +18,7 @@ import { clock } from '../domain/clock'
 import { followUpDue, isoDay } from '../domain/dates'
 import { searchDirectory } from '../domain/directory'
 import { useOscar } from '../oscar/useOscar'
+import { useAccountsStore } from '../stores/accounts'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
 import { useUiStore } from '../stores/ui'
@@ -28,6 +29,7 @@ const router = useRouter()
 const fmt = useFormat()
 const mails = useMailsStore()
 const settings = useSettingsStore()
+const accounts = useAccountsStore()
 const ui = useUiStore()
 const { say } = useOscar()
 
@@ -76,6 +78,9 @@ const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ va
 
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
+  await accounts.load().catch(() => undefined)
+  const acc = accounts.mail[0]
+  if (acc?.relanceHours) delayHours.value = acc.relanceHours
   const dr = draftId.value ? mails.byId(draftId.value) : undefined
   if (dr) {
     to.value = dr.to.map((x) => x.address)
@@ -119,7 +124,7 @@ async function regenerate() {
 watch([aiTone, slotStarts], () => { if (aiDraft.value && !edited.value) void regenerate() }, { deep: true })
 const toggleSlot = (start: string, on: boolean) => { slotStarts.value = on ? [...slotStarts.value, start] : slotStarts.value.filter((x) => x !== start) }
 const title = computed(() => (original.value ? t('compose.replyTo', { who: original.value.from.name }) : t('compose.title')))
-const dueDate = computed(() => isoDay(followUpDue(clock.now(), delayHours.value, settings.s.businessDays)))
+const dueDate = computed(() => isoDay(followUpDue(clock.now(), delayHours.value, accounts.mail[0]?.businessDays ?? settings.s.businessDays)))
 const invalid = computed(() => submitted.value && (!subject.value.trim() || to.value.length === 0))
 const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.name ?? to.value[0] : '…'))
 const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { v: 168, k: 'd7' }]

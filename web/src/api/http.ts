@@ -149,6 +149,7 @@ export function createHttpApi(baseUrl: string): Api {
       mail: {
         async list() { return (accountsCache.mail = await req<MailAccount[]>('GET', '/api/mail-accounts')) },
         async create(a) { accountsCache.mail = null; return req<MailAccount>('POST', '/api/mail-accounts', a) },
+        async update(id, patch) { accountsCache.mail = null; return req<MailAccount>('PATCH', `/api/mail-accounts/${encodeURIComponent(id)}`, patch, { merge: true }) },
         async remove(id) { accountsCache.mail = null; await req('DELETE', `/api/mail-accounts/${encodeURIComponent(id)}`) },
         async test(id) { return req<{ ok: boolean }>('POST', `/api/mail-accounts/${encodeURIComponent(id)}/test`, {}) },
       },
@@ -159,8 +160,18 @@ export function createHttpApi(baseUrl: string): Api {
       },
       shared: { list: () => req('GET', '/api/shared-mailboxes') },
     },
+    directory: {
+      status: () => req('GET', '/api/directory/status'),
+      search: (q) => req('GET', `/api/directory?q=${encodeURIComponent(q)}`),
+    },
     settings: {
       get: () => req('GET', '/api/settings'),
+      followRules: {
+        list: () => req('GET', '/api/follow-rules'),
+        create: (kind, value) => req('POST', '/api/follow-rules', { kind, value }),
+        setEnabled: (id, enabled) => req('PATCH', `/api/follow-rules/${encodeURIComponent(id)}`, { enabled }, { merge: true }),
+        async remove(id) { await req('DELETE', `/api/follow-rules/${encodeURIComponent(id)}`) },
+      },
       aiConfig: () => req('GET', '/api/ai-config'),
       saveAiConfig: (c) => req('PUT', '/api/ai-config', c),
       testAiConfig: () => req('POST', '/api/ai-config/test', {}),

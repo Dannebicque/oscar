@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountsPanel from '../components/settings/AccountsPanel.vue'
+import DirectoryPanel from '../components/settings/DirectoryPanel.vue'
+import FollowRulesPanel from '../components/settings/FollowRulesPanel.vue'
 import MyAccountPanel from '../components/settings/MyAccountPanel.vue'
 import AiProviderPanel from '../components/settings/AiProviderPanel.vue'
 import AppearancePanel from '../components/settings/AppearancePanel.vue'
@@ -59,6 +61,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
       <section id="set-accounts" aria-labelledby="h-accounts">
         <h2 id="h-accounts">{{ t('settings.nav.accounts') }}</h2>
         <AccountsPanel />
+        <DirectoryPanel />
         <div class="card stack">
           <SwitchField v-model="s.includePersonalCalendar" :label="t('settings.accounts.includePersonal')" :help="t('settings.accounts.includePersonalHelp')" />
           <SwitchField v-model="s.shareBusy" :label="t('settings.accounts.shareBusy')" :help="t('settings.accounts.shareBusyHelp')" />
@@ -74,6 +77,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
           <RadioGroup v-model="s.dailyCap" name="cap" :legend="t('settings.relances.cap')" :options="capOpts" />
           <p class="callout" data-tone="neutral">{{ t('settings.relances.never') }}</p>
         </div>
+        <FollowRulesPanel />
       </section>
 
       <section id="set-recap" aria-labelledby="h-recap">

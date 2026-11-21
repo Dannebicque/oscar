@@ -41,6 +41,23 @@ services:
             $mailerFrom: '%env(MAILER_FROM)%'
             $casBaseUrl: '%env(CAS_BASE_URL)%'
 
+    App\Directory\LdapDirectoryClient:
+        arguments:
+            $url: '%env(LDAP_URL)%'
+            $baseDn: '%env(LDAP_BASE_DN)%'
+            $bindDn: '%env(LDAP_BIND_DN)%'
+            $bindPassword: '%env(LDAP_BIND_PASSWORD)%'
+    App\Directory\DirectoryClient: '@App\Directory\LdapDirectoryClient'
+    App\Directory\Directory:
+        arguments:
+            $attrs:
+                first: '%env(LDAP_ATTR_FIRST)%'
+                last: '%env(LDAP_ATTR_LAST)%'
+                mail: '%env(LDAP_ATTR_MAIL)%'
+                department: '%env(LDAP_ATTR_DEPARTMENT)%'
+                phone: '%env(LDAP_ATTR_PHONE)%'
+            $extraFilter: '%env(LDAP_FILTER)%'
+
     App\Mail\OutgoingMailer: '@App\Mail\SymfonyOutgoingMailer'
     App\Calendar\CalendarProvider: '@App\Calendar\CalDavProvider'
     App\Ai\AiProvider: '@App\Ai\HeuristicProvider'

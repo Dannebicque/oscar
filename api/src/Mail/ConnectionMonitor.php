@@ -15,7 +15,7 @@ final class ConnectionMonitor
 {
     public const ALERT_AFTER = 3;
 
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly \App\Notification\NotificationCenter $center)
     {
     }
 
@@ -57,8 +57,6 @@ final class ConnectionMonitor
 
     private function notifyOnce(\App\Entity\User $owner, Notification $n): void
     {
-        if ($this->em->getRepository(Notification::class)->findOneBy(['owner' => $owner, 'dedupeKey' => $n->getDedupeKey()]) === null) {
-            $this->em->persist($n->setOwner($owner));
-        }
+        $this->center->deliver($owner, $n);
     }
 }

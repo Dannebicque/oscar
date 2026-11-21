@@ -69,7 +69,7 @@ final class MailSender
         $suivi = null;
         if ($r->followHours !== null) {
             $settings = $this->em->getRepository(\App\Entity\UserSettings::class)->findOneBy(['owner' => $user]) ?? new \App\Entity\UserSettings($user);
-            $due = \App\Domain\FollowUpDelay::dueDate($now, $r->followHours, (bool) $settings->all()['businessDays']);
+            $due = \App\Domain\FollowUpDelay::dueDate($now, $r->followHours, $account->getBusinessDays() ?? (bool) $settings->all()['businessDays']);
             $suivi = (new Suivi())->setOwner($user)->setSubject(preg_replace('/^(re|tr)\s*:\s*/i', '', $r->subject) ?? $r->subject)
                 ->setContact($this->contactName($r->to[0]))->setDirection(SuiviDirection::Waiting)->setStatus(SuiviStatus::Waiting)
                 ->setDueAt($due)->setRelanceAt($due)->setMailId($messageId)->setResponsible($user->getDisplayName())
