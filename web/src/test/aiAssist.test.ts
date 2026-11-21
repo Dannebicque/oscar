@@ -35,7 +35,7 @@ describe('Oscar résume et propose une réponse (F-11, F-64, F-74)', () => {
     expect(wrapper.text()).toContain('rien ne part sans ton clic')
   })
 
-  it('« Court » régénère un brouillon plus bref', async () => {
+  it('choisir « Court » fait suivre le brouillon, qui reste modifiable à la main', async () => {
     const first = await mountApp({ template: '<div/>' })
     await useMailsStore(first.pinia).load()
     const { wrapper } = await mountApp(ComposeView, '/ecrire?reply=m5&ai=1')
@@ -43,8 +43,8 @@ describe('Oscar résume et propose une réponse (F-11, F-64, F-74)', () => {
     await flushPromises()
     const warm = (wrapper.find('#body').element as HTMLTextAreaElement).value
     expect(warm).toContain('Cordialement')
-    await wrapper.findComponent({ name: 'SelectField' }).vm.$emit('update:modelValue', 'short')
-    await wrapper.findAll('button').find((b) => b.text().includes('Régénérer'))!.trigger('click')
+    await wrapper.findAll('button').find((b) => b.text() === 'Court')!.trigger('click')
+    await flushPromises()
     await flushPromises()
     expect((wrapper.find('#body').element as HTMLTextAreaElement).value).not.toContain('Cordialement')
   })

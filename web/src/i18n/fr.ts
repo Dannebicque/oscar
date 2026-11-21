@@ -139,7 +139,8 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
-    ai: { toneLabel: 'Ton', tone: { warm: 'Cordial', short: 'Court' }, regenerate: 'Régénérer', busy: 'Je prépare le brouillon…', failed: 'Je n’ai pas pu préparer le brouillon. Écris-le à la main ou réessaie.' },
+    replyTo: 'Répondre à {who}', backToMail: 'Retour au mail', original: 'Message d’origine', receivedFrom: 'Mail reçu · {who} · {date}', quote: 'Citer le message d’origine dans ma réponse',
+    ai: { prepared: 'Brouillon préparé par Oscar', edited: 'Brouillon modifié à la main. Régénère-le si tu veux repartir de zéro.', slots: 'Mes disponibilités', slotsHelp: '{n} créneau(x) proposé(s). Tu peux changer ta sélection, le brouillon suit.', free: 'Libre', toneLabel: 'Ton', tone: { warm: 'Cordial', short: 'Court' }, regenerate: 'Régénérer', busy: 'Je prépare le brouillon…', failed: 'Je n’ai pas pu préparer le brouillon. Écris-le à la main ou réessaie.' },
     subjectRequired: 'Indique l’objet du message.',
     removeRecipient: 'Retirer {to}', noMatch: 'Aucun contact trouvé. Tape une adresse complète pour l’ajouter.', badAddress: '« {text} » n’est pas une adresse valide.',
     noAccount: 'Aucun compte de messagerie n’est configuré : ton message n’est pas parti. Ajoute un compte dans Réglages.', notSent: 'Le message n’est pas parti : le serveur d’envoi ne répond pas ou refuse. Rien n’a été créé, ton texte est toujours là. Réessaie dans un instant.',

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ApiError, api } from '../api'
-import OscarSays from '../components/ui/OscarSays.vue'
+import OscarMark from '../components/OscarMark.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
+import SegmentedControl from '../components/ui/SegmentedControl.vue'
 import CheckboxField from '../components/ui/CheckboxField.vue'
 import SelectField from '../components/ui/SelectField.vue'
 import TextField from '../components/ui/TextField.vue'
@@ -46,16 +47,22 @@ const aiDraft = ref(false)
 const aiTone = ref<'warm' | 'short'>('warm')
 const aiBusy = ref(false)
 const aiFailed = ref(false)
-const slotStarts = computed(() => String(route.query.slots ?? '').split(',').filter(Boolean))
+const slotStarts = ref<string[]>(String(route.query.slots ?? '').split(',').filter(Boolean))
+const edited = ref(false)
+const quoteOn = ref(true)
+const original = computed(() => (route.query.reply ? mails.byId(String(route.query.reply)) : undefined))
+const originalSlots = computed(() => original.value?.hints.availability?.slots ?? [])
+const quote = computed(() => (original.value ? `\n\n> ${original.value.paragraphs.join('\n> ')}` : ''))
+const slotLabel = (x: { start: string; end: string }) => `${fmt.dateLong(x.start)}, ${fmt.time(x.start)} – ${fmt.time(x.end)}`
 const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ value: v, label: t(`compose.ai.tone.${v}`) })))
 
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
-  const original = route.query.reply ? mails.byId(String(route.query.reply)) : undefined
-  if (original) {
-    to.value = [original.from.address]
-    subject.value = /^re\s*:/i.test(original.subject) ? original.subject : `Re : ${original.subject}`
-    body.value = `\n\n${t('compose.signature')}\n\n> ${original.paragraphs.join('\n> ')}`
+  const o = original.value
+  if (o) {
+    to.value = [o.from.address]
+    subject.value = /^re\s*:/i.test(o.subject) ? o.subject : `Re : ${o.subject}`
+    body.value = `\n\n${t('compose.signature')}`
     if (route.query.ai && settings.s.aiMode !== 'off') { aiDraft.value = true; follow.value = true; aiPicked.value = true; await regenerate() }
   } else {
     // Oscar précoche « Suivre la réponse » quand le message appelle visiblement une réponse : modifiable.
@@ -65,18 +72,20 @@ onMounted(async () => {
 })
 
 async function regenerate() {
-  const original = route.query.reply ? mails.byId(String(route.query.reply)) : undefined
-  if (!original) return
+  const o = original.value
+  if (!o) return
   aiBusy.value = true
   aiFailed.value = false
   try {
-    const known = original.hints.availability?.slots ?? []
-    const lines = slotStarts.value.map((st) => known.find((x) => x.start === st)).filter((x): x is { start: string; end: string } => !!x)
-      .map((x) => `${fmt.dateLong(x.start)}, ${fmt.time(x.start)} – ${fmt.time(x.end)}`)
-    const draft = await api.mails.replyDraft(original.id, { tone: aiTone.value, slots: lines })
-    body.value = `${draft}\n\n> ${original.paragraphs.join('\n> ')}`
+    const lines = slotStarts.value.map((st) => originalSlots.value.find((x) => x.start === st)).filter((x): x is { start: string; end: string } => !!x).map(slotLabel)
+    body.value = await api.mails.replyDraft(o.id, { tone: aiTone.value, slots: lines })
+    edited.value = false
   } catch { aiFailed.value = true } finally { aiBusy.value = false }
 }
+/** Ton ou créneaux changés : le brouillon suit, sauf si l'utilisateur l'a retouché à la main (alors il décide de régénérer). */
+watch([aiTone, slotStarts], () => { if (aiDraft.value && !edited.value) void regenerate() }, { deep: true })
+const toggleSlot = (start: string, on: boolean) => { slotStarts.value = on ? [...slotStarts.value, start] : slotStarts.value.filter((x) => x !== start) }
+const title = computed(() => (original.value ? t('compose.replyTo', { who: original.value.from.name }) : t('compose.title')))
 const dueDate = computed(() => isoDay(addDays(clock.now(), Math.ceil(delayHours.value / 24))))
 const invalid = computed(() => submitted.value && (!subject.value.trim() || to.value.length === 0))
 const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.name ?? to.value[0] : '…'))
@@ -89,7 +98,7 @@ async function send() {
   sending.value = true
   try {
     const r = await mails.send({
-      to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: body.value,
+      to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: quoteOn.value && original.value ? body.value + quote.value : body.value,
       followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
     })
@@ -109,35 +118,62 @@ function saveDraft() {
 </script>
 
 <template>
-  <PageHeader :title="t('compose.title')" />
+  <PageHeader :title="title" :subtitle="aiDraft ? t('compose.ai.prepared') : undefined">
+    <RouterLink v-if="original" class="btn ghost" :to="{ name: 'mails', params: { id: original.id } }">{{ t('compose.backToMail') }}</RouterLink>
+  </PageHeader>
   <form class="form" novalidate @submit.prevent="send">
     <div class="main stack">
-      <div class="field">
-        <label for="to">{{ t('compose.to') }}</label>
-        <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />
-        <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
-      </div>
-      <BaseButton v-if="!showCc" class="cc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
-      <template v-else>
-        <div class="field"><label for="cc">{{ t('compose.cc') }}</label><RecipientInput id="cc" v-model="cc" :label="t('compose.cc')" /></div>
-        <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><RecipientInput id="bcc" v-model="bcc" :label="t('compose.bcc')" /></div>
-      </template>
-      <TextField id="subject" v-model="subject" :label="t('compose.subject')" required :error="submitted && !subject.trim() ? t('compose.subjectRequired') : ''" />
-      <p v-if="invalid" class="error-text" role="alert">{{ t('compose.required') }}</p>
-      <OscarSays v-if="aiDraft" situation="draftReady" suggestion :level="3">
-        <template #more>
-          <p v-if="aiFailed" class="error-text" role="alert">{{ t('compose.ai.failed') }}</p>
-          <p v-else-if="aiBusy" class="muted" role="status">{{ t('compose.ai.busy') }}</p>
+      <article v-if="original" class="card origin" :aria-label="t('compose.original')">
+        <p class="muted small">{{ t('compose.receivedFrom', { who: original.from.name, date: fmt.dateTime(original.at) }) }}</p>
+        <p class="osub">{{ original.subject }}</p>
+        <p v-for="(p, i) in original.paragraphs.slice(0, 6)" :key="i" class="otext">{{ p }}</p>
+      </article>
+
+      <section class="card compose-card stack" :aria-label="t('compose.title')">
+        <div class="field">
+          <label for="to">{{ t('compose.to') }}</label>
+          <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />
+          <p id="dir-help" class="hint">{{ t('compose.directoryHelp') }}</p>
+        </div>
+        <BaseButton v-if="!showCc" class="cc" variant="ghost" :label="t('compose.showCc')" :expanded="false" @click="showCc = true" />
+        <template v-else>
+          <div class="field"><label for="cc">{{ t('compose.cc') }}</label><RecipientInput id="cc" v-model="cc" :label="t('compose.cc')" /></div>
+          <div class="field"><label for="bcc">{{ t('compose.bcc') }}</label><RecipientInput id="bcc" v-model="bcc" :label="t('compose.bcc')" /></div>
         </template>
-        <template #actions>
-          <div class="tonebox"><SelectField id="ai-tone" v-model="aiTone" :label="t('compose.ai.toneLabel')" :options="toneOptions" /></div>
+        <TextField id="subject" v-model="subject" :label="t('compose.subject')" required :error="submitted && !subject.trim() ? t('compose.subjectRequired') : ''" />
+        <p v-if="invalid" class="error-text" role="alert">{{ t('compose.required') }}</p>
+
+        <div v-if="aiDraft" class="aibar" role="group" :aria-label="t('oscar.name')">
+          <span class="face" aria-hidden="true"><OscarMark /></span>
+          <div class="aitext">
+            <p class="who">{{ t('oscar.name') }}<AiBadge /></p>
+            <p>{{ say('draftReady') }}</p>
+            <p v-if="aiFailed" class="error-text" role="alert">{{ t('compose.ai.failed') }}</p>
+            <p v-else-if="aiBusy" class="muted" role="status">{{ t('compose.ai.busy') }}</p>
+            <p v-else-if="edited" class="muted" role="status">{{ t('compose.ai.edited') }}</p>
+          </div>
+          <SegmentedControl v-model="aiTone" :options="toneOptions" :label="t('compose.ai.toneLabel')" />
           <BaseButton icon="refresh" :label="t('compose.ai.regenerate')" :disabled="aiBusy" @click="regenerate" />
-        </template>
-      </OscarSays>
-      <TextareaField id="body" v-model="body" :label="t('compose.body')" :rows="14" />
+        </div>
+
+        <TextareaField id="body" v-model="body" :label="t('compose.body')" :rows="12" @input="edited = true" />
+        <CheckboxField v-if="original" v-model="quoteOn" :label="t('compose.quote')" />
+      </section>
     </div>
 
     <aside class="side stack">
+      <section v-if="aiDraft && originalSlots.length" class="card pad-sm flat slots" :aria-label="t('compose.ai.slots')">
+        <h2>{{ t('compose.ai.slots') }}</h2>
+        <p class="hint">{{ t('compose.ai.slotsHelp', { n: slotStarts.length }) }}</p>
+        <ul>
+          <li v-for="x in originalSlots" :key="x.start">
+            <CheckboxField :model-value="slotStarts.includes(x.start)" :label="slotLabel(x)" @update:model-value="(v: boolean) => toggleSlot(x.start, v)" />
+            <span class="free">{{ t('compose.ai.free') }}</span>
+          </li>
+        </ul>
+        <p class="hint">{{ t('agenda.freeBusy') }}</p>
+      </section>
+
       <fieldset class="card pad-sm flat follow">
         <legend class="sr-only">{{ t('compose.follow') }}</legend>
         <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
@@ -160,9 +196,22 @@ function saveDraft() {
 
 <style scoped>
 .form { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: start; }
-@media (min-width: 1000px) { .form { grid-template-columns: minmax(0, 1fr) 340px; } .side { position: sticky; top: 0; } }
+@media (min-width: 1000px) { .form { grid-template-columns: minmax(0, 1fr) 360px; } .side { position: sticky; top: 0; } }
 .cc { justify-self: start; }
-.tonebox { min-width: 160px; }
+.origin { display: grid; gap: var(--space-1); background: var(--c-surface-2); }
+.small { font-size: var(--fs-sm); }
+.osub { font-weight: 800; }
+.otext { color: var(--c-text-muted); overflow-wrap: anywhere; }
+.compose-card { padding: var(--space-4) var(--space-5); }
+.aibar { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3) var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
+.aibar > :nth-child(3), .aibar > :nth-child(4) { grid-column: 2; justify-self: start; }
+@media (min-width: 1300px) { .aibar { grid-template-columns: auto minmax(0, 1fr) auto auto; } .aibar > :nth-child(3), .aibar > :nth-child(4) { grid-column: auto; } }
+.face { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--c-surface); color: var(--c-ai); border: var(--bw) solid var(--c-ai); }
+.who { display: flex; align-items: center; gap: var(--space-2); font-weight: 800; color: var(--c-ai); }
+.slots h2 { font-size: var(--fs-md); }
+.slots ul { list-style: none; margin: var(--space-2) 0; padding: 0; display: grid; gap: var(--space-1); }
+.slots li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.free { font-size: var(--fs-sm); font-weight: 700; color: var(--c-success); white-space: nowrap; }
 .follow { display: grid; gap: var(--space-3); margin: 0; }
 .check { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

@@ -139,7 +139,8 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
-    ai: { toneLabel: 'Tone', tone: { warm: 'Warm', short: 'Short' }, regenerate: 'Regenerate', busy: 'Preparing the draft…', failed: 'I couldn’t prepare the draft. Write it by hand or try again.' },
+    replyTo: 'Reply to {who}', backToMail: 'Back to the mail', original: 'Original message', receivedFrom: 'Mail received · {who} · {date}', quote: 'Quote the original message in my reply',
+    ai: { prepared: 'Draft prepared by Oscar', edited: 'Draft edited by hand. Regenerate it to start over.', slots: 'My availability', slotsHelp: '{n} slot(s) proposed. Change your selection and the draft follows.', free: 'Free', toneLabel: 'Tone', tone: { warm: 'Warm', short: 'Short' }, regenerate: 'Regenerate', busy: 'Preparing the draft…', failed: 'I couldn’t prepare the draft. Write it by hand or try again.' },
     subjectRequired: 'Enter the subject of the message.',
     removeRecipient: 'Remove {to}', noMatch: 'No contact found. Type a full address to add it.', badAddress: '“{text}” is not a valid address.',
     noAccount: 'No mail account is configured: your message was not sent. Add an account in Settings.', notSent: 'The message was not sent: the outgoing server isn’t answering or refuses it. Nothing was created and your text is still here. Try again in a moment.',

@@ -117,7 +117,7 @@ function prepareAvailability(slots: string[]) {
   showAvail.value = false
   router.push({ name: 'compose', query: { reply: props.mail.id, ai: '1', slots: slots.join(',') } })
 }
-const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox')
+const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && props.mail.from.name !== 'Oscar')
 </script>
 
 <template>
