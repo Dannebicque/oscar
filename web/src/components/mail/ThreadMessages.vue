@@ -50,7 +50,7 @@ const who = (m: Mail) => (m.folder === 'sent' ? t('mail.thread.me') : m.from.nam
 </template>
 
 <style scoped>
-.thread { display: grid; gap: var(--space-2); max-width: 76ch; }
+.thread { display: grid; gap: var(--space-2); }
 .thread h3 { font-size: var(--fs-sm); color: var(--c-text-muted); }
 ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
 .msg { background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); overflow: hidden; }

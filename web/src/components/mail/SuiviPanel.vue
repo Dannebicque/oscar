@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { session } from '../../api'
 import { useFormat } from '../../composables/useFormat'
 import type { Suivi } from '../../domain/types'
+import BaseIcon from '../ui/BaseIcon.vue'
 import StatusChip from '../ui/StatusChip.vue'
 
 /** Volet latéral : responsable, échéance, relance et journal non modifiable (F-58). */
@@ -13,8 +14,10 @@ const fmt = useFormat()
 
 <template>
   <aside class="side" :aria-label="t('mail.suiviPanel')">
-    <h3>{{ t('mail.suiviPanel') }}</h3>
-    <StatusChip :status="suivi.status" />
+    <header class="top">
+      <h3><BaseIcon name="follow" :size="18" />{{ t('mail.suiviPanel') }}</h3>
+      <StatusChip :status="suivi.status" />
+    </header>
     <dl>
       <dt>{{ t('suivis.responsible') }}</dt><dd>{{ suivi.responsible === session.name ? t('common.me') : suivi.responsible ?? t('suivis.responsibleNone') }}</dd>
       <dt>{{ t('suivis.dueLabel') }}</dt><dd>{{ fmt.date(suivi.dueAt) }}</dd>
@@ -24,7 +27,7 @@ const fmt = useFormat()
         <span v-if="suivi.relanceCount" class="muted"> · {{ t('suivis.attempts', { n: suivi.relanceCount }, suivi.relanceCount) }}</span>
       </dd>
     </dl>
-    <h3>{{ t('suivis.journal') }}</h3>
+    <h3 class="jh">{{ t('suivis.journal') }}</h3>
     <p class="hint">{{ t('suivis.journalHelp') }}</p>
     <ol class="log">
       <li v-for="(e, i) in suivi.journal" :key="i"><time :datetime="e.at" class="muted">{{ fmt.dateTime(e.at) }}</time><br />{{ fmt.journal(e) }} · {{ e.author }}</li>
@@ -33,10 +36,13 @@ const fmt = useFormat()
 </template>
 
 <style scoped>
-.side { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-4); border-left: var(--bw) solid var(--c-border); background: var(--c-surface); min-height: 0; overflow-y: auto; }
-h3 { margin-top: var(--space-2); }
-dl { display: grid; gap: 2px; margin: 0; }
-dt { font-size: var(--fs-sm); color: var(--c-text-muted); margin-top: var(--space-2); }
-dd { margin: 0; font-weight: 600; }
-.log { display: grid; gap: var(--space-2); font-size: var(--fs-sm); border-left: 2px solid var(--c-border); padding-left: var(--space-3); }
+.side { display: grid; gap: var(--space-3); align-content: start; padding: var(--space-4); border-left: var(--bw) solid var(--c-border); background: var(--c-surface); min-height: 0; overflow-y: auto; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding-bottom: var(--space-3); border-bottom: 3px solid var(--c-accent); }
+.top h3 { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-lg); color: var(--c-accent-text, var(--c-text)); }
+.jh { margin-top: var(--space-2); }
+dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-2); margin: 0; }
+dl > div, dt, dd { min-width: 0; }
+dt { font-size: var(--fs-sm); color: var(--c-text-muted); margin-top: var(--space-2); grid-column: 1 / -1; }
+dd { margin: 0; font-weight: 700; grid-column: 1 / -1; }
+.log { display: grid; gap: var(--space-2); font-size: var(--fs-sm); border-left: 2px solid var(--c-border); padding-left: var(--space-3); margin: 0; list-style: none; }
 </style>

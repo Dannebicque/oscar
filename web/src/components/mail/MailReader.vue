@@ -220,15 +220,15 @@ function sendAvailability() {
 .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; padding-bottom: var(--space-3); border-bottom: var(--bw) solid var(--c-border); }
 .toolbar :deep(.btn) { min-height: 40px; }
 .sep { width: 1px; align-self: stretch; background: var(--c-border); margin: 4px var(--space-1); }
-.body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); max-width: 76ch; }
+.body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
 .detected { display: grid; gap: var(--space-2); }
 .kick { font-size: var(--fs-sm); font-weight: 700; color: var(--c-ai); }
 .back { display: none; }
 /* Selon la largeur DU VOLET de lecture (pas de la fenêtre) : volet de suivi sous le message, boutons réduits à leur icône. */
-@container reading (max-width: 980px) { .reader { display: block; overflow-y: auto; } .main { overflow: visible; } .reader > :deep(.side) { width: auto; border-left: 0; border-top: var(--bw) solid var(--c-border); } }
+@container reading (max-width: 980px) { .reader { display: block; overflow-y: auto; } .main { overflow: visible; } .reader > :deep(.side) { width: auto; margin: 0 var(--space-5) var(--space-6); border: var(--bw-card) solid var(--c-border); border-top: 4px solid var(--c-accent); border-radius: var(--radius-lg); } .reader > :deep(.side) .top { border-bottom: 0; padding-bottom: 0; } }
 @container reading (max-width: 760px) {
   .toolbar :deep(.btn > span) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .toolbar :deep(.btn) { padding: 0; }
 }
-@media (max-width: 720px) { .back { display: inline-flex; } .main { padding: var(--space-3); } }
+@media (max-width: 720px) { .back { display: inline-flex; } .main { padding: var(--space-3); } .reader > :deep(.side) { margin: 0 var(--space-3) var(--space-4); } }
 </style>
