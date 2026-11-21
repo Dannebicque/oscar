@@ -1,10 +1,10 @@
 //! Oscar, application de bureau (Tauri 2).
 //!
 //! Le bureau n'ajoute pas de logique métier : il charge le même front que le navigateur et apporte seulement ce qu'un navigateur ne peut pas :
-//!  - le jeton de session dans le trousseau du système (N-04), jamais dans un fichier ni dans localStorage ;
-//!  - les notifications natives (F-75), pilotées par le front (canal « bureau » des réglages) ;
-//!  - un raccourci global de capture rapide d'une tâche (N-03) ;
-//!  - une icône dans la barre système (ouvrir, capture rapide, quitter).
+//! - le jeton de session dans le trousseau du système (N-04), jamais dans un fichier ni dans localStorage ;
+//! - les notifications natives (F-75), pilotées par le front (canal « bureau » des réglages) ;
+//! - un raccourci global de capture rapide d'une tâche (N-03) ;
+//! - une icône dans la barre système (ouvrir, capture rapide, quitter).
 //! Rien ne s'envoie, rien ne se ferme, rien ne se relance tout seul : comme dans le navigateur, l'utilisateur décide.
 
 use tauri::{

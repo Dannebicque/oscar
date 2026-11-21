@@ -14,7 +14,7 @@ Côté web, le pont (`web/src/desktop/bridge.ts`) est **inerte** sans Tauri : le
 
 ## État
 
-Le socle est écrit et le pont côté web est testé (`web/src/test/desktop.test.ts`). **Le code Rust n'a pas été compilé** : aucune chaîne Rust n'était disponible là où il a été écrit. Premier travail à faire : lancer `npm run dev` (ci-dessous) et corriger ce que le compilateur signalera. Les critères de validation du cahier (installation, notifications, trousseau, accessibilité de la webview) restent à vérifier sur chaque système, en particulier **VoiceOver, NVDA et Orca** : la webview dépend de l'OS (comparatif §3).
+Le socle est écrit et le pont côté web est testé (`web/src/test/desktop.test.ts`). Le code Rust **compile** (`cargo check`, `cargo clippy` et `cargo build` sans erreur sur macOS, Rust 1.100, Tauri 2.12), mais la fenêtre n'a pas encore été essayée à la main : lance `npm run dev` (ci-dessous) et déroule la liste de contrôle. Les critères de validation du cahier (installation, notifications, trousseau, accessibilité de la webview) restent à vérifier sur chaque système, en particulier **VoiceOver, NVDA et Orca** : la webview dépend de l'OS (comparatif §3).
 
 ## Lancer
 

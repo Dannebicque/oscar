@@ -189,7 +189,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | Mercure (temps réel) | ❌ | Interrogation du serveur chaque minute. |
 | FrankenPHP | ❌ | `php -S` en développement ; pas d'image de production. |
 | Cache hors ligne (service worker, IndexedDB) | ❌ | |
-| Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. **Le code Rust n'a pas été compilé** (pas de chaîne Rust sur la machine de développement). |
+| Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. Le code Rust compile (check, clippy, build sur macOS) ; **fenêtre, trousseau, notifications et raccourci non essayés à la main**. |
 | Playwright | ❌ | Remplacé par `scripts/e2e.py` (HTTP + IMAP réels). |
 | Affichage HTML isolé (iframe sandbox) | ❌ | Texte brut seulement : aucun contenu actif ne s'exécute. |
 | Identifiants chiffrés, clé hors base | ✅ | |
