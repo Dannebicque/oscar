@@ -102,6 +102,7 @@ export default {
     shared: 'Boîtes partagées', sharedMembers: 'Membres : {names}. Tout le monde reçoit chaque mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Boîte partagée · {n} membres',
     filters: { all: 'Tous', unread: 'Non lus', attach: 'Avec PJ', week: '7 jours' }, filterLabel: 'Filtrer',
+    bulk: { select: 'Sélectionner', done: 'Terminer', label: 'Actions sur la sélection', all: 'Tout', count: 'Aucun sélectionné | 1 sélectionné | {n} sélectionnés', pick: 'Sélectionner « {subject} »', toInbox: 'Remettre en boîte de réception', moved: '1 message déplacé vers « {folder} ». | {n} messages déplacés vers « {folder} ».', failed: '1 message n’a pas pu être déplacé. | {n} messages n’ont pas pu être déplacés.' },
     adv: { toggle: 'Filtres avancés', active: '{n} actif(s)', reset: 'Tout effacer', from: 'Expéditeur', subject: 'Objet', after: 'Reçu après le', before: 'Reçu avant le', attachment: 'Avec pièce jointe', followed: 'Avec un suivi', unread: 'Non lus seulement', help: 'Astuce : tape de:claire, objet:devis, apres:2026-11-01, avant:2026-11-30, pj, suivi ou nonlu directement dans la recherche.' },
     search: 'Rechercher dans les mails', searchPlaceholder: 'Rechercher',
     unread: 'non lu', attachment: 'pièce jointe', from: 'De {who}', via: 'via contact{\'@\'}',
@@ -221,6 +222,7 @@ export default {
     types: { send: 'Envoi', calendar: 'Agenda', auth: 'Authentification', sync: 'Synchronisation' }, back: 'Retour aux réglages',
   },
   brief: { title: 'Avant ce rendez-vous', none: 'Aucun échange récent avec les participants.', noPeople: 'Aucun participant connu pour ce rendez-vous.', receivedFrom: 'Reçu de {who}', sentTo: 'Envoyé à {who}' },
+  confirmTrash: { title: 'Mettre ce message à la corbeille ? | Mettre {n} messages à la corbeille ?', text: 'Il reste récupérable dans la Corbeille. | Ils restent récupérables dans la Corbeille. Rien n’est supprimé définitivement.', suivi: 'Ce message a un suivi en cours : le suivi reste dans Suivis. | {n} messages ont un suivi en cours : les suivis restent dans Suivis.', dontAsk: 'Ne plus demander (modifiable dans Réglages)', confirm: 'Mettre à la corbeille' },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
     kept: 'Ton message est conservé : rouvre-le et réessaie.',
@@ -347,6 +349,7 @@ export default {
       when: { domain: 'Tout mail reçu de {\'@\'}{value}', sender: 'Tout mail reçu de {value}' }, alias: 'Tout mail arrivant sur {address}', on: 'Activée', off: 'Désactivée', remove: 'Supprimer la règle {value}', none: 'Aucune règle pour l’instant.',
       never: 'Une règle ne crée qu’un suivi « à traiter ». Rien n’est envoyé, rien n’est clos, et les messages automatiques (absence, newsletters) sont ignorés.',
     },
+    confirmDelete: 'Confirmer avant la corbeille', confirmDeleteHelp: 'Une fenêtre te demande confirmation avant de mettre des mails à la corbeille. Le message reste récupérable et un bouton Annuler suit chaque déplacement.',
     undoSend: { legend: 'Annuler l’envoi', off: 'Envoyer tout de suite', seconds: '{n} secondes', help: 'Après ton clic sur « Envoyer », le message attend ce délai avant de partir : tu peux l’annuler. Rien ne part sans ton clic.' },
     relances: {
       delay: 'Délai avant relance', delayHelp: 'Par défaut, pour le compte david{\'@\'}iut-troyes.fr', h24: '24 heures', h48: '48 heures', h72: '3 jours', h168: '1 semaine',

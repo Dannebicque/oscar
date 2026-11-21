@@ -27,6 +27,7 @@ import BaseDialog from '../ui/BaseDialog.vue'
 import ActivityNotes from './ActivityNotes.vue'
 import AvailabilityDialog from './AvailabilityDialog.vue'
 import AttachmentsMenu from './AttachmentsMenu.vue'
+import ConfirmTrashDialog from './ConfirmTrashDialog.vue'
 import ClaimPanel from './ClaimPanel.vue'
 import SuiviBanner from './SuiviBanner.vue'
 import SuiviPanel from './SuiviPanel.vue'
@@ -98,8 +99,19 @@ async function download(a: Attachment) {
 }
 const moveTarget = ref<'inbox' | 'archive' | 'trash'>('archive')
 /** Archiver, corbeille ou classement : message parti d'ici, annulation possible depuis la notification. */
-async function relocate(folder: 'inbox' | 'archive' | 'trash') {
+const showTrash = ref(false)
+function relocate(folder: 'inbox' | 'archive' | 'trash') {
   showMove.value = false
+  // La corbeille demande confirmation (réglable) ; archiver et classer restent immédiats, avec annulation.
+  if (folder === 'trash' && settings.s.confirmDelete) { showTrash.value = true; return }
+  void doRelocate(folder)
+}
+function confirmTrash(dontAsk: boolean) {
+  showTrash.value = false
+  if (dontAsk) settings.s.confirmDelete = false
+  void doRelocate('trash')
+}
+async function doRelocate(folder: 'inbox' | 'archive' | 'trash') {
   try {
     const undo = await mails.moveTo(props.mail.id, folder)
     ui.notify(t('mail.moved', { subject: props.mail.subject, folder: t(`mail.folder.${folder}`) }), { undo: undo ? async () => { await undo(); ui.notify(t('mail.movedBack')) } : undefined })
@@ -272,6 +284,7 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
     <SuiviPanel v-if="suivi && panel" :suivi="suivi" />
   </article>
 
+  <ConfirmTrashDialog :open="showTrash" :count="1" :with-suivi="suivi ? 1 : 0" @confirm="confirmTrash" @close="showTrash = false" />
   <BaseDialog :open="showMove" :title="t('mail.move')" @close="showMove = false">
     <fieldset class="moves">
       <legend>{{ t('mail.moveTo') }}</legend>

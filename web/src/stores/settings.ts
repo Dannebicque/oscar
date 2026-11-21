@@ -37,6 +37,8 @@ export interface Settings {
   dirShowPhone: boolean
   /** Ton d'Oscar : léger (pointe d'humour) ou sobre. L'humour disparaît toujours dans une erreur. */
   oscarTone: 'light' | 'neutral'
+  /** Demander confirmation avant de mettre des mails à la corbeille. */
+  confirmDelete: boolean
   /** Délai d'annulation de l'envoi, en secondes (0 = envoi immédiat) (F-73). */
   undoSendSeconds: 0 | 5 | 10 | 20 | 30
   /** Raccourcis clavier à une touche : désactivables (WCAG 2.1.4). */
@@ -44,7 +46,7 @@ export interface Settings {
 }
 
 export const DEFAULTS: Settings = {
-  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
+  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, confirmDelete: true, undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
   recapMorning: '08:00', recapEvening: '17:30', recapEmail: true, recapHome: true, includePersonalCalendar: false,
   shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true, notifyChannels: {}, dirShowDepartment: true, dirShowPhone: false,
 }

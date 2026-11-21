@@ -2,6 +2,7 @@ import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import MailReader from '../components/mail/MailReader.vue'
 import { useMailsStore } from '../stores/mails'
+import { useSettingsStore } from '../stores/settings'
 import { useTasksStore } from '../stores/tasks'
 import ComposeView from '../views/ComposeView.vue'
 import { mountApp } from './helpers'
@@ -28,6 +29,28 @@ describe('actions sur un mail (F-16)', () => {
     await s.load()
     await wrapper.findAll('button').find((b) => b.attributes('aria-label') === 'Supprimer')!.trigger('click')
     await flushPromises()
+    // Une confirmation précède la corbeille : rien ne bouge tant qu'on ne confirme pas.
+    expect(s.byId('m1')?.folder).toBe('inbox')
+    expect(document.body.textContent).toContain('Mettre ce message à la corbeille ?')
+    ;[...document.body.querySelectorAll('button')].find((b) => b.textContent?.includes('Mettre à la corbeille'))!.click()
+    await flushPromises()
+    expect(s.byId('m1')?.folder).toBe('trash')
+  })
+
+  it('« Ne plus demander » coupe la confirmation ; le message part alors tout de suite', async () => {
+    const first = await mountApp({ template: '<div/>' })
+    const store = useMailsStore(first.pinia)
+    await store.load()
+    const { wrapper } = await mountApp(MailReader, '/mails/m1', { mail: { ...store.byId('m1')! } })
+    await flushPromises()
+    const s = useMailsStore()
+    await s.load()
+    await wrapper.findAll('button').find((b) => b.attributes('aria-label') === 'Supprimer')!.trigger('click')
+    await flushPromises()
+    ;(document.body.querySelector('[role="checkbox"]') as HTMLElement).click()
+    ;[...document.body.querySelectorAll('button')].find((b) => b.textContent?.includes('Mettre à la corbeille'))!.click()
+    await flushPromises()
+    expect(useSettingsStore().s.confirmDelete).toBe(false)
     expect(s.byId('m1')?.folder).toBe('trash')
   })
 

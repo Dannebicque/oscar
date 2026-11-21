@@ -36,8 +36,8 @@ describe('recherche avancée (F-12)', () => {
     await wrapper.setProps({ mails: useMailsStore(pinia).items.filter((x) => x.folder === 'inbox') })
     const all = wrapper.findAll('li[data-mail]').length
     expect(all).toBeGreaterThan(1)
-    await wrapper.find('.adv-toggle').trigger('click')
-    expect(wrapper.find('.adv-toggle').attributes('aria-expanded')).toBe('true')
+    await wrapper.find('.adv-toggle:not(.sel-toggle)').trigger('click')
+    expect(wrapper.find('.adv-toggle:not(.sel-toggle)').attributes('aria-expanded')).toBe('true')
     await wrapper.find('#mail-q').setValue('de:claire')
     await flushPromises()
     const some = wrapper.findAll('li[data-mail]').length

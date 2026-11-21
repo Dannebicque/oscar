@@ -13,6 +13,9 @@ import { SHORTCUT_EVENTS } from '../composables/useShortcuts'
 import type { MailFolder } from '../domain/types'
 import { useAccountsStore } from '../stores/accounts'
 import { useMailsStore } from '../stores/mails'
+import { useSettingsStore } from '../stores/settings'
+import { useUiStore } from '../stores/ui'
+import ConfirmTrashDialog from '../components/mail/ConfirmTrashDialog.vue'
 import { useSuivisStore } from '../stores/suivis'
 
 /** Webmail à trois volets (dossiers, liste, lecture), comme Gmail, Outlook et Thunderbird : l'écran entier est l'application. */
@@ -55,6 +58,36 @@ function pick(mailbox: string, folder: Box['folder']) {
 const select = (id: string) => router.push({ name: 'mails', params: { id } })
 const count = (mailbox: string) => mails.unread(mailbox)
 const suivisCount = computed(() => suivis.mine.filter((s) => s.status !== 'done' && s.mailId).length)
+
+// Traitement par lot : même geste que pour un seul mail, annulable d'un coup.
+const ui = useUiStore()
+const settings = useSettingsStore()
+const trashAsk = ref<string[] | null>(null)
+const trashWithSuivi = computed(() => (trashAsk.value ?? []).filter((i) => mails.byId(i)?.suivi).length)
+function bulk(action: 'archive' | 'trash' | 'inbox', ids: string[]) {
+  if (!ids.length) return
+  if (action === 'trash' && settings.s.confirmDelete) { trashAsk.value = ids; return }
+  void runBulk(action, ids)
+}
+function confirmBulkTrash(dontAsk: boolean) {
+  const ids = trashAsk.value ?? []
+  trashAsk.value = null
+  if (dontAsk) settings.s.confirmDelete = false
+  void runBulk('trash', ids)
+}
+async function runBulk(action: 'archive' | 'trash' | 'inbox', ids: string[]) {
+  const results = await Promise.allSettled(ids.map((i) => mails.moveTo(i, action)))
+  const undos = results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []))
+  const failed = results.length - undos.length
+  listRef.value?.clearSelection()
+  if (props.id && ids.includes(props.id)) void router.push({ name: 'mails' })
+  if (undos.length) {
+    ui.notify(t('mail.bulk.moved', { n: undos.length, folder: t(`mail.folder.${action}`) }, undos.length), {
+      undo: async () => { await Promise.allSettled(undos.map((u) => u())); ui.notify(t('mail.movedBack')) },
+    })
+  }
+  if (failed) ui.notify(t('mail.bulk.failed', { n: failed }, failed), { tone: 'error' })
+}
 
 // j / k : message suivant / précédent dans la liste affichée.
 function onMove(e: Event) {
@@ -121,7 +154,7 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
         <header class="mid-head"><h1>{{ folderTitle }}</h1><p v-if="sharedBox && currentShared" class="hint">{{ t('mail.sharedMembers', { names: currentShared.members.map((m) => m.displayName).join(', ') }) }}</p></header>
         <p v-if="mails.loading" class="muted pad">{{ t('common.loading') }}</p>
         <ScheduledList v-else-if="box.folder === 'scheduled'" />
-        <MailList v-else ref="listRef" :mails="list" :selected-id="id ?? null" :shared="sharedBox" @select="select" />
+        <MailList v-else ref="listRef" :mails="list" :selected-id="id ?? null" :shared="sharedBox" :folder="box.folder" @select="select" @bulk="bulk" />
       </div>
 
       <div class="read">
@@ -130,6 +163,7 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
       </div>
     </template>
   </div>
+  <ConfirmTrashDialog :open="trashAsk !== null" :count="trashAsk?.length ?? 0" :with-suivi="trashWithSuivi" @confirm="confirmBulkTrash" @close="trashAsk = null" />
 </template>
 
 <style scoped>

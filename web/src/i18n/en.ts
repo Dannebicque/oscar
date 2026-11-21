@@ -102,6 +102,7 @@ const en: typeof fr = {
     shared: 'Shared mailboxes', sharedMembers: 'Members: {names}. Everyone receives every mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Shared mailbox · {n} members',
     filters: { all: 'All', unread: 'Unread', attach: 'With file', week: '7 days' }, filterLabel: 'Filter',
+    bulk: { select: 'Select', done: 'Done', label: 'Actions on the selection', all: 'All', count: 'None selected | 1 selected | {n} selected', pick: 'Select “{subject}”', toInbox: 'Move back to inbox', moved: '1 message moved to “{folder}”. | {n} messages moved to “{folder}”.', failed: '1 message could not be moved. | {n} messages could not be moved.' },
     adv: { toggle: 'Advanced filters', active: '{n} active', reset: 'Clear all', from: 'From', subject: 'Subject', after: 'Received after', before: 'Received before', attachment: 'With attachment', followed: 'With a follow-up', unread: 'Unread only', help: 'Tip: type from:claire, subject:quote, after:2026-11-01, before:2026-11-30, pj, suivi or nonlu straight into the search.' },
     search: 'Search mail', searchPlaceholder: 'Search',
     unread: 'unread', attachment: 'attachment', from: 'From {who}', via: 'via contact{\'@\'}',
@@ -221,6 +222,7 @@ const en: typeof fr = {
     types: { send: 'Sending', calendar: 'Calendar', auth: 'Authentication', sync: 'Synchronization' }, back: 'Back to settings',
   },
   brief: { title: 'Before this meeting', none: 'No recent exchange with the participants.', noPeople: 'No known participant for this meeting.', receivedFrom: 'Received from {who}', sentTo: 'Sent to {who}' },
+  confirmTrash: { title: 'Move this message to trash? | Move {n} messages to trash?', text: 'It stays recoverable in Trash. | They stay recoverable in Trash. Nothing is permanently deleted.', suivi: 'This message has an open follow-up: it stays under Follow-ups. | {n} messages have an open follow-up: they stay under Follow-ups.', dontAsk: 'Do not ask again (can be changed in Settings)', confirm: 'Move to trash' },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
     kept: 'Your message is kept: reopen it and try again.',
@@ -347,6 +349,7 @@ const en: typeof fr = {
       when: { domain: 'Any mail from {\'@\'}{value}', sender: 'Any mail from {value}' }, alias: 'Any mail arriving at {address}', on: 'On', off: 'Off', remove: 'Delete the rule {value}', none: 'No rules yet.',
       never: 'A rule only creates a “to handle” follow-up. Nothing is sent, nothing is closed, and automatic messages (out-of-office, newsletters) are ignored.',
     },
+    confirmDelete: 'Confirm before trashing', confirmDeleteHelp: 'A window asks you to confirm before moving mail to trash. The message stays recoverable and an Undo button follows every move.',
     undoSend: { legend: 'Undo send', off: 'Send right away', seconds: '{n} seconds', help: 'After you click “Send”, the message waits this long before it leaves: you can undo it. Nothing leaves without your click.' },
     relances: {
       delay: 'Delay before a reminder', delayHelp: 'Default for the account david{\'@\'}iut-troyes.fr', h24: '24 hours', h48: '48 hours', h72: '3 days', h168: '1 week',

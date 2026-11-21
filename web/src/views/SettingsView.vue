@@ -73,6 +73,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
         <div class="card stack">
           <RadioGroup v-model="s.undoSendSeconds" name="undo" :legend="t('settings.undoSend.legend')" :options="undoOpts" />
           <p class="hint">{{ t('settings.undoSend.help') }}</p>
+          <SwitchField v-model="s.confirmDelete" :label="t('settings.confirmDelete')" :help="t('settings.confirmDeleteHelp')" />
         </div>
       </section>
 
