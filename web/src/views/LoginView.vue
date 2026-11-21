@@ -21,6 +21,7 @@ const username = ref('')
 const error = ref('')
 const busy = ref(false)
 const config = ref<AuthConfig>({ password: true, registration: true, cas: true, dev: false })
+const DEMOS = [{ id: 'david', name: 'David' }, { id: 'claire', name: 'Claire' }, { id: 'marc', name: 'Marc' }, { id: 'lea', name: 'Léa' }]
 const base = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 onMounted(async () => {
@@ -65,14 +66,26 @@ const casUrl = computed(() => `${base}/api/auth/cas/login?return=${encodeURIComp
       <a class="btn full" :href="casUrl">{{ t('login.cas') }}</a>
     </template>
 
-    <details v-if="config.dev" class="dev">
-      <summary>{{ t('login.dev') }}</summary>
-      <form class="stack" @submit.prevent="finish(() => auth.loginDev(username))">
-        <TextField id="u" v-model="username" :label="t('login.username')" autocomplete="username" required />
-        <BaseButton type="submit" :disabled="busy || !username" :label="t('login.devSubmit')" />
-        <p class="hint">{{ t('login.devHelp') }}</p>
-      </form>
-    </details>
+    <section v-if="config.dev" class="demo" :aria-label="t('login.demoTitle')">
+      <h2>{{ t('login.demoTitle') }}</h2>
+      <p class="hint">{{ t('login.demoHelp') }}</p>
+      <ul>
+        <li v-for="d in DEMOS" :key="d.id">
+          <button type="button" class="who" :disabled="busy" @click="finish(() => auth.loginDev(d.id))">
+            <span class="av" aria-hidden="true">{{ d.name[0] }}</span>
+            <span class="txt"><strong>{{ d.name }}</strong><small>{{ t(`login.demo.${d.id}`) }}</small></span>
+          </button>
+        </li>
+      </ul>
+      <details class="dev">
+        <summary>{{ t('login.dev') }}</summary>
+        <form class="stack" @submit.prevent="finish(() => auth.loginDev(username))">
+          <TextField id="u" v-model="username" :label="t('login.username')" autocomplete="username" required />
+          <BaseButton type="submit" :disabled="busy || !username" :label="t('login.devSubmit')" />
+          <p class="hint">{{ t('login.devHelp') }}</p>
+        </form>
+      </details>
+    </section>
 
     <template v-if="config.registration" #alt>
       <p>{{ t('auth.noAccount') }} <RouterLink :to="{ name: 'register' }">{{ t('auth.createLink') }}</RouterLink></p>
@@ -87,6 +100,13 @@ const casUrl = computed(() => `${base}/api/auth/cas/login?return=${encodeURIComp
 .full { width: 100%; justify-content: center; text-decoration: none; }
 .or { display: flex; align-items: center; gap: var(--space-3); margin: 0; color: var(--c-text-muted); font-size: var(--fs-sm); }
 .or::before, .or::after { content: ''; flex: 1; border-top: var(--bw) solid var(--c-border); }
+.demo { display: grid; gap: var(--space-2); }
+.demo h2 { font-size: var(--fs-md); margin: 0; }
+.demo ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.who { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: calc(var(--target) + 8px); padding: var(--space-2) var(--space-3); border: var(--bw) solid var(--c-border-strong); border-radius: var(--radius-md); background: var(--c-surface); color: var(--c-text); font: inherit; text-align: start; cursor: pointer; }
+.who:hover:not(:disabled) { background: var(--c-surface-2); }
+.av { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--c-primary-soft); color: var(--c-on-primary-soft); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
+.txt { display: grid; min-width: 0; } .txt small { color: var(--c-text-muted); overflow-wrap: anywhere; }
 .dev { border: var(--bw) dashed var(--c-border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
 .dev summary { cursor: pointer; font-weight: 600; min-height: var(--target); display: flex; align-items: center; }
 .dev form { padding-top: var(--space-2); }
