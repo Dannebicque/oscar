@@ -14,13 +14,13 @@ contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
 | F-10 | Synchro IMAP multi-comptes, lecture, recherche, envoi SMTP | 🟡 | Synchro incrémentale par UID, lecture, envoi ✅. La recherche porte sur les en-têtes déjà chargés (pas de recherche plein texte serveur). |
 | F-11 | Tâches proposées depuis un mail | 🟡 | Fournisseur local à règles (dates en français « avant mardi », « jeudi à 10h »). Pas de modèle de langage branché : l'interface `AiProvider` l'attend. |
 | F-12 | Relance après 48 h, délai réglable | 🟡 | Délai réglable par utilisateur et par suivi (via l'échéance). Pas par compte ; « jours ouvrés » est enregistré mais **pas encore appliqué** au calcul. |
-| F-16 | Webmail convaincant | 🟡 | Dossiers, liste, lecture (texte brut), répondre, filtres ✅. **Pas encore** : transférer, pièces jointes, brouillons, corbeille/archivage réels, fils de discussion, HTML isolé. Ces boutons annoncent qu'ils ne font rien. |
+| F-16 | Webmail convaincant | 🟡 | Dossiers, liste, lecture (texte brut), répondre, filtres ✅. **Pas encore** : transférer, pièces jointes, brouillons, corbeille/archivage réels, HTML isolé. Fil de discussion ✅ (messages précédents repliables, calculé côté front). Ces boutons annoncent qu'ils ne font rien. |
 | F-20 | Agenda CalDAV, lecture et création | ✅ | Récurrences développées ; création écrite d'abord sur le serveur. Affichage par FullCalendar 6 (MIT, maintenu) : semaine, jour, mois, liste, glisser pour créer, événements focalisables au clavier. Un événement existant se consulte mais ne se modifie ni ne se supprime pas encore. Testé contre des réponses CalDAV simulées, **pas contre un vrai serveur CalDAV**. Google : version 2. |
 | F-30 à F-35 | To-do globale, tri, filtres, « traité », « à confirmer » | ✅ | |
 | F-36 | Réponse reçue → tâche de relance liée | 🟡 | Il n'y a pas de tâche de relance liée ; c'est le suivi qui porte le signal. |
 | F-50 à F-56 | Suivi : création, états, réponse, relance, échéance | ✅ | Sens + état stockés, signaux calculés, aucune clôture ni relance automatique. |
 | F-58 | Journal non modifiable | ✅ | |
-| F-59, F-70 | Mes suivis, page Suivis (priorités, tableau) | ✅ | |
+| F-59, F-70 | Mes suivis, page Suivis (priorités, tableau) | ✅ | Tuiles de situation filtrantes, synthèse d'Oscar, activité récente en colonne, entrée de menu mise en avant (maquette « centre de suivi »). |
 | F-61 | Relances et retards dans récaps et to-do | 🟡 | Récaps ✅ ; pas de ligne dédiée dans la to-do. |
 | F-63 | Mode Relances, plafond quotidien | ✅ | Jamais d'envoi groupé. |
 | F-65 | Réponse reçue → « à traiter » + alerte, jamais de clôture auto | ✅ | |

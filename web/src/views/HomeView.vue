@@ -89,7 +89,7 @@ async function close(i: PriorityItem) {
     ui.notify(say('closed', { subject: i.title }), { undo: undo && (() => undo()) })
   } else if (i.kind === 'task') {
     await tasks.setDone(i.refId, true)
-    ui.notify(t('tasks.doneToast', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
+    ui.notify(say('taskDone', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
   }
 }
 async function quickAdd() {

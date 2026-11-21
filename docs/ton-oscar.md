@@ -40,3 +40,9 @@ chaque phrase d'Oscar est vérifiée par test (`web/src/test/oscar.test.ts`).
 2. Écrire `oscar.<situation>.neutral` (et `light` si pertinent) en français ET en anglais.
 3. L'utiliser avec `OscarSays` ou `say()`.
 4. `npm test` : le catalogue entier est revalidé ; une phrase qui enfreint la charte fait échouer la CI.
+
+## Situations ajoutées (passe maquettes)
+
+`tasksEmpty`, `tasksViewEmpty`, `taskAdded`, `taskDone` (page Tâches) ; `summaryDay`, `summaryTeam` (synthèse de la page Suivis) ;
+`recapMorning`, `recapEvening` (résumé du récap) ; `journalIntro` (page Journal). Les comptes passent par des pluriels i18n
+(`suivis.summaryRdv`, `suivis.summaryActions`), jamais par une phrase assemblée à la main.

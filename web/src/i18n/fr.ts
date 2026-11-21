@@ -55,6 +55,8 @@ export default {
     demoStates: { busy: 'Journée chargée', calm: 'Journée calme', first: 'Premier lancement' },
   },
   suivis: {
+    seeRecap: 'Voir le récap',
+    summaryRdv: 'aucun rendez-vous à venir | 1 rendez-vous à venir | {n} rendez-vous à venir', summaryActions: 'aucune action | 1 action | {n} actions',
     kpiLabel: 'Filtrer par situation', kpi: { todo: 'À traiter', relance: 'Relances dues', late: 'En retard', wait: 'En attente', done: 'Traités' }, kpiClear: 'Tout afficher',
     title: 'Suivis', subtitle: 'Mails, tâches et rendez-vous au même endroit.',
     scopeLabel: 'Périmètre', mine: 'Mes suivis', team: 'Équipe · {address}',
@@ -154,6 +156,7 @@ export default {
     freeBusy: 'Pour proposer des créneaux, Oscar ne lit que libre ou occupé : ni titres, ni lieux, ni participants.',
   },
   tasks: {
+    views: { open: 'À faire', late: 'En retard', today: 'Aujourd’hui', soon: 'À venir', done: 'Terminées' }, viewsLabel: 'Listes de tâches', detail: 'Détail', detailEmpty: 'Choisis une tâche dans la liste pour voir son détail et son origine.', originLabel: 'Origine', stateLabel: 'État', todo: 'À faire', reopen: 'Rouvrir la tâche', markDoneShort: 'Marquer comme terminée', seeSource: { mail: 'Voir le mail', event: 'Voir l’événement', ai: 'Voir le mail', manual: '' },
     removeTag: 'Retirer l’étiquette {tag}', newTask: 'Nouvelle tâche', editTask: 'Modifier la tâche', fTitle: 'Titre', fDescription: 'Description', fDue: 'Échéance', fPriority: 'Priorité', fProject: 'Projet', fTags: 'Étiquettes', tagsHint: 'Entrée ou virgule pour ajouter.', saved: 'Tâche enregistrée.', deleted: 'Tâche supprimée : « {title} ».', deleteTitle: 'Supprimer cette tâche ?', deleteText: 'Elle disparaît définitivement. Tu peux plutôt la marquer comme traitée.', delete: 'Supprimer', filters: 'Filtres', list: 'Tâches', quick: 'Ajout rapide', titleRequired: 'Donne un titre à la tâche.', saveFailed: 'Je n’ai pas pu enregistrer la tâche. Réessaie dans un instant.', open: 'Ouvrir {title}',
     title: 'Tâches', add: 'Ajouter une tâche', addLabel: 'Nouvelle tâche', addPlaceholder: 'Titre de la tâche', added: 'Tâche ajoutée : « {title} ».',
     sort: 'Trier par', sortDue: 'Échéance', sortPriority: 'Priorité', sortProject: 'Projet', filterProject: 'Projet', filterTag: 'Étiquettes', showDone: 'Afficher les traitées',
@@ -165,6 +168,7 @@ export default {
     counts: '{n} tâche | {n} tâche | {n} tâches', clearFilters: 'Effacer les filtres',
   },
   recap: {
+    titleMorning: 'Ton récap du matin : {rdv} rendez-vous, {n} actions', titleEvening: 'Ton bilan du soir : {n} à reprendre', preview: 'Aperçu de ce que tu reçois par e-mail et de ce qui s’affiche sur l’accueil.', settings: 'Horaires et canaux', readOnly: 'Ce récap est une lecture de ton activité. Il ne crée rien et n’envoie rien : chaque ligne ouvre l’élément concerné.',
     title: 'Récapitulatif', morning: 'Récap du matin', evening: 'Bilan du soir', mailsToHandle: 'Mails importants non traités', events: 'Événements à venir', tasks: 'Tâches du jour et en retard',
     relances: 'Relances dues', nothing: 'Rien à signaler.', intro: 'Voilà ce qui compte maintenant. Je prépare, tu décides.', example: 'Exemple de récap', sentTo: 'Envoyé à david{\'@\'}iut-troyes.fr à {time}.',
   },
@@ -176,6 +180,7 @@ export default {
       takenOver: '{who} a repris « {subject} ».', memberReplied: '{who} a répondu à « {subject} ».',
     }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
   journal: {
+    log: 'Journal',
     messages: {
       authRefused: 'Le serveur a refusé l’identifiant ou le mot de passe.', timeout: 'Le serveur n’a pas répondu à temps. Une nouvelle tentative aura lieu automatiquement.',
       unreachable: 'Le serveur est injoignable : adresse, port ou réseau.', failed: 'La synchronisation a échoué. Une nouvelle tentative aura lieu automatiquement.',
@@ -213,6 +218,15 @@ export default {
     neverSend: { neutral: 'Je propose, tu décides : rien ne part sans ton clic.' },
     neverDeletes: { neutral: 'Je ne supprime jamais rien sans ton accord.' },
     firstLaunch: { neutral: 'Commençons : ajoute ton compte de messagerie, je m’occupe du reste.' },
+    tasksEmpty: { neutral: 'Aucune tâche pour l’instant. Ajoute la première, je te la rappellerai.', light: 'Aucune tâche pour l’instant. Respire, puis ajoute la première quand tu veux.' },
+    tasksViewEmpty: { neutral: 'Rien dans cette liste. Choisis une autre liste ou ajoute une tâche.' },
+    taskAdded: { neutral: 'Tâche ajoutée : « {title} ». Tu peux lui donner une échéance.' },
+    taskDone: { neutral: 'C’est fait : « {title} ».', light: 'C’est fait : « {title} ». Une de moins.' },
+    summaryDay: { neutral: 'Ta journée : {rdv} et {actions}. Je te propose de commencer par « {first} ».', light: 'Ta journée : {rdv} et {actions}. Je te propose de commencer par « {first} », le reste suivra.' },
+    summaryTeam: { neutral: '{n} demandes de l’alias attendent un membre de l’équipe. Prends-en une ?' },
+    recapMorning: { neutral: 'Ce matin : {rdv} et {actions}. « {first} » passe en premier.' },
+    recapEvening: { neutral: 'Ce soir : {done} traités aujourd’hui et {left} à reprendre demain.' },
+    journalIntro: { neutral: 'Tout ce qui se passe en coulisses est ici, sans le contenu de tes mails. Tu peux l’exporter pour le support.' },
     errorGeneric: { neutral: 'Je n’ai pas pu terminer. Réessaie dans un instant.' },
     errorConnection: { neutral: 'Je n’arrive pas à joindre {name}. Vérifie le compte dans Réglages, puis réessaie.' },
     errorSend: { neutral: 'Le message n’est pas parti et rien n’a été créé. Réessaie dans un instant.' },

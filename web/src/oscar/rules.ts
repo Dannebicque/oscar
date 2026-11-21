@@ -35,7 +35,7 @@ const words = (s: string) => s.replace(/\{[^}]*\}/g, 'x').split(/\s+/).filter(Bo
 /** Situations d'erreur : le ton léger n'existe pas. */
 export const ERROR_SITUATIONS = ['errorGeneric', 'errorConnection', 'errorSend'] as const
 /** Situations purement informatives : elles n'ont pas à proposer d'action. */
-export const INFO_SITUATIONS = ['greeting', 'quiet', 'calm', 'noMeeting', 'closed', 'neverSend', 'recapIntro', 'neverDeletes'] as const
+export const INFO_SITUATIONS = ['greeting', 'quiet', 'calm', 'noMeeting', 'closed', 'neverSend', 'recapIntro', 'neverDeletes', 'taskDone', 'summaryDay', 'recapMorning', 'recapEvening', 'journalIntro'] as const
 
 export interface Violation { rule: string; line: string }
 

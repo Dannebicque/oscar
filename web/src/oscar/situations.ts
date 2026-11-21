@@ -8,6 +8,7 @@ import { ERROR_SITUATIONS } from './rules'
 export const SITUATIONS = [
   'greeting', 'quiet', 'replyReceived', 'relanceDue', 'relancesMany', 'calm', 'noMeeting', 'availability', 'suggestFollow', 'suggestTask',
   'suggestEvent', 'suggestGroup', 'closed', 'sentFollow', 'followAi', 'recapIntro', 'draftReady', 'neverSend', 'neverDeletes', 'firstLaunch',
+  'tasksEmpty', 'tasksViewEmpty', 'taskAdded', 'taskDone', 'summaryDay', 'summaryTeam', 'recapMorning', 'recapEvening', 'journalIntro',
   'errorGeneric', 'errorConnection', 'errorSend',
 ] as const
 export type Situation = (typeof SITUATIONS)[number]

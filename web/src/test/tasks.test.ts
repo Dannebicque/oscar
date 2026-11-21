@@ -81,10 +81,13 @@ describe('page Tâches', () => {
     expect(useTasksStore(pinia).items).toHaveLength(before)
   })
 
-  it('cliquer sur une tâche l’ouvre pour la modifier ; l’origine et la source sont rappelées', async () => {
+  it('cliquer sur une tâche affiche son détail, puis « Modifier » l’ouvre ; l’origine et la source sont rappelées', async () => {
     const { wrapper, pinia } = await mountApp(TasksView, '/taches')
     await flushPromises()
     await wrapper.find('button[aria-label^="Ouvrir Relire la convention"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('aside.detail').text()).toContain('Issue d’un mail') // le détail s’affiche d’abord
+    await wrapper.find('aside.detail button.btn:last-of-type, aside.detail .dact button:last-child').trigger('click')
     await flushPromises()
     expect(dlg()!.querySelector('h2')?.textContent).toBe('Modifier la tâche')
     expect((document.querySelector('#task-form input[type="text"]') as HTMLInputElement).value).toBe('Relire la convention de Claire Petit')
@@ -99,6 +102,8 @@ describe('page Tâches', () => {
     const { wrapper, pinia } = await mountApp(TasksView, '/taches')
     await flushPromises()
     await wrapper.find('button[aria-label^="Ouvrir Commander le papier"]').trigger('click')
+    await flushPromises()
+    await wrapper.find('aside.detail button.btn:last-of-type, aside.detail .dact button:last-child').trigger('click')
     await flushPromises()
     ;[...dlg()!.querySelectorAll('button')].find((b) => b.textContent?.includes('Supprimer'))!.click()
     await flushPromises()

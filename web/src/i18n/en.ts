@@ -55,6 +55,8 @@ const en: typeof fr = {
     demoStates: { busy: 'Busy day', calm: 'Quiet day', first: 'First launch' },
   },
   suivis: {
+    seeRecap: 'See the recap',
+    summaryRdv: 'no event ahead | 1 event ahead | {n} events ahead', summaryActions: 'no actions | 1 action | {n} actions',
     kpiLabel: 'Filter by situation', kpi: { todo: 'To handle', relance: 'Reminders due', late: 'Late', wait: 'Waiting', done: 'Done' }, kpiClear: 'Show all',
     title: 'Follow-ups', subtitle: 'Mails, tasks and events in one place.',
     scopeLabel: 'Scope', mine: 'My follow-ups', team: 'Team · {address}',
@@ -154,6 +156,7 @@ const en: typeof fr = {
     freeBusy: 'To suggest slots, Oscar only reads free or busy: no titles, places or attendees.',
   },
   tasks: {
+    views: { open: 'To do', late: 'Late', today: 'Today', soon: 'Upcoming', done: 'Done' }, viewsLabel: 'Task lists', detail: 'Details', detailEmpty: 'Pick a task in the list to see its details and where it comes from.', originLabel: 'Origin', stateLabel: 'Status', todo: 'To do', reopen: 'Reopen task', markDoneShort: 'Mark as done', seeSource: { mail: 'See the mail', event: 'See the event', ai: 'See the mail', manual: '' },
     removeTag: 'Remove tag {tag}', newTask: 'New task', editTask: 'Edit task', fTitle: 'Title', fDescription: 'Description', fDue: 'Due date', fPriority: 'Priority', fProject: 'Project', fTags: 'Tags', tagsHint: 'Press Enter or comma to add.', saved: 'Task saved.', deleted: 'Task deleted: “{title}”.', deleteTitle: 'Delete this task?', deleteText: 'It disappears for good. You could mark it as done instead.', delete: 'Delete', filters: 'Filters', list: 'Tasks', quick: 'Quick add', titleRequired: 'Give the task a title.', saveFailed: 'I couldn’t save the task. Try again in a moment.', open: 'Open {title}',
     title: 'Tasks', add: 'Add a task', addLabel: 'New task', addPlaceholder: 'Task title', added: 'Task added: “{title}”.',
     sort: 'Sort by', sortDue: 'Due date', sortPriority: 'Priority', sortProject: 'Project', filterProject: 'Project', filterTag: 'Tags', showDone: 'Show completed',
@@ -165,6 +168,7 @@ const en: typeof fr = {
     counts: '{n} task | {n} task | {n} tasks', clearFilters: 'Clear filters',
   },
   recap: {
+    titleMorning: 'Your morning recap: {rdv} events, {n} actions', titleEvening: 'Your evening wrap-up: {n} to pick up', preview: 'A preview of what you get by e-mail and what shows on the home page.', settings: 'Times and channels', readOnly: 'This recap only reads your activity. It creates nothing and sends nothing: each line opens the item it mentions.',
     title: 'Recap', morning: 'Morning recap', evening: 'Evening review', mailsToHandle: 'Important unhandled mails', events: 'Upcoming events', tasks: 'Tasks today and overdue',
     relances: 'Reminders due', nothing: 'Nothing to report.', intro: 'Here is what matters now. I prepare, you decide.', example: 'Recap example', sentTo: 'Sent to david{\'@\'}iut-troyes.fr at {time}.',
   },
@@ -176,6 +180,7 @@ const en: typeof fr = {
       takenOver: '{who} took over “{subject}”.', memberReplied: '{who} replied to “{subject}”.',
     }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
   journal: {
+    log: 'Log',
     messages: {
       authRefused: 'The server refused the username or password.', timeout: 'The server did not answer in time. Another attempt will be made automatically.',
       unreachable: 'The server is unreachable: address, port or network.', failed: 'Synchronization failed. Another attempt will be made automatically.',
@@ -213,6 +218,15 @@ const en: typeof fr = {
     neverSend: { neutral: 'I suggest, you decide: nothing is sent without your click.' },
     neverDeletes: { neutral: 'I never delete anything without your say-so.' },
     firstLaunch: { neutral: 'Let’s start: add your mail account, I’ll handle the rest.' },
+    tasksEmpty: { neutral: 'No tasks yet. Add the first one, I’ll remind you.', light: 'No tasks yet. Breathe, then add the first one whenever you like.' },
+    tasksViewEmpty: { neutral: 'Nothing in this list. Choose another list or add a task.' },
+    taskAdded: { neutral: 'Task added: “{title}”. You can give it a due date.' },
+    taskDone: { neutral: 'Done: “{title}”.', light: 'Done: “{title}”. One less.' },
+    summaryDay: { neutral: 'Your day: {rdv} and {actions}. I suggest starting with “{first}”.', light: 'Your day: {rdv} and {actions}. I suggest starting with “{first}”, the rest will follow.' },
+    summaryTeam: { neutral: '{n} alias requests are waiting for a team member. Want to take one?' },
+    recapMorning: { neutral: 'This morning: {rdv} and {actions}. “{first}” comes first.' },
+    recapEvening: { neutral: 'Tonight: {done} handled today and {left} to pick up tomorrow.' },
+    journalIntro: { neutral: 'Everything that happens behind the scenes is here, without your mail contents. You can export it for support.' },
     errorGeneric: { neutral: 'I couldn’t finish. Try again in a moment.' },
     errorConnection: { neutral: 'I can’t reach {name}. Check the account in Settings, then try again.' },
     errorSend: { neutral: 'The message was not sent and nothing was created. Try again in a moment.' },

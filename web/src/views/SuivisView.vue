@@ -86,6 +86,16 @@ const viewOptions = computed(() => [
   { value: 'board' as const, label: t('suivis.board') },
 ])
 watch(() => store.scope, () => { kpi.value = null; kind.value = 'all' })
+const rdvAhead = computed(() => all.value.filter((i) => i.kind === 'rdv' && i.flag === 'dueToday').length)
+const teamNew = computed(() => mails.items.filter((m) => m.claim?.state === 'new').length)
+/** Synthèse d'Oscar (maquette) : comptes locaux, aucun contenu de mail ne la nourrit. */
+const summary = computed((): { situation: 'summaryTeam' | 'summaryDay'; params: Record<string, string | number> } | null => {
+  if (store.scope === 'team') return teamNew.value ? { situation: 'summaryTeam' as const, params: { n: teamNew.value } } : null
+  const first = open_.value[0]
+  if (!first) return null
+  return { situation: 'summaryDay' as const, params: { rdv: t('suivis.summaryRdv', { n: rdvAhead.value }, rdvAhead.value), actions: t('suivis.summaryActions', { n: store.actionCount }, store.actionCount), first: first.title } }
+})
+const groupOpen = computed(() => apiMode === 'mock' && suggestion.value === 'open' && store.scope === 'mine')
 const recent = computed(() =>
   store.inScope.flatMap((s) => s.journal.map((j) => ({ ...j, subject: s.subject }))).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 5),
 )
@@ -119,7 +129,7 @@ async function done(i: PriorityItem) {
     ui.notify(say('closed', { subject }), { undo: undo && (async () => { await undo(); ui.notify(t('suivis.reopened')) }) })
   } else if (i.kind === 'task') {
     await tasks.setDone(i.refId, true)
-    ui.notify(t('tasks.doneToast', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
+    ui.notify(say('taskDone', { title: i.title }), { undo: () => tasks.setDone(i.refId, false) })
   }
 }
 async function create(n: NewSuivi) {
@@ -154,14 +164,11 @@ function suggest(accept: boolean) {
         <template #actions><BaseButton variant="primary" :label="t('suivis.relancesStart')" @click="showRelances = true" /></template>
       </Callout>
 
-      <OscarSays v-if="apiMode === 'mock' && suggestion === 'open' && store.scope === 'mine'" situation="suggestGroup" suggestion>
-        <template #actions>
-          <BaseButton variant="primary" :label="t('suivis.suggestionCreate')" @click="suggest(true)" />
-          <BaseButton :label="t('common.ignore')" @click="suggest(false)" />
-        </template>
-      </OscarSays>
 
       <SuiviKpis v-model="kpi" :counts="kpiCounts" />
+      <OscarSays v-if="summary" :situation="summary.situation" :params="summary.params" suggestion>
+        <template #actions><RouterLink class="btn" to="/recap">{{ t('suivis.seeRecap') }}</RouterLink></template>
+      </OscarSays>
       <p class="muted" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
 
       <template v-if="view === 'priorities'">
@@ -176,11 +183,17 @@ function suggest(accept: boolean) {
       <SuiviBoard v-else :items="store.inScope" @open="(s) => openMail(s.mailId)" />
 
     </div>
-    <aside v-if="recent.length" class="aside" :aria-label="t('suivis.activity')">
+    <aside v-if="recent.length || groupOpen" class="aside" :aria-label="t('suivis.activity')">
       <h2 id="act-h">{{ t('suivis.activity') }}</h2>
-      <ul class="activity">
+      <ul v-if="recent.length" class="activity">
         <li v-for="(j, n) in recent" :key="n"><span class="muted">{{ fmt.dateTime(j.at) }}</span><br /><strong>{{ j.author }}</strong> · {{ fmt.journal(j) }} · {{ j.subject }}</li>
       </ul>
+      <OscarSays v-if="groupOpen" situation="suggestGroup" suggestion :level="3">
+        <template #actions>
+          <BaseButton variant="primary" :label="t('suivis.suggestionCreate')" @click="suggest(true)" />
+          <BaseButton :label="t('common.ignore')" @click="suggest(false)" />
+        </template>
+      </OscarSays>
     </aside>
     </div>
   </template>
@@ -193,7 +206,7 @@ function suggest(accept: boolean) {
 .toolbar { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
 .layout { display: grid; gap: var(--space-4); align-items: start; }
 .stack { display: grid; gap: var(--space-4); min-width: 0; }
-.aside { padding: var(--space-4); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
+.aside { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
 @media (min-width: 1200px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } .aside { position: sticky; top: 0; } }
 h2 { margin-bottom: var(--space-2); font-size: var(--fs-md); }
 .activity { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; font-size: var(--fs-sm); }
