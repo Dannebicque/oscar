@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CalendarGrid, { type GridView } from '../components/agenda/CalendarGrid.vue'
+import Callout from '../components/ui/Callout.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseDialog from '../components/ui/BaseDialog.vue'
 import BaseIcon from '../components/ui/BaseIcon.vue'
@@ -117,7 +118,10 @@ async function create() {
             </button>
           </li>
         </ul>
-        <p v-if="store.sources.length === 0" class="muted">{{ t('agenda.noSource') }} <RouterLink to="/reglages#set-accounts">{{ t('agenda.addSource') }}</RouterLink></p>
+        <Callout v-if="!store.loading && store.sources.length === 0" class="nosource" :level="2" tone="warn" icon="calendar" :title="t('agenda.noSource')">
+          <p>{{ t('agenda.noSourceHelp') }}</p>
+          <template #actions><RouterLink class="btn primary" to="/reglages#set-accounts">{{ t('agenda.addSource') }}</RouterLink></template>
+        </Callout>
         <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
         <CalendarGrid
           ref="grid" :events="shownEvents" :sources="store.sources" :view="view" :conflicts="conflicts"
@@ -179,6 +183,7 @@ async function create() {
 .when { font-size: var(--fs-md); flex: 1; min-width: 200px; text-transform: capitalize; }
 .layout { display: grid; gap: var(--space-4); align-items: start; }
 .main { min-width: 0; }
+.nosource { margin-bottom: var(--space-4); }
 .side { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
 @media (min-width: 1200px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } .side { position: sticky; top: 0; } }
 .sources { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: flex; gap: var(--space-2); flex-wrap: wrap; }

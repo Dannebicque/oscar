@@ -160,6 +160,7 @@ const en: typeof fr = {
     attach: 'Attach a file', delays: { h24: '24 hours', h48: '48 hours', d3: '3 days', d7: '1 week' },
   },
   agenda: {
+    noSourceHelp: 'Add your CalDAV or Google calendar: your meetings will show up here and Oscar can suggest free slots.',
     selected: 'Selected event', selectHint: 'Click an event to see its details.', dues: 'Due this period', noDues: 'Nothing due in this period.', dueTask: 'Task', dueSuivi: 'Follow-up', sidePanel: 'Details and due dates', legend: 'A blue bar: work calendar; a grey bar: personal calendar.', noSource: 'No calendar connected.', addSource: 'Add a calendar',
     title: 'Calendar', views: 'View', week: 'Week', day: 'Day', month: 'Month', list: 'List', when: 'When', createFailed: 'The calendar server refused the event. Nothing was added, try again in a moment.', prev: 'Previous week', next: 'Next week', todayBtn: 'Today',
     weekOf: 'Week of {date}', noEvents: 'No events', sources: 'Calendars', add: 'New event', evTitle: 'Title', evDay: 'Day', evStart: 'Start', evEnd: 'End', evPlace: 'Place', evCalendar: 'Calendar',

@@ -141,3 +141,17 @@ describe('écran Agenda', () => {
     expect(wrapper.text()).toContain('Réunion test')
   })
 })
+
+describe('agenda sans calendrier connecté', () => {
+  it('affiche une alerte avec une action « Ajouter un agenda » plutôt qu’une simple ligne de texte', async () => {
+    const { wrapper, pinia } = await mountApp(AgendaView, '/agenda')
+    await flushPromises()
+    const { useAgendaStore } = await import('../stores/agenda')
+    useAgendaStore(pinia).sources = []
+    await flushPromises()
+    const alert = wrapper.find('.callout.nosource')
+    expect(alert.exists()).toBe(true)
+    expect(alert.text()).toContain('Aucun agenda connecté')
+    expect(alert.find('a.btn').attributes('href')).toContain('/reglages')
+  })
+})

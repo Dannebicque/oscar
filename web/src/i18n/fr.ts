@@ -160,6 +160,7 @@ export default {
     attach: 'Joindre un fichier', delays: { h24: '24 heures', h48: '48 heures', d3: '3 jours', d7: '1 semaine' },
   },
   agenda: {
+    noSourceHelp: 'Ajoute ton agenda CalDAV ou Google : tes rendez-vous apparaîtront ici et Oscar pourra proposer des créneaux libres.',
     selected: 'Événement sélectionné', selectHint: 'Clique sur un événement pour voir son détail.', dues: 'Échéances de la période', noDues: 'Aucune échéance sur cette période.', dueTask: 'Tâche', dueSuivi: 'Suivi', sidePanel: 'Détail et échéances', legend: 'Une barre bleue : agenda pro ; une barre grise : agenda perso.', noSource: 'Aucun agenda connecté.', addSource: 'Ajouter un agenda',
     title: 'Agenda', views: 'Vue', week: 'Semaine', day: 'Jour', month: 'Mois', list: 'Liste', when: 'Quand', createFailed: 'Le serveur d’agenda a refusé l’événement. Rien n’a été ajouté, réessaie dans un instant.', prev: 'Semaine précédente', next: 'Semaine suivante', todayBtn: 'Aujourd’hui',
     weekOf: 'Semaine du {date}', noEvents: 'Aucun rendez-vous', sources: 'Agendas', add: 'Nouvel événement', evTitle: 'Titre', evDay: 'Jour', evStart: 'Début', evEnd: 'Fin', evPlace: 'Lieu', evCalendar: 'Agenda',
