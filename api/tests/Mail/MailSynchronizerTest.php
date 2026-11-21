@@ -56,6 +56,8 @@ final class MailSynchronizerTest extends KernelTestCase
     {
         return new class($all) implements MailboxReader {
             public function __construct(private array $all) {}
+            public function attachments(string $folder, int $uid): array { return []; }
+            public function attachment(string $folder, int $uid, int $index): ?array { return null; }
 
             public function fetchAfter(string $folder, int $afterUid): array
             {

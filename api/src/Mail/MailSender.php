@@ -43,6 +43,13 @@ final class MailSender
         if ($r->bcc !== []) {
             $email->bcc(...array_map(static fn (string $a) => new Address($a), $r->bcc));
         }
+        foreach ($r->attachments as $a) {
+            $raw = base64_decode((string) ($a['content'] ?? ''), true);
+            if ($raw === false) {
+                throw new \InvalidArgumentException('Pièce jointe illisible.');
+            }
+            $email->attach($raw, mb_substr((string) ($a['name'] ?? 'pièce-jointe'), 0, 150), 'application/octet-stream');
+        }
         $messageId = sprintf('<%s@%s>', bin2hex(random_bytes(12)), substr(strrchr($account->getAddress(), '@') ?: '@localhost', 1));
         $email->getHeaders()->addIdHeader('Message-ID', trim($messageId, '<>'));
         if ($replyTo !== null) {

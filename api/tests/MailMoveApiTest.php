@@ -59,4 +59,33 @@ final class MailMoveApiTest extends ApiTestCase
         self::assertSame(404, $st);
         self::assertSame([], FakeReaderFactory::$moved);
     }
+
+    public function testAttachmentsAreListedAndOnlyEverDownloaded(): void
+    {
+        [$st, $r] = $this->call('GET', '/api/mails/'.$this->mail->getId().'/attachments', $this->token);
+        self::assertSame(200, $st);
+        self::assertSame('convention.pdf', $r['attachments'][0]['name']);
+        $this->client->request('GET', '/api/mails/'.$this->mail->getId().'/attachments/0', server: ['HTTP_AUTHORIZATION' => 'Bearer '.$this->token]);
+        $resp = $this->client->getResponse();
+        self::assertSame(200, $resp->getStatusCode());
+        self::assertSame('application/octet-stream', $resp->headers->get('Content-Type'), 'type forcé : jamais interprété par le navigateur');
+        self::assertSame('nosniff', $resp->headers->get('X-Content-Type-Options'));
+        self::assertStringContainsString('attachment', (string) $resp->headers->get('Content-Disposition'));
+        [$st] = $this->call('GET', '/api/mails/'.$this->mail->getId().'/attachments', $this->other);
+        self::assertSame(404, $st);
+    }
+
+    public function testSendCarriesAttachmentsAndRefusesMoreThanFiveMegabytes(): void
+    {
+        $smtp = static::getContainer()->get(\App\Tests\Support\FakeOutgoingMailer::class);
+        $accountId = $this->em->getRepository(MailAccount::class)->findAll()[0]->getId();
+        [$st] = $this->call('POST', '/api/mails/send', $this->token, ['accountId' => $accountId, 'to' => ['a@x.fr'], 'subject' => 'PJ', 'body' => 'Voir pièce jointe', 'attachments' => [['name' => 'note.txt', 'type' => 'text/plain', 'content' => base64_encode('bonjour')]]]);
+        self::assertSame(201, $st);
+        $atts = $smtp->sent[0]->getAttachments();
+        self::assertCount(1, $atts);
+        self::assertSame('note.txt', $atts[0]->getFilename());
+        [$st] = $this->call('POST', '/api/mails/send', $this->token, ['accountId' => $accountId, 'to' => ['a@x.fr'], 'subject' => 'Gros', 'body' => 'x', 'attachments' => [['name' => 'big.bin', 'type' => 'x', 'content' => base64_encode(str_repeat('a', 6 * 1024 * 1024))]]]);
+        self::assertSame(413, $st);
+        self::assertCount(1, $smtp->sent, 'rien n’est parti');
+    }
 }

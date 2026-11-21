@@ -94,6 +94,15 @@ export const useMailsStore = defineStore('mails', () => {
     }
   }
 
+  /** Pièces jointes d'un mail, lues à la demande (une fois). Une panne n'empêche jamais de lire le message. */
+  const attachmentsLoaded = ref<Set<string>>(new Set())
+  async function loadAttachments(id: string) {
+    const m = byId(id)
+    if (!m || attachmentsLoaded.value.has(id)) return
+    attachmentsLoaded.value = new Set([...attachmentsLoaded.value, id])
+    try { patch(id, { attachments: await api.mails.attachments(id) }) } catch { /* pas de liste, pas de blocage */ }
+  }
+
   /** Déplace un message (archives, corbeille, boîte de réception). Renvoie l'annulation : remettre en boîte de réception. */
   async function moveTo(id: string, folder: 'inbox' | 'archive' | 'trash') {
     const m = byId(id)
@@ -167,5 +176,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

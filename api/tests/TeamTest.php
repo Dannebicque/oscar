@@ -52,6 +52,8 @@ final class TeamTest extends ApiTestCase
             public function __construct(private array $all) {}
             public function fetchAfter(string $folder, int $afterUid): array { return $folder === 'INBOX' ? array_values(array_filter($this->all, fn ($h) => $h->uid > $afterUid)) : []; }
             public function fetchBody(string $folder, int $uid): ?string { return null; }
+            public function attachments(string $folder, int $uid): array { return []; }
+            public function attachment(string $folder, int $uid, int $index): ?array { return null; }
         };
         static::getContainer()->get(MailSynchronizer::class)->sync($this->accounts[$who], $reader);
     }

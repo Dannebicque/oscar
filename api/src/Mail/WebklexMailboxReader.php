@@ -60,6 +60,29 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         return $moved === null ? null : (int) $moved->getUid();
     }
 
+    public function attachments(string $folder, int $uid): array
+    {
+        $out = [];
+        foreach ($this->message($folder, $uid)?->getAttachments() ?? [] as $a) {
+            $out[] = ['name' => MimeDecoder::decode((string) $a->getName()) ?: 'pièce-jointe', 'size' => (int) $a->getSize(), 'type' => (string) $a->getMimeType()];
+        }
+
+        return $out;
+    }
+
+    public function attachment(string $folder, int $uid, int $index): ?array
+    {
+        $list = array_values(iterator_to_array($this->message($folder, $uid)?->getAttachments() ?? [], false));
+        $a = $list[$index] ?? null;
+
+        return $a === null ? null : ['name' => MimeDecoder::decode((string) $a->getName()) ?: 'pièce-jointe', 'type' => (string) $a->getMimeType(), 'content' => (string) $a->getContent()];
+    }
+
+    private function message(string $folder, int $uid): ?Message
+    {
+        return $this->client()->getFolderByPath($folder)?->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(true)->get()->first();
+    }
+
     public function fetchBody(string $folder, int $uid): ?string
     {
         $box = $this->client()->getFolderByPath($folder);

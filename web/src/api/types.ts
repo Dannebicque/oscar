@@ -1,5 +1,5 @@
 import type {
-  AppNotification, CalEvent, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
+  AppNotification, Attachment, CalEvent, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
   MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
 } from '../domain/types'
 
@@ -33,6 +33,8 @@ export interface SendPayload {
   followHours?: number
   followSuggestedByAi?: boolean
   inReplyToMailId?: string
+  /** Pièces jointes (5 Mo au total), contenu en base64. */
+  attachments?: { name: string; type: string; content: string }[]
 }
 
 export interface MailApi {
@@ -43,6 +45,10 @@ export interface MailApi {
   hints(id: string): Promise<MailHints>
   /** Brouillon de réponse préparé par Oscar (jamais envoyé) ; `slots` : créneaux choisis, déjà formatés. */
   replyDraft(id: string, p: { tone: 'warm' | 'short'; slots: string[] }): Promise<string>
+  /** Pièces jointes d'un mail : métadonnées seulement, lues à la demande. */
+  attachments(id: string): Promise<Attachment[]>
+  /** Télécharge une pièce jointe (jamais affichée dans l'application). */
+  download(id: string, a: Attachment): Promise<void>
   markRead(id: string): Promise<void>
   /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
   move(id: string, folder: 'inbox' | 'archive' | 'trash'): Promise<void>

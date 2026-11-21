@@ -3,11 +3,11 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ToolbarButton, ToolbarRoot, ToolbarSeparator } from 'reka-ui'
 import { useRouter } from 'vue-router'
-import { session } from '../../api'
+import { api, session } from '../../api'
 import { collisionWith } from '../../domain/claim'
 import { clock } from '../../domain/clock'
 import { isoDay, addDays } from '../../domain/dates'
-import type { Mail } from '../../domain/types'
+import type { Attachment, Mail } from '../../domain/types'
 import { useFormat } from '../../composables/useFormat'
 import { SHORTCUT_EVENTS } from '../../composables/useShortcuts'
 import { useAgendaStore } from '../../stores/agenda'
@@ -48,7 +48,7 @@ const showDraft = ref(false)
 const showAvail = ref(false)
 const showCollision = ref(false)
 const dismissed = ref<Set<string>>(new Set())
-onMounted(() => { void mails.loadBody(props.mail.id); if (aiOn.value && !shared.value) void mails.loadHints(props.mail.id); else if (aiOn.value && shared.value) void mails.loadHints(props.mail.id) })
+onMounted(() => { void mails.loadBody(props.mail.id); void mails.loadAttachments(props.mail.id); if (aiOn.value && !shared.value) void mails.loadHints(props.mail.id); else if (aiOn.value && shared.value) void mails.loadHints(props.mail.id) })
 // « r » : répondre (raccourci Gmail), si les raccourcis sont actifs.
 const onReplyKey = () => reply(false)
 onMounted(() => window.addEventListener(SHORTCUT_EVENTS.reply, onReplyKey))
@@ -66,6 +66,9 @@ const showSuggestFollow = computed(
 const aiOn = computed(() => settings.s.aiMode !== 'off')
 
 const showMove = ref(false)
+async function download(a: Attachment) {
+  try { await api.mails.download(props.mail.id, a) } catch { ui.notify(t('mail.downloadFailed'), { tone: 'error' }) }
+}
 const moveTarget = ref<'inbox' | 'archive' | 'trash'>('archive')
 /** Archiver, corbeille ou classement : message parti d'ici, annulation possible depuis la notification. */
 async function relocate(folder: 'inbox' | 'archive' | 'trash') {
@@ -185,7 +188,9 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
           <p v-if="bodyLoading" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
           <p v-else-if="bodyFailed" class="error-text" role="alert">{{ t('mail.bodyError') }} <BaseButton :label="t('common.retry')" @click="mails.loadBody(mail.id)" /></p>
           <p v-else-if="mail.paragraphs.length === 0" class="muted">{{ t('mail.bodyEmpty') }}</p>
-          <p v-if="mail.attachments.length" class="cluster"><span v-for="a in mail.attachments" :key="a.name" class="chip"><BaseIcon name="paperclip" :size="14" />{{ a.name }} · {{ a.size }}</span></p>
+          <ul v-if="mail.attachments.length" class="cluster atts" :aria-label="t('mail.attachments')">
+            <li v-for="a in mail.attachments" :key="a.name + a.index"><button type="button" class="chip att" :aria-label="t('mail.download', { name: a.name })" @click="download(a)"><BaseIcon name="paperclip" :size="14" />{{ a.name }} · {{ a.size }}</button></li>
+          </ul>
         </div>
 
         <OscarSays v-if="aiOn && hints.availability && !dismissed.has('avail')" situation="availability" :params="{ who: mail.from.name.split(' ')[0], n: hints.availability.slots.length }" :level="3" suggestion>
@@ -256,6 +261,8 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 .body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
 .summary { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
 .sh { display: flex; align-items: center; gap: var(--space-2); color: var(--c-ai); }
+.atts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.att { cursor: pointer; min-height: var(--target); }
 .moves { border: 0; padding: 0; margin: 0; display: grid; gap: 2px; }
 .moves legend { font-weight: 700; margin-bottom: var(--space-2); }
 .check { display: flex; gap: var(--space-2); align-items: center; min-height: var(--target); }

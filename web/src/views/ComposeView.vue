@@ -49,6 +49,23 @@ const aiBusy = ref(false)
 const aiFailed = ref(false)
 const slotStarts = ref<string[]>(String(route.query.slots ?? '').split(',').filter(Boolean))
 const edited = ref(false)
+const MAX_BYTES = 5 * 1024 * 1024
+const files = ref<File[]>([])
+const fileInput = ref<HTMLInputElement | null>(null)
+const attachError = ref('')
+const totalBytes = computed(() => files.value.reduce((n, f) => n + f.size, 0))
+function pickFiles(e: Event) {
+  const input = e.target as HTMLInputElement
+  const added = [...(input.files ?? [])]
+  input.value = ''
+  attachError.value = ''
+  for (const f of added) {
+    if (totalBytes.value + f.size > MAX_BYTES) { attachError.value = t('compose.attachTooBig'); continue }
+    files.value = [...files.value, f]
+  }
+}
+const readBase64 = (f: File) => new Promise<string>((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] ?? ''); r.onerror = () => ko(r.error); r.readAsDataURL(f) })
+const sizeLabel = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} Ko` : `${(n / 1024 / 1024).toFixed(1)} Mo`)
 const quoteOn = ref(true)
 const original = computed(() => (route.query.reply ? mails.byId(String(route.query.reply)) : undefined))
 const originalSlots = computed(() => original.value?.hints.availability?.slots ?? [])
@@ -105,6 +122,7 @@ async function send() {
   try {
     const r = await mails.send({
       to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: quoteOn.value && original.value ? body.value + quote.value : body.value,
+      attachments: await Promise.all(files.value.map(async (f) => ({ name: f.name, type: f.type || 'application/octet-stream', content: await readBase64(f) }))),
       followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
     })
@@ -191,10 +209,16 @@ function saveDraft() {
       </fieldset>
       <div class="actions">
         <BaseButton variant="primary" type="submit" icon="send" :disabled="sending" :label="t('compose.send')" />
-        <BaseButton icon="paperclip" :label="t('compose.attach')" @click="ui.notify(t('compose.attach'), { tone: 'info' })" />
+        <BaseButton icon="paperclip" :label="t('compose.attach')" @click="fileInput?.click()" />
+        <input ref="fileInput" type="file" multiple class="sr-only" tabindex="-1" :aria-label="t('compose.attach')" @change="pickFiles" />
         <BaseButton :label="t('compose.saveDraft')" @click="saveDraft" />
         <BaseButton variant="ghost" :label="t('common.cancel')" @click="router.back()" />
       </div>
+      <section v-if="files.length || attachError" class="card pad-sm flat" :aria-label="t('compose.attached')">
+        <h2 class="ah">{{ t('compose.attached') }} · {{ sizeLabel(totalBytes) }}</h2>
+        <ul class="flist"><li v-for="(f, i) in files" :key="f.name + i"><span>{{ f.name }} · {{ sizeLabel(f.size) }}</span><BaseButton variant="ghost" icon="x" icon-only :label="t('compose.removeFile', { name: f.name })" @click="files = files.filter((_, n) => n !== i)" /></li></ul>
+        <p v-if="attachError" class="error-text" role="alert">{{ attachError }}</p>
+      </section>
       <p class="hint">{{ say('neverSend') }}</p>
     </aside>
   </form>
@@ -218,6 +242,9 @@ function saveDraft() {
 .slots ul { list-style: none; margin: var(--space-2) 0; padding: 0; display: grid; gap: var(--space-1); }
 .slots li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .free { font-size: var(--fs-sm); font-weight: 700; color: var(--c-success); white-space: nowrap; }
+.ah { font-size: var(--fs-md); }
+.flist { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-1); }
+.flist li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); overflow-wrap: anywhere; }
 .follow { display: grid; gap: var(--space-3); margin: 0; }
 .check { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

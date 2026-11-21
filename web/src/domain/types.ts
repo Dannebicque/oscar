@@ -52,6 +52,8 @@ export interface Person {
 export interface Attachment {
   name: string
   size: string
+  /** Position dans le message (téléchargement). */
+  index?: number
 }
 
 export type MailFolder = 'inbox' | 'sent' | 'drafts' | 'archive' | 'trash'

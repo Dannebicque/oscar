@@ -5,6 +5,8 @@ import { authEvents, session } from './session'
 import { ApiError, type Api, type SendPayload } from './types'
 
 /** Client HTTP : jeton porteur, erreurs lisibles, retour à la connexion sur 401. */
+export const humanSize = (n: number) => (n < 1024 ? `${n} o` : n < 1024 * 1024 ? `${Math.round(n / 1024)} Ko` : `${(n / 1024 / 1024).toFixed(1)} Mo`)
+
 export function createHttp(baseUrl: string) {
   const root = baseUrl.replace(/\/$/, '')
   return async function request<T>(method: string, path: string, body?: unknown, opts: { merge?: boolean; auth?: boolean } = {}): Promise<T> {
@@ -64,6 +66,7 @@ export function extractAddress(input: string): string | null {
 
 export function createHttpApi(baseUrl: string): Api {
   const req: Request = createHttp(baseUrl)
+  const root = baseUrl.replace(/\/$/, '')
   const accountsCache: { mail: MailAccount[] | null } = { mail: null }
 
   const mailAccounts = async () => (accountsCache.mail ??= await req<MailAccount[]>('GET', '/api/mail-accounts'))
@@ -87,6 +90,20 @@ export function createHttpApi(baseUrl: string): Api {
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
       async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
       async move(id, folder) { await req('POST', `/api/mails/${encodeURIComponent(id)}/move`, { folder: { inbox: 'INBOX', archive: 'Archive', trash: 'Trash' }[folder] }) },
+      async attachments(id) {
+        const r = await req<{ attachments: { name: string; size: number }[] }>('GET', `/api/mails/${encodeURIComponent(id)}/attachments`)
+        return r.attachments.map((a, index) => ({ name: a.name, size: humanSize(a.size), index }))
+      },
+      async download(id, a) {
+        const res = await fetch(`${root}/api/mails/${encodeURIComponent(id)}/attachments/${a.index ?? 0}`, { headers: { Authorization: `Bearer ${session.token}` } })
+        if (!res.ok) throw new ApiError(res.status, 'download')
+        const url = URL.createObjectURL(await res.blob())
+        const link = document.createElement('a')
+        link.href = url
+        link.download = a.name
+        link.click()
+        URL.revokeObjectURL(url)
+      },
       async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')

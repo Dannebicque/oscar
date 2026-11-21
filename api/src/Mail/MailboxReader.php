@@ -15,4 +15,10 @@ interface MailboxReader
      * (contenus actifs, pixels espions) ; l'affichage HTML isolé viendra plus tard (§3).
      */
     public function fetchBody(string $folder, int $uid): ?string;
+
+    /** @return list<array{name: string, size: int, type: string}> pièces jointes (métadonnées seulement) */
+    public function attachments(string $folder, int $uid): array;
+
+    /** @return ?array{name: string, type: string, content: string} contenu brut d'une pièce jointe, servi en téléchargement uniquement */
+    public function attachment(string $folder, int $uid, int $index): ?array;
 }

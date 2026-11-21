@@ -88,6 +88,7 @@ export default {
     teamOwnerNone: 'Personne ne l’a pris', teamTakenBy: 'Pris par {who}', teamHandledBy: 'Traité par {who}', teamAge: 'Depuis {n} h',
   },
   mail: {
+    attachments: 'Pièces jointes', download: 'Télécharger {name}', downloadFailed: 'Je n’ai pas pu télécharger la pièce jointe. Réessaie dans un instant.',
     moved: '« {subject} » : {folder}.', movedBack: 'Message remis dans la boîte de réception.', moveTo: 'Déplacer vers',
     thread: { title: 'Conversation', count: '{n} messages', me: 'Moi', show: 'Afficher', hide: 'Masquer', earlier: 'Message précédent' },
     expand: 'Développer les dossiers', collapse: 'Réduire',
@@ -140,6 +141,7 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
+    attached: 'Pièces jointes', removeFile: 'Retirer {name}', attachTooBig: 'Les pièces jointes dépassent 5 Mo. Retire-en une ou envoie un lien.',
     forwarded: '---------- Message transféré ----------\nDe : {who} · {date}',
     replyTo: 'Répondre à {who}', backToMail: 'Retour au mail', original: 'Message d’origine', receivedFrom: 'Mail reçu · {who} · {date}', quote: 'Citer le message d’origine dans ma réponse',
     ai: { prepared: 'Brouillon préparé par Oscar', edited: 'Brouillon modifié à la main. Régénère-le si tu veux repartir de zéro.', slots: 'Mes disponibilités', slotsHelp: '{n} créneau(x) proposé(s). Tu peux changer ta sélection, le brouillon suit.', free: 'Libre', toneLabel: 'Ton', tone: { warm: 'Cordial', short: 'Court' }, regenerate: 'Régénérer', busy: 'Je prépare le brouillon…', failed: 'Je n’ai pas pu préparer le brouillon. Écris-le à la main ou réessaie.' },

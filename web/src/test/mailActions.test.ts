@@ -38,4 +38,13 @@ describe('actions sur un mail (F-16)', () => {
     expect((wrapper.find('#subject').element as HTMLInputElement).value).toMatch(/^Tr : /)
     expect((wrapper.find('#body').element as HTMLTextAreaElement).value).toContain('Message transféré')
   })
+
+  it('les pièces jointes sont listées comme des boutons de téléchargement, jamais affichées', async () => {
+    const first = await mountApp({ template: '<div/>' })
+    const store = useMailsStore(first.pinia)
+    await store.load()
+    const { wrapper } = await mountApp(MailReader, '/mails/m4', { mail: { ...store.byId('m4')! } })
+    await flushPromises()
+    expect(wrapper.find('button[aria-label="Télécharger convention.pdf"]').exists()).toBe(true)
+  })
 })

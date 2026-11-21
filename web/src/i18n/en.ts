@@ -88,6 +88,7 @@ const en: typeof fr = {
     teamOwnerNone: 'Nobody has taken it', teamTakenBy: 'Taken by {who}', teamHandledBy: 'Handled by {who}', teamAge: 'For {n} h',
   },
   mail: {
+    attachments: 'Attachments', download: 'Download {name}', downloadFailed: 'I couldn’t download the attachment. Try again in a moment.',
     moved: '“{subject}”: {folder}.', movedBack: 'Message moved back to the inbox.', moveTo: 'Move to',
     thread: { title: 'Conversation', count: '{n} messages', me: 'Me', show: 'Show', hide: 'Hide', earlier: 'Earlier message' },
     expand: 'Expand folders', collapse: 'Collapse',
@@ -140,6 +141,7 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
+    attached: 'Attachments', removeFile: 'Remove {name}', attachTooBig: 'Attachments exceed 5 MB. Remove one or send a link.',
     forwarded: '---------- Forwarded message ----------\nFrom: {who} · {date}',
     replyTo: 'Reply to {who}', backToMail: 'Back to the mail', original: 'Original message', receivedFrom: 'Mail received · {who} · {date}', quote: 'Quote the original message in my reply',
     ai: { prepared: 'Draft prepared by Oscar', edited: 'Draft edited by hand. Regenerate it to start over.', slots: 'My availability', slotsHelp: '{n} slot(s) proposed. Change your selection and the draft follows.', free: 'Free', toneLabel: 'Tone', tone: { warm: 'Warm', short: 'Short' }, regenerate: 'Regenerate', busy: 'Preparing the draft…', failed: 'I couldn’t prepare the draft. Write it by hand or try again.' },
