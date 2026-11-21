@@ -128,6 +128,8 @@ export interface MailHints {
   event?: MailEventHint | null
   task?: MailTaskHint | null
   suggestFollow?: boolean
+  /** Résumé de l'IA : les phrases qui portent la demande (absent pour un message court). */
+  summary?: string | null
 }
 
 export interface Mail {

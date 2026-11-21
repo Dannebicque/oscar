@@ -35,7 +35,40 @@ final class HeuristicProvider implements AiProvider
         }
         $follow = !$availability && $task === null && preg_match(self::REQUEST, $text) === 1;
 
-        return new MailAnalysis($slots === [] ? null : $slots, $event, $task, $follow);
+        return new MailAnalysis($slots === [] ? null : $slots, $event, $task, $follow, $this->summary($text));
+    }
+
+    public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines): string
+    {
+        $first = explode(' ', trim($contact))[0] ?: $contact;
+        $list = $slotLines === [] ? '' : implode("\n", array_map(static fn (string $l) => '- '.$l, $slotLines));
+        if ($locale === 'en') {
+            return $tone === 'short'
+                ? "Hello {$first},\n\n".($list !== '' ? "Available:\n{$list}" : 'Got it, I will get back to you soon.')."\n\n{$me}"
+                : "Hello {$first},\n\n".($list !== '' ? "Here is when I am available:\n{$list}\n\nLet me know what suits you and I will confirm right away." : 'Thank you for your message. I am looking into it and will come back to you shortly.')."\n\nBest regards,\n{$me}";
+        }
+
+        return $tone === 'short'
+            ? "Bonjour {$first},\n\n".($list !== '' ? "Disponible :\n{$list}" : 'Bien reçu, je reviens vers toi vite.')."\n\n{$me}"
+            : "Bonjour {$first},\n\n".($list !== '' ? "Voici mes disponibilités :\n{$list}\n\nDis-moi ce qui te convient, je confirme aussitôt." : 'Merci pour ton message. Je regarde cela et je reviens vers toi rapidement.')."\n\nCordialement,\n{$me}";
+    }
+
+    /** Résumé extractif : les une ou deux phrases qui portent la demande, une date ou un chiffre. Rien pour un message court. */
+    private function summary(string $text): ?string
+    {
+        $skip = '/^(bonjour|bonsoir|salut|hello|cordialement|bien cordialement|bien à vous|merci d[\'’]avance|merci|bonne journée|à bientôt|best regards)\b/iu';
+        $keep = array_values(array_filter($this->sentences($text), static fn ($s) => preg_match($skip, $s) !== 1 || mb_strlen($s) > 60));
+        if (mb_strlen($text) < 160 || \count($keep) < 2) {
+            return null;
+        }
+        $score = static fn (string $s): int => (preg_match(self::REQUEST, $s) ? 3 : 0) + (preg_match(self::AVAILABILITY, $s) ? 3 : 0) + (preg_match('/\d|lundi|mardi|mercredi|jeudi|vendredi|avant|urgent/iu', $s) ? 2 : 0);
+        $ranked = $keep;
+        usort($ranked, static fn ($a, $b) => $score($b) <=> $score($a));
+        $top = \array_slice($ranked, 0, 2);
+        $ordered = array_values(array_filter($keep, static fn ($s) => \in_array($s, $top, true)));
+        $out = implode(' ', $ordered);
+
+        return mb_strlen($out) > 260 ? rtrim(mb_substr($out, 0, 257), " ,;.").'…' : $out;
     }
 
     public function draftRelance(string $contact, string $subject, string $me, string $locale): string

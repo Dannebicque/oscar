@@ -18,6 +18,7 @@ import { useTasksStore } from '../../stores/tasks'
 import { useUiStore } from '../../stores/ui'
 import RelanceDialog from '../suivis/RelanceDialog.vue'
 import Avatar from '../ui/Avatar.vue'
+import AiBadge from '../ui/AiBadge.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
 import OscarSays from '../ui/OscarSays.vue'
 import BaseButton from '../ui/BaseButton.vue'
@@ -49,7 +50,7 @@ const showCollision = ref(false)
 const dismissed = ref<Set<string>>(new Set())
 onMounted(() => { void mails.loadBody(props.mail.id); if (aiOn.value && !shared.value) void mails.loadHints(props.mail.id); else if (aiOn.value && shared.value) void mails.loadHints(props.mail.id) })
 // « r » : répondre (raccourci Gmail), si les raccourcis sont actifs.
-const onReplyKey = () => reply()
+const onReplyKey = () => reply(false)
 onMounted(() => window.addEventListener(SHORTCUT_EVENTS.reply, onReplyKey))
 onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.reply, onReplyKey))
 const bodyLoading = computed(() => mails.loadingBody.has(props.mail.id))
@@ -66,9 +67,9 @@ const aiOn = computed(() => settings.s.aiMode !== 'off')
 
 const stub = (key: string) => ui.notify(t('mail.actionDone', { action: t(`mail.${key}`), subject: props.mail.subject }), { tone: 'info' })
 
-function reply() {
+function reply(ai = false) {
   if (collision.value) { showCollision.value = true; return }
-  router.push({ name: 'compose', query: { reply: props.mail.id } })
+  router.push({ name: 'compose', query: { reply: props.mail.id, ...(ai === true ? { ai: '1' } : {}) } })
 }
 async function takeOverAndReply() {
   await mails.takeOver(props.mail.id)
@@ -111,10 +112,12 @@ function ignore(key: string) {
   dismissed.value.add(key)
   ui.notify(t('mail.ai.ignored'), { tone: 'info' })
 }
-function sendAvailability() {
+/** Créneaux choisis : Oscar prépare le brouillon dans l'écran de rédaction, rien ne part ici. */
+function prepareAvailability(slots: string[]) {
   showAvail.value = false
-  ui.notify(t('compose.sent', { to: props.mail.from.name }))
+  router.push({ name: 'compose', query: { reply: props.mail.id, ai: '1', slots: slots.join(',') } })
 }
+const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox')
 </script>
 
 <template>
@@ -132,6 +135,7 @@ function sendAvailability() {
 
       <ToolbarRoot class="toolbar" :aria-label="t('mail.reading')">
         <ToolbarButton as-child><BaseButton icon="reply" :label="t('mail.reply')" @click="reply" /></ToolbarButton>
+        <ToolbarButton v-if="canDraft" as-child><BaseButton variant="ai" icon="sparkles" :label="t('mail.ai.suggestReply')" @click="reply(true)" /></ToolbarButton>
         <ToolbarButton as-child><BaseButton icon="replyAll" :label="t('mail.replyAll')" @click="reply" /></ToolbarButton>
         <ToolbarButton as-child><BaseButton icon="forward" :label="t('mail.forward')" @click="stub('forward')" /></ToolbarButton>
         <ToolbarSeparator class="sep" />
@@ -157,6 +161,11 @@ function sendAvailability() {
         </OscarSays>
 
         <ThreadMessages :mail="mail" />
+
+        <section v-if="aiOn && hints.summary" class="summary" :aria-label="t('mail.ai.summary')">
+          <p class="sh"><BaseIcon name="sparkles" :size="16" /><strong>{{ t('mail.ai.summary') }}</strong><AiBadge /></p>
+          <p>{{ hints.summary }}</p>
+        </section>
 
         <div class="body">
           <p v-for="(p, i) in mail.paragraphs" :key="i">{{ p }}</p>
@@ -197,7 +206,7 @@ function sendAvailability() {
   </article>
 
   <RelanceDialog v-if="suivi" :open="showDraft" :queue="[suivi]" single @close="showDraft = false" />
-  <AvailabilityDialog :open="showAvail" :mail="mail" @close="showAvail = false" @send="sendAvailability" />
+  <AvailabilityDialog :open="showAvail" :mail="mail" @close="showAvail = false" @pick="prepareAvailability" />
 
   <BaseDialog :open="showCollision" :title="t('mail.claim.warnTitle', { who: collision ?? '' })" @close="showCollision = false">
     <p>{{ t('mail.claim.warnText', { who: collision ?? '' }) }}</p>
@@ -221,6 +230,8 @@ function sendAvailability() {
 .toolbar :deep(.btn) { min-height: 40px; }
 .sep { width: 1px; align-self: stretch; background: var(--c-border); margin: 4px var(--space-1); }
 .body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
+.summary { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
+.sh { display: flex; align-items: center; gap: var(--space-2); color: var(--c-ai); }
 .detected { display: grid; gap: var(--space-2); }
 .kick { font-size: var(--fs-sm); font-weight: 700; color: var(--c-ai); }
 .back { display: none; }

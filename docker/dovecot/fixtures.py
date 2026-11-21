@@ -38,6 +38,14 @@ AUTO_REPLY = mail(frm="Claire Petit <claire.petit@entreprise.fr>", to=f"David <d
 # Un mail sans réponse attendue, avec une demande de tâche et de date (extraction F-11).
 TASK_MAIL = mail(frm="Sophie Laurent <sophie.laurent@univ-reims.fr>", to=f"David <david@{DOMAIN}>", subject="Planning des soutenances",
                  body="Bonjour David,\n\nPeux-tu confirmer le nombre de participants avant mardi ? Préparation du jury jeudi à 10h.\n\nSophie", hours_ago=30)
+# Démonstration de l'IA : une demande de disponibilités (créneaux libres, brouillon de réponse, F-74) et un message long à résumer (F-64).
+AVAIL_MAIL = mail(frm="Claire Petit <claire.petit@entreprise.fr>", to=f"David <david@{DOMAIN}>", subject="Disponibilités pour la soutenance",
+                  body="Bonjour David,\n\nJ'espère que ta semaine se passe bien. Nous préparons la soutenance de M. Lemoine avec le jury. "
+                       "Peux-tu m'indiquer tes disponibilités la semaine du 30 novembre ? Il me faudrait deux créneaux d'une heure.\n\nMerci d'avance,\nClaire", hours_ago=3)
+LONG_MAIL = mail(frm="Direction des stages <stages@univ-reims.fr>", to=f"David <david@{DOMAIN}>", subject="Conventions de stage de janvier",
+                 body="Bonjour,\n\nLa campagne de conventions de stage de janvier démarre. Chaque responsable de formation doit valider les dossiers de ses étudiants. "
+                      "Peux-tu transmettre la liste des étudiants concernés avant vendredi ? Les conventions incomplètes seront renvoyées aux étudiants. "
+                      "Une réunion de point d'étape aura lieu jeudi à 14h en salle B12.\n\nCordialement,\nLa Direction des stages", hours_ago=8)
 # Alias contact@ : le MÊME message (même Message-ID) arrive chez les quatre membres. Une seule demande (F-44).
 ALIAS_ID = "<inscription-camille-1@gmail.com>"
 ALIAS = mail(frm="Camille Roux <camille.roux@gmail.com>", to=f"contact@{DOMAIN}", subject="Question d'inscription",
@@ -48,4 +56,5 @@ ALIAS_USERS = ["david", "claire", "marc", "lea"]
 # (utilisateur, dossier, message)
 PLAN = [
     ("david", "Sent", SENT), ("david", "INBOX", REPLY), ("david", "Sent", AUTO_SENT), ("david", "INBOX", AUTO_REPLY), ("david", "INBOX", TASK_MAIL),
+    ("david", "INBOX", AVAIL_MAIL), ("david", "INBOX", LONG_MAIL),
 ] + [(u, "INBOX", ALIAS) for u in ALIAS_USERS]

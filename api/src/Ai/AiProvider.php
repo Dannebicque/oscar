@@ -18,5 +18,12 @@ interface AiProvider
      */
     public function analyse(string $subject, string $body, \DateTimeImmutable $mailDate, array $busy): MailAnalysis;
 
+    /**
+     * Brouillon de réponse (jamais envoyé : l'utilisateur relit et clique). `$slotLines` : créneaux déjà choisis par l'utilisateur, déjà formatés.
+     *
+     * @param list<string> $slotLines
+     */
+    public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines): string;
+
     public function draftRelance(string $contact, string $subject, string $me, string $locale): string;
 }

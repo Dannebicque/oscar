@@ -85,6 +85,7 @@ export function createHttpApi(baseUrl: string): Api {
       async list() { return (await req<RawMail[]>('GET', '/api/mails')).map(toMail) },
       async body(id) { return (await req<{ paragraphs: string[] }>('GET', `/api/mails/${encodeURIComponent(id)}/body`)).paragraphs },
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
+      async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
       async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')

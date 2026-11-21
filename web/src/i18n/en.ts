@@ -113,6 +113,7 @@ const en: typeof fr = {
     createSuivi: 'Create a request', createSuiviDue: 'Request due date', suiviCreated: 'Request created for “{subject}”.',
     suiviPanel: 'Follow-up', agendaPanel: 'Calendar', todoPanel: 'To do', togglePanel: 'Show or hide the follow-up panel',
     ai: {
+      summary: 'Oscar’s summary', suggestReply: 'Suggested reply', availPickHelp: 'The first two free slots are ticked. Oscar prepares the draft, you review it in the editor.', availPrepare: 'Prepare the reply',
       availTitle: 'Availability request detected', availText: 'Oscar found {n} free one-hour slots the week of {date}. You pick which to offer, it drafts the reply, you review.',
       availTentative: 'Hold these slots as tentative in my calendar (off by default)', availAction: 'Reply with Oscar', detected: 'Detected in this mail',
       eventKicker: 'Event · “{quote}”', eventWhen: '{date}, {start} to {end} · in your {cal} calendar', eventAdd: 'Add to calendar', eventDone: 'Event added: “{title}”.',
@@ -138,6 +139,7 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
+    ai: { toneLabel: 'Tone', tone: { warm: 'Warm', short: 'Short' }, regenerate: 'Regenerate', busy: 'Preparing the draft…', failed: 'I couldn’t prepare the draft. Write it by hand or try again.' },
     subjectRequired: 'Enter the subject of the message.',
     removeRecipient: 'Remove {to}', noMatch: 'No contact found. Type a full address to add it.', badAddress: '“{text}” is not a valid address.',
     noAccount: 'No mail account is configured: your message was not sent. Add an account in Settings.', notSent: 'The message was not sent: the outgoing server isn’t answering or refuses it. Nothing was created and your text is still here. Try again in a moment.',

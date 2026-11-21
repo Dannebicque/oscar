@@ -61,9 +61,9 @@ final class HeuristicProviderTest extends TestCase
         $a = (new HeuristicProvider())->analyse('Urgent', $evil, $this->at('2026-11-19 09:00'), []);
         // La seule chose produite est une suggestion que l'utilisateur peut ignorer ; aucun effet de bord n'existe dans l'interface.
         self::assertNotNull($a->task);
-        self::assertStringNotContainsString('evil.example', json_encode($a->toArray()));
+        self::assertStringNotContainsString('evil.example', json_encode([$a->task, $a->event, $a->slots]), 'rien d’actionnable ne reprend le texte hostile (le résumé n’est qu’un texte affiché)');
         $methods = get_class_methods(\App\Ai\AiProvider::class);
-        self::assertSame(['name', 'analyse', 'draftRelance'], $methods, 'l’interface n’offre aucun moyen d’envoyer, supprimer ou déplacer');
+        self::assertSame(['name', 'analyse', 'draftReply', 'draftRelance'], $methods, 'l’interface n’offre aucun moyen d’envoyer, supprimer ou déplacer');
     }
 
     public function testRelanceDraftIsInTheUsersLanguage(): void
@@ -80,5 +80,26 @@ final class HeuristicProviderTest extends TestCase
         $slots = $f->find([['start' => $this->at('2026-11-20 14:00'), 'end' => $this->at('2026-11-20 16:30')]], $from, 3);
         self::assertSame('2026-11-23T09:00:00+01:00', $slots[0]['start'], 'vendredi : 14h-16h30 occupé et 16h chevauche ; ensuite lundi');
         self::assertCount(3, $slots);
+    }
+
+    public function testSummaryKeepsTheSentencesThatCarryTheRequest(): void
+    {
+        $body = "Bonjour David,\n\nJ'espère que ta semaine se passe bien. Nous préparons la soutenance de M. Lemoine. Peux-tu m'indiquer tes disponibilités la semaine du 30 novembre ? Il faudrait deux créneaux d'une heure.\n\nCordialement,\nClaire";
+        $a = (new HeuristicProvider())->analyse('Soutenance', $body, new \DateTimeImmutable('2026-11-20 09:00:00 Europe/Paris'), []);
+        self::assertNotNull($a->summary);
+        self::assertStringContainsString('disponibilités', (string) $a->summary);
+        self::assertStringNotContainsString('Cordialement', (string) $a->summary);
+        self::assertNull((new HeuristicProvider())->analyse('Ok', 'Merci, bien reçu.', new \DateTimeImmutable('2026-11-20'), [])->summary, 'un message court n’a pas de résumé');
+    }
+
+    public function testReplyDraftListsTheChosenSlotsAndAdaptsToTheTone(): void
+    {
+        $p = new HeuristicProvider();
+        $warm = $p->draftReply('Claire Petit', 'Soutenance', 'David', 'fr', 'warm', ['Lun. 30 nov., 10:00']);
+        self::assertStringContainsString('Bonjour Claire,', $warm);
+        self::assertStringContainsString('- Lun. 30 nov., 10:00', $warm);
+        self::assertStringContainsString('Cordialement', $warm);
+        self::assertStringNotContainsString('Cordialement', $p->draftReply('Claire Petit', 'S', 'David', 'fr', 'short', ['x']));
+        self::assertStringNotContainsString('vous', $p->draftReply('Claire', 'S', 'David', 'fr', 'warm', []), 'Oscar tutoie');
     }
 }

@@ -2,7 +2,7 @@
 import BaseIcon from './BaseIcon.vue'
 
 withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'ai'
   icon?: string
   /** Bouton à icône seule : `label` devient son nom accessible. */
   iconOnly?: boolean

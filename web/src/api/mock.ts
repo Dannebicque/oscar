@@ -42,8 +42,8 @@ export function createMockApi(now: Date = new Date()): Api {
   const claim = (state: 'new' | 'taken' | 'handled', by: string | null = null) => ({ state, by })
 
   let mails: Mail[] = [
-    m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
-    m('m5', { from: { name: 'Claire Roux', address: 'claire.roux@iut-troyes.fr' }, subject: 'Disponibilités pour la réunion pédagogique', at: hoursAgo(5), unread: true, paragraphs: ['Bonjour,', 'Pourrais-tu m’indiquer tes disponibilités la semaine du 30 novembre pour une réunion d’une heure ?', 'Merci !', 'Claire'], hints: { availability: { slots: [0, 1, 2, 3, 4].map((i) => ({ start: iso(10 + i, 9 + i), end: iso(10 + i, 10 + i) })) } } }),
+    m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
+    m('m5', { from: { name: 'Claire Roux', address: 'claire.roux@iut-troyes.fr' }, subject: 'Disponibilités pour la réunion pédagogique', at: hoursAgo(5), unread: true, paragraphs: ['Bonjour,', 'Pourrais-tu m’indiquer tes disponibilités la semaine du 30 novembre pour une réunion d’une heure ?', 'Merci !', 'Claire'], hints: { summary: 'Claire demande tes disponibilités la semaine du 30 novembre pour une réunion d’une heure.', availability: { slots: [0, 1, 2, 3, 4].map((i) => ({ start: iso(10 + i, 9 + i), end: iso(10 + i, 10 + i) })) } } }),
     m('m2', { folder: 'sent', from: { name: ME, address: 'david@iut-troyes.fr' }, to: [{ name: 'Marc Dubois', address: 'marc.dubois@imprimerie.fr' }], subject: 'Devis des affiches', at: hoursAgo(52), suivi: 's2', paragraphs: ['Bonjour Marc,', 'Pourriez-vous m’envoyer le devis pour 40 affiches A2 ?', 'Merci, David'] }),
     m('m3', { from: { name: 'Scolarité', address: 'scolarite@iut-troyes.fr' }, subject: 'Salle B104 pour le jury', at: hoursAgo(96), suivi: 's3', paragraphs: ['Bonjour, la salle B104 est disponible sous réserve de confirmation avant vendredi.'] }),
     m('m4', { folder: 'sent', from: { name: ME, address: 'david@iut-troyes.fr' }, to: [{ name: 'Claire Petit', address: 'claire.petit@entreprise.fr' }], subject: 'Convention de stage', at: hoursAgo(20), suivi: 's4', paragraphs: ['Bonjour Claire, ci-joint la convention à signer.'], attachments: [{ name: 'convention.pdf', size: '184 Ko' }] }),
@@ -122,6 +122,13 @@ export function createMockApi(now: Date = new Date()): Api {
       async list() { return clone(mails) },
       async body(id) { return clone(findMail(id)?.paragraphs ?? []) },
       async hints(id) { return clone(findMail(id)?.hints ?? {}) },
+      async replyDraft(id, p) {
+        const first = (findMail(id)?.from.name ?? '').split(' ')[0]
+        const list = p.slots.map((l) => `- ${l}`).join('\n')
+        return p.tone === 'short'
+          ? `Bonjour ${first},\n\n${list ? `Disponible :\n${list}` : 'Bien reçu, je reviens vers toi vite.'}\n\nDavid`
+          : `Bonjour ${first},\n\n${list ? `Voici mes disponibilités :\n${list}\n\nDis-moi ce qui te convient, je confirme aussitôt.` : 'Merci pour ton message. Je regarde cela et je reviens vers toi rapidement.'}\n\nCordialement,\nDavid`
+      },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
       async claim(mailId, _suiviId, action) {
         const m = findMail(mailId)

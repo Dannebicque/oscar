@@ -41,6 +41,8 @@ export interface MailApi {
   body(id: string): Promise<string[]>
   /** Suggestions de l'IA pour ce mail (tâche, événement, créneaux) ; vide si l'IA est coupée. */
   hints(id: string): Promise<MailHints>
+  /** Brouillon de réponse préparé par Oscar (jamais envoyé) ; `slots` : créneaux choisis, déjà formatés. */
+  replyDraft(id: string, p: { tone: 'warm' | 'short'; slots: string[] }): Promise<string>
   markRead(id: string): Promise<void>
   /** Boîte partagée : prise en charge. Lève ApiError 409 (« Claire s'en occupe ») si quelqu'un d'autre l'a prise. */
   claim(mailId: string, suiviId: string | null, action: ClaimAction): Promise<void>

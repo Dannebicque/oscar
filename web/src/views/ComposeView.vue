@@ -2,7 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { ApiError } from '../api'
+import { ApiError, api } from '../api'
+import OscarSays from '../components/ui/OscarSays.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import CheckboxField from '../components/ui/CheckboxField.vue'
@@ -40,6 +41,13 @@ const aiPicked = ref(false)
 const delayHours = ref<number>(settings.s.relanceHours)
 const submitted = ref(false)
 const sending = ref(false)
+/** Brouillon préparé par Oscar : ton et créneaux modifiables, régénérable ; rien ne part sans clic. */
+const aiDraft = ref(false)
+const aiTone = ref<'warm' | 'short'>('warm')
+const aiBusy = ref(false)
+const aiFailed = ref(false)
+const slotStarts = computed(() => String(route.query.slots ?? '').split(',').filter(Boolean))
+const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ value: v, label: t(`compose.ai.tone.${v}`) })))
 
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
@@ -48,6 +56,7 @@ onMounted(async () => {
     to.value = [original.from.address]
     subject.value = /^re\s*:/i.test(original.subject) ? original.subject : `Re : ${original.subject}`
     body.value = `\n\n${t('compose.signature')}\n\n> ${original.paragraphs.join('\n> ')}`
+    if (route.query.ai && settings.s.aiMode !== 'off') { aiDraft.value = true; follow.value = true; aiPicked.value = true; await regenerate() }
   } else {
     // Oscar précoche « Suivre la réponse » quand le message appelle visiblement une réponse : modifiable.
     follow.value = true
@@ -55,6 +64,19 @@ onMounted(async () => {
   }
 })
 
+async function regenerate() {
+  const original = route.query.reply ? mails.byId(String(route.query.reply)) : undefined
+  if (!original) return
+  aiBusy.value = true
+  aiFailed.value = false
+  try {
+    const known = original.hints.availability?.slots ?? []
+    const lines = slotStarts.value.map((st) => known.find((x) => x.start === st)).filter((x): x is { start: string; end: string } => !!x)
+      .map((x) => `${fmt.dateLong(x.start)}, ${fmt.time(x.start)} – ${fmt.time(x.end)}`)
+    const draft = await api.mails.replyDraft(original.id, { tone: aiTone.value, slots: lines })
+    body.value = `${draft}\n\n> ${original.paragraphs.join('\n> ')}`
+  } catch { aiFailed.value = true } finally { aiBusy.value = false }
+}
 const dueDate = computed(() => isoDay(addDays(clock.now(), Math.ceil(delayHours.value / 24))))
 const invalid = computed(() => submitted.value && (!subject.value.trim() || to.value.length === 0))
 const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.name ?? to.value[0] : '…'))
@@ -102,6 +124,16 @@ function saveDraft() {
       </template>
       <TextField id="subject" v-model="subject" :label="t('compose.subject')" required :error="submitted && !subject.trim() ? t('compose.subjectRequired') : ''" />
       <p v-if="invalid" class="error-text" role="alert">{{ t('compose.required') }}</p>
+      <OscarSays v-if="aiDraft" situation="draftReady" suggestion :level="3">
+        <template #more>
+          <p v-if="aiFailed" class="error-text" role="alert">{{ t('compose.ai.failed') }}</p>
+          <p v-else-if="aiBusy" class="muted" role="status">{{ t('compose.ai.busy') }}</p>
+        </template>
+        <template #actions>
+          <div class="tonebox"><SelectField id="ai-tone" v-model="aiTone" :label="t('compose.ai.toneLabel')" :options="toneOptions" /></div>
+          <BaseButton icon="refresh" :label="t('compose.ai.regenerate')" :disabled="aiBusy" @click="regenerate" />
+        </template>
+      </OscarSays>
       <TextareaField id="body" v-model="body" :label="t('compose.body')" :rows="14" />
     </div>
 
@@ -130,6 +162,7 @@ function saveDraft() {
 .form { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 1000px) { .form { grid-template-columns: minmax(0, 1fr) 340px; } .side { position: sticky; top: 0; } }
 .cc { justify-self: start; }
+.tonebox { min-width: 160px; }
 .follow { display: grid; gap: var(--space-3); margin: 0; }
 .check { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

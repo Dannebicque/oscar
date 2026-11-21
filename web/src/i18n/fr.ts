@@ -113,6 +113,7 @@ export default {
     createSuivi: 'Créer une demande', createSuiviDue: 'Échéance de la demande', suiviCreated: 'Demande créée pour « {subject} ».',
     suiviPanel: 'Suivi', agendaPanel: 'Agenda', todoPanel: 'À faire', togglePanel: 'Afficher ou masquer le panneau de suivi',
     ai: {
+      summary: 'Résumé d’Oscar', suggestReply: 'Réponse suggérée', availPickHelp: 'Les deux premiers créneaux libres sont cochés. Oscar prépare le brouillon, tu le relis dans l’éditeur.', availPrepare: 'Préparer la réponse',
       availTitle: 'Demande de disponibilités détectée', availText: 'Oscar a repéré {n} créneaux libres d’une heure la semaine du {date}. Tu choisis ceux à proposer, il rédige la réponse, tu relis.',
       availTentative: 'Poser ces créneaux en provisoire dans mon agenda (décoché par défaut)', availAction: 'Répondre avec Oscar', detected: 'Détecté dans ce mail',
       eventKicker: 'Événement · « {quote} »', eventWhen: '{date}, {start} à {end} · dans ton agenda {cal}', eventAdd: 'Ajouter à l’agenda', eventDone: 'Événement ajouté : « {title} ».',
@@ -138,6 +139,7 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
+    ai: { toneLabel: 'Ton', tone: { warm: 'Cordial', short: 'Court' }, regenerate: 'Régénérer', busy: 'Je prépare le brouillon…', failed: 'Je n’ai pas pu préparer le brouillon. Écris-le à la main ou réessaie.' },
     subjectRequired: 'Indique l’objet du message.',
     removeRecipient: 'Retirer {to}', noMatch: 'Aucun contact trouvé. Tape une adresse complète pour l’ajouter.', badAddress: '« {text} » n’est pas une adresse valide.',
     noAccount: 'Aucun compte de messagerie n’est configuré : ton message n’est pas parti. Ajoute un compte dans Réglages.', notSent: 'Le message n’est pas parti : le serveur d’envoi ne répond pas ou refuse. Rien n’a été créé, ton texte est toujours là. Réessaie dans un instant.',

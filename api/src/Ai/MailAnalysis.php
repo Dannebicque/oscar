@@ -15,12 +15,13 @@ final readonly class MailAnalysis
         public ?array $event = null,
         public ?array $task = null,
         public bool $suggestFollow = false,
+        public ?string $summary = null,
     ) {
     }
 
     public function isEmpty(): bool
     {
-        return $this->slots === null && $this->event === null && $this->task === null && !$this->suggestFollow;
+        return $this->slots === null && $this->event === null && $this->task === null && !$this->suggestFollow && $this->summary === null;
     }
 
     /** @return array<string, mixed> forme attendue par le front (`hints`) */
@@ -28,7 +29,7 @@ final readonly class MailAnalysis
     {
         return [
             'availability' => $this->slots === null ? null : ['slots' => $this->slots],
-            'event' => $this->event, 'task' => $this->task, 'suggestFollow' => $this->suggestFollow,
+            'event' => $this->event, 'task' => $this->task, 'suggestFollow' => $this->suggestFollow, 'summary' => $this->summary,
         ];
     }
 }

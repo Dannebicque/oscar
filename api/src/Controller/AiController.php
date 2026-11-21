@@ -13,6 +13,7 @@ use App\Mail\MailboxReaderFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -20,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 /** Suggestions de l'IA : elle propose et prépare, elle ne décide ni n'envoie (§5). */
 final class AiController extends AbstractController
 {
-    private const NONE = ['availability' => null, 'event' => null, 'task' => null, 'suggestFollow' => false];
+    private const NONE = ['availability' => null, 'event' => null, 'task' => null, 'suggestFollow' => false, 'summary' => null];
 
     public function __construct(private readonly EntityManagerInterface $em, private readonly AiProviderRegistry $registry, private readonly MailboxReaderFactory $factory)
     {
@@ -55,7 +56,7 @@ final class AiController extends AbstractController
         $a = $provider->analyse($mail->getSubject(), $body, $mail->getDate()->setTimezone(new \DateTimeZone((string) $settings['timezone'])), $busy);
         $out = $a->toArray();
         if (!$settings['aiSuggestTasks']) {
-            $out['task'] = $out['event'] = $out['availability'] = null;
+            $out['task'] = $out['event'] = $out['availability'] = $out['summary'] = null;
         }
         if (!$settings['aiSuggestFollow']) {
             $out['suggestFollow'] = false;
@@ -64,6 +65,29 @@ final class AiController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse($out);
+    }
+
+    /** Brouillon de réponse à un mail : l'utilisateur choisit le ton et les créneaux, relit, puis envoie lui-même. */
+    #[Route('/api/mails/{id}/reply-draft', methods: ['POST'])]
+    public function replyDraft(string $id, Request $request, #[CurrentUser] User $user): JsonResponse
+    {
+        $mail = $this->em->find(Mail::class, $id);
+        if ($mail === null || $mail->getOwner()?->getId() !== $user->getId()) {
+            return new JsonResponse(['title' => 'Mail inconnu'], Response::HTTP_NOT_FOUND);
+        }
+        $settings = $this->settings($user);
+        $provider = $this->registry->for((string) $settings['aiMode']);
+        if ($provider === null || !$mail->getAccount()->isAiAllowed() || ($mail->getSharedMailbox() !== null && !$mail->getSharedMailbox()->isAiEnabled())) {
+            return new JsonResponse(['title' => 'Le brouillon par l’IA est désactivé pour cette boîte.'], Response::HTTP_FORBIDDEN);
+        }
+        $in = json_decode($request->getContent(), true) ?: [];
+        $tone = ($in['tone'] ?? 'warm') === 'short' ? 'short' : 'warm';
+        $lines = array_values(array_filter(array_map(static fn ($l) => \is_string($l) ? mb_substr(trim($l), 0, 120) : '', (array) ($in['slots'] ?? [])), static fn ($l) => $l !== ''));
+        $body = $provider->draftReply($mail->getFromName() ?: $mail->getFromAddress(), $mail->getSubject(), $user->getDisplayName(), (string) $settings['locale'], $tone, \array_slice($lines, 0, 8));
+        $this->em->persist((new AiCall($provider->name(), 'reply-draft', 'mail '.$mail->getId(), ['chars' => mb_strlen($body), 'slots' => \count($lines)]))->setOwner($user));
+        $this->em->flush();
+
+        return new JsonResponse(['body' => $body, 'ai' => true]);
     }
 
     #[Route('/api/suivis/{id}/relance-draft', methods: ['POST'])]

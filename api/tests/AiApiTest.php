@@ -41,13 +41,26 @@ final class AiApiTest extends ApiTestCase
         // FakeReaderFactory renvoie « Corps simulé » : on vérifie le circuit complet, pas l'extraction (testée à part).
         [$st, $h] = $this->call('GET', '/api/mails/'.$this->mail->getId().'/hints', $this->token);
         self::assertSame(200, $st);
-        self::assertSame(['availability', 'event', 'task', 'suggestFollow'], array_keys($h));
+        self::assertSame(['availability', 'event', 'task', 'suggestFollow', 'summary'], array_keys($h));
         $calls = $this->em->getRepository(AiCall::class)->findAll();
         self::assertCount(1, $calls);
         self::assertSame('mail-hints', $calls[0]->getPurpose());
         self::assertStringNotContainsString('Corps simulé', $calls[0]->getInputSummary(), 'le journal ne contient jamais le contenu du mail');
         [, $log] = $this->call('GET', '/api/ai-calls', $this->token);
         self::assertSame('spy', $log[0]['provider']);
+    }
+
+    public function testReplyDraftIsPreparedNeverSentAndJournaledWithoutContent(): void
+    {
+        [$st, $d] = $this->call('POST', '/api/mails/'.$this->mail->getId().'/reply-draft', $this->token, ['tone' => 'short', 'slots' => ['Lun. 30 nov., 10:00 – 11:00']]);
+        self::assertSame(200, $st);
+        self::assertStringContainsString('- Lun. 30 nov., 10:00 – 11:00', $d['body']);
+        self::assertTrue($d['ai']);
+        $call = array_values(array_filter($this->em->getRepository(AiCall::class)->findAll(), static fn ($c) => $c->getPurpose() === 'reply-draft'))[0];
+        self::assertStringNotContainsString('Lun.', $call->getInputSummary());
+        $this->setting(['aiMode' => 'off']);
+        [$st] = $this->call('POST', '/api/mails/'.$this->mail->getId().'/reply-draft', $this->token, []);
+        self::assertSame(403, $st, 'IA coupée : aucun brouillon');
     }
 
     public function testNothingIsReadWhenAiIsOffExternalOrForbiddenOnTheMailbox(): void
@@ -73,7 +86,7 @@ final class AiApiTest extends ApiTestCase
         $this->setting(['aiSuggestTasks' => false, 'aiSuggestFollow' => false]);
         $spy = static::getContainer()->get(SpyAiProvider::class);
         [, $h] = $this->call('GET', '/api/mails/'.$this->mail->getId().'/hints', $this->token);
-        self::assertSame(['availability' => null, 'event' => null, 'task' => null, 'suggestFollow' => false], $h);
+        self::assertSame(['availability' => null, 'event' => null, 'task' => null, 'suggestFollow' => false, 'summary' => null], $h);
         self::assertSame([], $spy->calls);
     }
 

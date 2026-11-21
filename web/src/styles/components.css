@@ -72,6 +72,7 @@
   .btn.icon { padding: 0; }
   .btn.primary { background: var(--c-primary); border-color: var(--c-primary); color: var(--c-on-primary); }
   .btn.primary:hover:not(:disabled) { background: var(--c-primary-hover); border-color: var(--c-primary-hover); }
+  .btn.ai { background: var(--c-ai-soft); border-color: var(--c-ai); color: var(--c-ai); }
   .btn.ghost { background: transparent; border-color: transparent; }
   .btn.ghost:hover:not(:disabled) { background: var(--c-surface-2); }
   .btn.danger { color: var(--c-danger); border-color: var(--c-danger); }
