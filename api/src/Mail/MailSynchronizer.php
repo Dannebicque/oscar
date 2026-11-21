@@ -56,6 +56,24 @@ final class MailSynchronizer
         return ['fetched' => $fetched, 'replies' => $this->markReplies($account->getOwner())];
     }
 
+    /**
+     * Enregistre des en-têtes d'un dossier personnel (sous-dossiers) : pas de routage ni de règles, ce sont des messages déjà classés.
+     *
+     * @param list<MailHeader> $headers
+     */
+    public function import(MailAccount $account, array $headers): int
+    {
+        $n = 0;
+        foreach ($headers as $header) {
+            $this->em->persist(Mail::fromHeader($account, $header));
+            ++$n;
+        }
+        $this->em->flush();
+        $this->markReplies($account->getOwner());
+
+        return $n;
+    }
+
     /** Règles de création automatique (F-66) : un expéditeur ou un domaine suivi d'office, jamais pour un message automatique ni déjà suivi. */
     private function applyRules(User $owner, Mail $mail): void
     {

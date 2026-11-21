@@ -10,11 +10,15 @@ import BaseIcon from '../components/ui/BaseIcon.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import ErrorState from '../components/ui/ErrorState.vue'
 import { SHORTCUT_EVENTS } from '../composables/useShortcuts'
-import type { MailFolder } from '../domain/types'
+import type { CustomFolder, MailFolder, MoveTarget } from '../domain/types'
+import { customOf, folderTree, isCustom, pathOf, prettyPath } from '../domain/folders'
+import FolderDialog from '../components/mail/FolderDialog.vue'
+import MoveDialog from '../components/mail/MoveDialog.vue'
 import { useAccountsStore } from '../stores/accounts'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
 import { useUiStore } from '../stores/ui'
+import BaseDialog from '../components/ui/BaseDialog.vue'
 import ConfirmTrashDialog from '../components/mail/ConfirmTrashDialog.vue'
 import { useSuivisStore } from '../stores/suivis'
 
@@ -26,11 +30,11 @@ const mails = useMailsStore()
 const suivis = useSuivisStore()
 const accounts = useAccountsStore()
 
-type Box = { mailbox: string; folder: MailFolder | 'suivis' | 'scheduled' }
+type Box = { mailbox: string; folder: MailFolder | CustomFolder | 'suivis' | 'scheduled' }
 const box = ref<Box>({ mailbox: 'personal', folder: 'inbox' })
 const compact = ref(false)
 const listRef = ref<InstanceType<typeof MailList> | null>(null)
-onMounted(() => Promise.all([mails.load(), suivis.load(), accounts.load(), mails.loadScheduled()]))
+onMounted(() => Promise.all([mails.load(), suivis.load(), accounts.load(), mails.loadScheduled(), mails.loadFolders()]))
 
 const FOLDERS: MailFolder[] = ['inbox', 'sent', 'drafts', 'archive', 'trash']
 const ICON: Record<MailFolder, string> = { inbox: 'inbox', sent: 'send', drafts: 'draft', archive: 'archive', trash: 'trash' }
@@ -42,7 +46,33 @@ const list = computed(() => {
 const selected = computed(() => mails.byId(props.id ?? '') ?? null)
 const sharedBox = computed(() => box.value.mailbox !== 'personal')
 const currentShared = computed(() => accounts.shared.find((b) => b.slug === box.value.mailbox))
-const folderTitle = computed(() => (box.value.mailbox !== 'personal' ? `${box.value.mailbox}@` : t(`mail.folder.${box.value.folder}`)))
+const folderTitle = computed(() => (box.value.mailbox !== 'personal' ? `${box.value.mailbox}@` : isCustom(box.value.folder) ? prettyPath(pathOf(box.value.folder)) : t(`mail.folder.${box.value.folder}`)))
+/** Dossiers personnels du serveur (sous-dossiers compris) et leur gestion. */
+const myFolders = computed(() => folderTree(mails.folders))
+const customBox = computed(() => (box.value.mailbox === 'personal' && isCustom(box.value.folder) ? pathOf(box.value.folder) : null))
+const dlg = ref<{ mode: 'create' | 'rename'; path?: string; parent?: string } | null>(null)
+const askDelete = ref(false)
+async function openCustom(path: string) {
+  pick('personal', customOf(path))
+  await mails.openFolder(path)
+}
+/** Après une création ou un renommage, on se place dans le dossier concerné. */
+function folderDone(path: string) {
+  dlg.value = null
+  box.value = { mailbox: 'personal', folder: customOf(path) }
+}
+async function deleteFolder() {
+  const path = customBox.value
+  askDelete.value = false
+  if (!path) return
+  try {
+    await mails.removeFolder(path)
+    ui.notify(t('folders.deleted', { name: prettyPath(path) }))
+    box.value = { mailbox: 'personal', folder: 'inbox' }
+  } catch (e) {
+    ui.notify(e instanceof Error && e.message ? e.message : t('common.actionFailed'), { tone: 'error' })
+  }
+}
 
 // Un lien direct vers un mail (depuis Suivis ou l'accueil) place le panneau sur la bonne boîte.
 watch(() => [props.id, mails.items.length], () => {
@@ -64,8 +94,15 @@ const ui = useUiStore()
 const settings = useSettingsStore()
 const trashAsk = ref<string[] | null>(null)
 const trashWithSuivi = computed(() => (trashAsk.value ?? []).filter((i) => mails.byId(i)?.suivi).length)
-function bulk(action: 'archive' | 'trash' | 'inbox', ids: string[]) {
+const moveAsk = ref<string[] | null>(null)
+function confirmBulkMove(target: MoveTarget) {
+  const ids = moveAsk.value ?? []
+  moveAsk.value = null
+  void runBulk(target, ids)
+}
+function bulk(action: 'archive' | 'trash' | 'inbox' | 'move', ids: string[]) {
   if (!ids.length) return
+  if (action === 'move') { moveAsk.value = ids; return }
   if (action === 'trash' && settings.s.confirmDelete) { trashAsk.value = ids; return }
   void runBulk(action, ids)
 }
@@ -75,14 +112,14 @@ function confirmBulkTrash(dontAsk: boolean) {
   if (dontAsk) settings.s.confirmDelete = false
   void runBulk('trash', ids)
 }
-async function runBulk(action: 'archive' | 'trash' | 'inbox', ids: string[]) {
+async function runBulk(action: MoveTarget, ids: string[]) {
   const results = await Promise.allSettled(ids.map((i) => mails.moveTo(i, action)))
   const undos = results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []))
   const failed = results.length - undos.length
   listRef.value?.clearSelection()
   if (props.id && ids.includes(props.id)) void router.push({ name: 'mails' })
   if (undos.length) {
-    ui.notify(t('mail.bulk.moved', { n: undos.length, folder: t(`mail.folder.${action}`) }, undos.length), {
+    ui.notify(t('mail.bulk.moved', { n: undos.length, folder: isCustom(action) ? prettyPath(pathOf(action)) : t(`mail.folder.${action}`) }, undos.length), {
       undo: async () => { await Promise.allSettled(undos.map((u) => u())); ui.notify(t('mail.movedBack')) },
     })
   }
@@ -137,6 +174,15 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
             </button>
           </li>
         </ul>
+        <div class="fh"><h2 class="sec lbl">{{ t('folders.mine') }}</h2><button type="button" class="fadd" :aria-label="t('folders.newTitle')" :title="t('folders.newTitle')" @click="dlg = { mode: 'create' }"><BaseIcon name="plus" :size="16" /></button></div>
+        <ul v-if="myFolders.length" class="ftree">
+          <li v-for="f in myFolders" :key="f.path">
+            <button type="button" class="fbtn" :style="{ paddingInlineStart: `calc(var(--space-3) + ${f.depth * 14}px)` }" :aria-current="box.mailbox === 'personal' && box.folder === f.target ? 'true' : undefined" :aria-label="compact ? prettyPath(f.path, f.delimiter) : undefined" :title="prettyPath(f.path, f.delimiter)" @click="openCustom(f.path)">
+              <BaseIcon name="folder" :size="18" /><span class="lbl">{{ f.name }}</span><span v-if="f.count" class="n">{{ f.count }}</span>
+            </button>
+          </li>
+        </ul>
+        <p v-else class="muted sec lbl fnone">{{ t('folders.noneYet') }}</p>
         <template v-if="accounts.shared.length">
           <h2 class="sec lbl">{{ t('mail.shared') }}</h2>
           <ul>
@@ -151,7 +197,7 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
       </nav>
 
       <div class="mid">
-        <header class="mid-head"><h1>{{ folderTitle }}</h1><p v-if="sharedBox && currentShared" class="hint">{{ t('mail.sharedMembers', { names: currentShared.members.map((m) => m.displayName).join(', ') }) }}</p></header>
+        <header class="mid-head"><h1>{{ folderTitle }}</h1><span v-if="customBox" class="fact"><BaseButton variant="ghost" icon="plus" icon-only :title="t('folders.newSub')" :label="t('folders.newSub')" @click="dlg = { mode: 'create', parent: customBox }" /><BaseButton variant="ghost" icon="edit" icon-only :title="t('folders.renameTitle')" :label="t('folders.renameTitle')" @click="dlg = { mode: 'rename', path: customBox }" /><BaseButton variant="ghost" icon="trash" icon-only :title="t('folders.delete')" :label="t('folders.delete')" @click="askDelete = true" /></span><p v-if="sharedBox && currentShared" class="hint">{{ t('mail.sharedMembers', { names: currentShared.members.map((m) => m.displayName).join(', ') }) }}</p></header>
         <p v-if="mails.loading" class="muted pad">{{ t('common.loading') }}</p>
         <ScheduledList v-else-if="box.folder === 'scheduled'" />
         <MailList v-else ref="listRef" :mails="list" :selected-id="id ?? null" :shared="sharedBox" :folder="box.folder" @select="select" @bulk="bulk" />
@@ -163,6 +209,12 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
       </div>
     </template>
   </div>
+  <FolderDialog :open="dlg !== null" :mode="dlg?.mode ?? 'create'" :path="dlg?.path" :parent="dlg?.parent" @close="dlg = null" @done="folderDone" />
+  <BaseDialog :open="askDelete" :title="t('folders.deleteTitle', { name: customBox ? prettyPath(customBox) : '' })" @close="askDelete = false">
+    <p>{{ t('folders.deleteText') }}</p>
+    <template #footer><BaseButton variant="danger" icon="trash" :label="t('folders.delete')" @click="deleteFolder" /><BaseButton :label="t('common.cancel')" @click="askDelete = false" /></template>
+  </BaseDialog>
+  <MoveDialog :open="moveAsk !== null" :count="moveAsk?.length ?? 0" @close="moveAsk = null" @pick="confirmBulkMove" />
   <ConfirmTrashDialog :open="trashAsk !== null" :count="trashAsk?.length ?? 0" :with-suivi="trashWithSuivi" @confirm="confirmBulkTrash" @close="trashAsk = null" />
 </template>
 
@@ -171,6 +223,14 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
 .mail.compact { grid-template-columns: 64px minmax(300px, 380px) minmax(0, 1fr); }
 .err { grid-column: 1 / -1; margin: var(--space-5); }
 .folders { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); background: var(--c-surface); border-right: var(--bw) solid var(--c-border); min-height: 0; overflow-y: auto; }
+.fh { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.fh h2 { margin: 0; }
+.compact .fh { justify-content: center; }
+.fadd { min-width: var(--target); min-height: var(--target); display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--radius-sm); color: var(--c-text); }
+.fadd:hover { background: var(--c-surface-2); }
+.ftree { display: grid; gap: 2px; }
+.fnone { margin: 0; }
+.fact { display: inline-flex; gap: var(--space-1); }
 .compose { width: 100%; margin-bottom: var(--space-2); }
 .folders ul { display: grid; gap: 2px; }
 .fbtn { width: 100%; display: flex; align-items: center; gap: var(--space-3); min-height: var(--target); padding: 0 var(--space-3); border: var(--bw) solid transparent; background: transparent; border-radius: var(--radius-sm); text-align: left; color: var(--c-text); }

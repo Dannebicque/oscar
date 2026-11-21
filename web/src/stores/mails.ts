@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { api, ApiError } from '../api'
 import type { ScheduledMail, SendPayload } from '../api/types'
-import type { ClaimAction, Mail, MailFolder, Suivi } from '../domain/types'
+import type { ClaimAction, FolderInfo, Mail, MailFolder, MoveTarget, Suivi } from '../domain/types'
 import { useSuivisStore } from './suivis'
 
 const norm = (id: string) => id.trim().replace(/^<|>$/g, '').toLowerCase()
@@ -124,10 +124,10 @@ export const useMailsStore = defineStore('mails', () => {
   }
 
   /** Déplace un message (archives, corbeille, boîte de réception). Renvoie l'annulation : remettre en boîte de réception. */
-  async function moveTo(id: string, folder: 'inbox' | 'archive' | 'trash') {
+  async function moveTo(id: string, folder: MoveTarget) {
     const m = byId(id)
     if (!m) return null
-    const from = m.folder as 'inbox' | 'archive' | 'trash'
+    const from = m.folder as MoveTarget
     await api.mails.move(id, folder)
     patch(id, { folder })
     return async () => { await api.mails.move(id, from); patch(id, { folder: from }) }
@@ -184,6 +184,29 @@ export const useMailsStore = defineStore('mails', () => {
     return s
   }
 
+  /** Dossiers et sous-dossiers de la messagerie (F-16). */
+  const folders = ref<FolderInfo[]>([])
+  async function loadFolders() { folders.value = await api.mails.folders.list().catch(() => folders.value) }
+  async function createFolder(name: string, parent?: string) {
+    await api.mails.folders.create(name, parent)
+    await loadFolders()
+  }
+  async function renameFolder(path: string, name: string) {
+    const r = await api.mails.folders.rename(path, name)
+    // Les messages que nous connaissons suivent le renommage (le dossier et ses sous-dossiers).
+    items.value = items.value.map((m) => (m.folder === `f:${path}` || m.folder.startsWith(`f:${path}/`) ? { ...m, folder: `f:${r.path}${m.folder.slice(2 + path.length)}` as Mail['folder'] } : m))
+    await loadFolders()
+    return r
+  }
+  async function removeFolder(path: string) {
+    await api.mails.folders.remove(path)
+    await loadFolders()
+  }
+  /** Ouvrir un dossier : ses derniers messages sont récupérés, puis la liste est rechargée s'il y en a de nouveaux. */
+  async function openFolder(path: string) {
+    if (await api.mails.folders.open(path).catch(() => 0)) await load()
+  }
+
   /** Mails programmés (F-73) : écrits, en attente de l'heure choisie par l'utilisateur. */
   const scheduled = ref<ScheduledMail[]>([])
   async function loadScheduled() { scheduled.value = await api.mails.scheduled().catch(() => []) }
@@ -210,5 +233,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

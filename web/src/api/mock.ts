@@ -41,6 +41,11 @@ export function createMockApi(now: Date = new Date()): Api {
   })
   const claim = (state: 'new' | 'taken' | 'handled', by: string | null = null) => ({ state, by })
 
+  let mockFolders: { path: string; name: string; delimiter: string; system: boolean; count: number }[] = [
+    { path: 'Projets', name: 'Projets', delimiter: '/', system: false, count: 0 },
+    { path: 'Projets/Jury de janvier', name: 'Jury de janvier', delimiter: '/', system: false, count: 0 },
+    { path: 'Scolarité', name: 'Scolarité', delimiter: '/', system: false, count: 0 },
+  ]
   let scheduledMails: { row: ScheduledMail; payload: SendPayload }[] = []
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
@@ -136,6 +141,28 @@ export function createMockApi(now: Date = new Date()): Api {
           : `Bonjour ${first},\n\n${list ? `Voici mes disponibilités :\n${list}\n\nDis-moi ce qui te convient, je confirme aussitôt.` : 'Merci pour ton message. Je regarde cela et je reviens vers toi rapidement.'}\n\nCordialement,\nDavid`
       },
       async move(id, folder) { mails = mails.map((x) => (x.id === id ? { ...x, folder } : x)) },
+      folders: {
+        async list() { return clone(mockFolders) },
+        async create(name, parent) {
+          const path = parent ? `${parent}/${name}` : name
+          if (mockFolders.some((f) => f.path.toLowerCase() === path.toLowerCase())) throw new ApiError(409, 'Un dossier porte déjà ce nom.')
+          const f = { path, name, delimiter: '/', system: false, count: 0 }
+          mockFolders = [...mockFolders, f]
+          return clone(f)
+        },
+        async rename(path, name) {
+          const next = `${path.split('/').slice(0, -1).concat(name).join('/')}`
+          mockFolders = mockFolders.map((f) => (f.path === path || f.path.startsWith(`${path}/`) ? { ...f, path: next + f.path.slice(path.length), name: f.path === path ? name : f.name } : f))
+          mails = mails.map((x) => (x.folder === `f:${path}` || x.folder.startsWith(`f:${path}/`) ? { ...x, folder: `f:${next}${x.folder.slice(2 + path.length)}` as typeof x.folder } : x))
+          return { path: next, name }
+        },
+        async remove(path) {
+          if (mails.some((x) => x.folder === `f:${path}`)) throw new ApiError(409, 'Ce dossier n’est pas vide. Déplace ses messages ailleurs avant de le supprimer.')
+          if (mockFolders.some((f) => f.path.startsWith(`${path}/`))) throw new ApiError(409, 'Ce dossier contient des sous-dossiers. Vide-les ou supprime-les d’abord.')
+          mockFolders = mockFolders.filter((f) => f.path !== path)
+        },
+        async open() { return 0 },
+      },
       async attachments(id) { return clone(findMail(id)?.attachments ?? []).map((a, index) => ({ ...a, index })) },
       async download() { /* démo : rien à télécharger */ },
       async schedule(p, sendAt) {

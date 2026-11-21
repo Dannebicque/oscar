@@ -7,7 +7,7 @@ import { api, session } from '../../api'
 import { collisionWith } from '../../domain/claim'
 import { clock } from '../../domain/clock'
 import { followUpDue, isoDay } from '../../domain/dates'
-import type { Attachment, Mail } from '../../domain/types'
+import type { Attachment, Mail, MoveTarget } from '../../domain/types'
 import { useFormat } from '../../composables/useFormat'
 import { SHORTCUT_EVENTS, type ShortcutAction } from '../../composables/useShortcuts'
 import { useAgendaStore } from '../../stores/agenda'
@@ -28,6 +28,8 @@ import ActivityNotes from './ActivityNotes.vue'
 import AvailabilityDialog from './AvailabilityDialog.vue'
 import AttachmentsMenu from './AttachmentsMenu.vue'
 import ConfirmTrashDialog from './ConfirmTrashDialog.vue'
+import MoveDialog from './MoveDialog.vue'
+import { isCustom, pathOf, prettyPath } from '../../domain/folders'
 import ClaimPanel from './ClaimPanel.vue'
 import SuiviBanner from './SuiviBanner.vue'
 import SuiviPanel from './SuiviPanel.vue'
@@ -97,10 +99,9 @@ const showMove = ref(false)
 async function download(a: Attachment) {
   try { await api.mails.download(props.mail.id, a) } catch { ui.notify(t('mail.downloadFailed'), { tone: 'error' }) }
 }
-const moveTarget = ref<'inbox' | 'archive' | 'trash'>('archive')
 /** Archiver, corbeille ou classement : message parti d'ici, annulation possible depuis la notification. */
 const showTrash = ref(false)
-function relocate(folder: 'inbox' | 'archive' | 'trash') {
+function relocate(folder: MoveTarget) {
   showMove.value = false
   // La corbeille demande confirmation (réglable) ; archiver et classer restent immédiats, avec annulation.
   if (folder === 'trash' && settings.s.confirmDelete) { showTrash.value = true; return }
@@ -111,10 +112,10 @@ function confirmTrash(dontAsk: boolean) {
   if (dontAsk) settings.s.confirmDelete = false
   void doRelocate('trash')
 }
-async function doRelocate(folder: 'inbox' | 'archive' | 'trash') {
+async function doRelocate(folder: MoveTarget) {
   try {
     const undo = await mails.moveTo(props.mail.id, folder)
-    ui.notify(t('mail.moved', { subject: props.mail.subject, folder: t(`mail.folder.${folder}`) }), { undo: undo ? async () => { await undo(); ui.notify(t('mail.movedBack')) } : undefined })
+    ui.notify(t('mail.moved', { subject: props.mail.subject, folder: isCustom(folder) ? prettyPath(pathOf(folder)) : t(`mail.folder.${folder}`) }), { undo: undo ? async () => { await undo(); ui.notify(t('mail.movedBack')) } : undefined })
     // La liste propose le message suivant (traitement à la chaîne au clavier) ; sans liste, retour aux mails.
     const step = { handled: false, id: props.mail.id }
     window.dispatchEvent(new CustomEvent(SHORTCUT_EVENTS.advance, { detail: step }))
@@ -285,16 +286,7 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
   </article>
 
   <ConfirmTrashDialog :open="showTrash" :count="1" :with-suivi="suivi ? 1 : 0" @confirm="confirmTrash" @close="showTrash = false" />
-  <BaseDialog :open="showMove" :title="t('mail.move')" @close="showMove = false">
-    <fieldset class="moves">
-      <legend>{{ t('mail.moveTo') }}</legend>
-      <label v-for="f in (['inbox', 'archive', 'trash'] as const).filter((x) => x !== mail.folder)" :key="f" class="check"><input v-model="moveTarget" type="radio" name="move" :value="f" /> {{ t(`mail.folder.${f}`) }}</label>
-    </fieldset>
-    <template #footer>
-      <BaseButton :label="t('common.cancel')" @click="showMove = false" />
-      <BaseButton variant="primary" icon="folder" :label="t('mail.move')" @click="relocate(moveTarget)" />
-    </template>
-  </BaseDialog>
+  <MoveDialog :open="showMove" :current="mail.folder" @close="showMove = false" @pick="relocate" />
 
   <RelanceDialog v-if="suivi" :open="showDraft" :queue="[suivi]" single @close="showDraft = false" />
   <AvailabilityDialog :open="showAvail" :mail="mail" @close="showAvail = false" @pick="prepareAvailability" />

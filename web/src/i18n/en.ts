@@ -223,6 +223,13 @@ const en: typeof fr = {
   },
   brief: { title: 'Before this meeting', none: 'No recent exchange with the participants.', noPeople: 'No known participant for this meeting.', receivedFrom: 'Received from {who}', sentTo: 'Sent to {who}' },
   confirmTrash: { title: 'Move this message to trash? | Move {n} messages to trash?', text: 'It stays recoverable in Trash. | They stay recoverable in Trash. Nothing is permanently deleted.', suivi: 'This message has an open follow-up: it stays under Follow-ups. | {n} messages have an open follow-up: they stay under Follow-ups.', dontAsk: 'Do not ask again (can be changed in Settings)', confirm: 'Move to trash' },
+  folders: {
+    mine: 'My folders', noneYet: 'No personal folder yet. Create one with the + button.', topLevel: 'Top level', newTitle: 'New folder', newSub: 'New subfolder', renameTitle: 'Rename folder',
+    name: 'Folder name', parent: 'Put it in', create: 'Create folder', rename: 'Rename', nameRequired: 'Give the folder a name.',
+    help: 'This is a real folder on your mail server: you will see it in any other client. No / \\ . % * # & in the name.',
+    created: 'Folder “{name}” created.', renamed: 'Folder renamed to “{name}”.', deleted: 'Folder “{name}” deleted.',
+    delete: 'Delete folder', deleteTitle: 'Delete “{name}”?', deleteText: 'Only an empty folder can be deleted: its messages are never erased. If it still holds messages or subfolders, nothing happens.',
+  },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
     kept: 'Your message is kept: reopen it and try again.',

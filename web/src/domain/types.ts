@@ -57,6 +57,12 @@ export interface Attachment {
 }
 
 export type MailFolder = 'inbox' | 'sent' | 'drafts' | 'archive' | 'trash'
+/** Dossier personnel (et sous-dossier) de la messagerie : `f:` suivi du chemin sur le serveur, par exemple `f:Projets/Jury`. */
+export type CustomFolder = `f:${string}`
+/** Où l'on peut déplacer un mail. */
+export type MoveTarget = 'inbox' | 'archive' | 'trash' | CustomFolder
+/** Un dossier de la messagerie, tel que le serveur le décrit. */
+export interface FolderInfo { path: string; name: string; delimiter: string; system: boolean; count: number }
 
 export type ClaimState = 'new' | 'taken' | 'handled'
 export interface Claim {
@@ -163,7 +169,7 @@ export interface Mail {
   parents?: string[]
   /** 'personal' ou id d'une boîte partagée. */
   mailbox: string
-  folder: MailFolder
+  folder: MailFolder | CustomFolder
   from: Person
   to: Person[]
   subject: string

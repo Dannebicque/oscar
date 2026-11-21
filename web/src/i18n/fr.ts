@@ -223,6 +223,13 @@ export default {
   },
   brief: { title: 'Avant ce rendez-vous', none: 'Aucun échange récent avec les participants.', noPeople: 'Aucun participant connu pour ce rendez-vous.', receivedFrom: 'Reçu de {who}', sentTo: 'Envoyé à {who}' },
   confirmTrash: { title: 'Mettre ce message à la corbeille ? | Mettre {n} messages à la corbeille ?', text: 'Il reste récupérable dans la Corbeille. | Ils restent récupérables dans la Corbeille. Rien n’est supprimé définitivement.', suivi: 'Ce message a un suivi en cours : le suivi reste dans Suivis. | {n} messages ont un suivi en cours : les suivis restent dans Suivis.', dontAsk: 'Ne plus demander (modifiable dans Réglages)', confirm: 'Mettre à la corbeille' },
+  folders: {
+    mine: 'Mes dossiers', noneYet: 'Aucun dossier personnel. Crée-en un avec le bouton +.', topLevel: 'À la racine', newTitle: 'Nouveau dossier', newSub: 'Nouveau sous-dossier', renameTitle: 'Renommer le dossier',
+    name: 'Nom du dossier', parent: 'Placer dans', create: 'Créer le dossier', rename: 'Renommer', nameRequired: 'Donne un nom au dossier.',
+    help: 'C’est un vrai dossier de ta messagerie : tu le retrouves dans tout autre client. Pas de / \\ . % * # & dans le nom.',
+    created: 'Dossier « {name} » créé.', renamed: 'Dossier renommé en « {name} ».', deleted: 'Dossier « {name} » supprimé.',
+    delete: 'Supprimer le dossier', deleteTitle: 'Supprimer « {name} » ?', deleteText: 'Seul un dossier vide peut être supprimé : ses messages ne sont jamais effacés. Si le dossier contient encore des messages ou des sous-dossiers, rien ne bouge.',
+  },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
     kept: 'Ton message est conservé : rouvre-le et réessaie.',

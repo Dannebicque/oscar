@@ -6,7 +6,7 @@ use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Message;
 
 /** Lecture IMAP via webklex/php-imap (PHP pur, sans l'extension imap retirée du noyau). */
-final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover
+final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders
 {
     private ?\Webklex\PHPIMAP\Client $client = null;
 
@@ -41,6 +41,58 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         return $out;
     }
 
+    public function folders(): array
+    {
+        $out = [];
+        foreach ($this->client()->getFolders(false, null, true) as $f) {
+            if ($f->no_select) {
+                continue;
+            }
+            $out[] = ['path' => $f->full_name, 'name' => $f->name, 'delimiter' => $f->delimiter];
+        }
+
+        return $out;
+    }
+
+    public function createFolder(string $path): void
+    {
+        $this->client()->createFolder($path, false);
+    }
+
+    public function renameFolder(string $from, string $to): void
+    {
+        ($this->client()->getFolderByPath($from) ?? throw new \RuntimeException("Dossier $from introuvable."))->rename($to, false);
+    }
+
+    public function deleteFolder(string $path): void
+    {
+        $this->client()->deleteFolder($path, false);
+    }
+
+    public function countMessages(string $path): int
+    {
+        $box = $this->client()->getFolderByPath($path) ?? throw new \RuntimeException("Dossier $path introuvable.");
+        $status = $box->status();
+
+        return (int) ($status['exists'] ?? $box->messages()->all()->leaveUnread()->setFetchBody(false)->count());
+    }
+
+    public function fetchRecent(string $folder, int $limit): array
+    {
+        $box = $this->client()->getFolderByPath($folder);
+        if ($box === null) {
+            return [];
+        }
+        $messages = $box->messages()->all()->leaveUnread()->setFetchBody(false)->setFetchOrderDesc()->limit($limit, 1)->get();
+        $out = [];
+        foreach ($messages as $m) {
+            $out[] = $this->toHeader($m, $folder);
+        }
+        usort($out, static fn (MailHeader $a, MailHeader $b) => $a->uid <=> $b->uid);
+
+        return $out;
+    }
+
     public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
     {
         $box = $this->client()->getFolderByPath($folder) ?? $this->client()->createFolder($folder, false);
@@ -53,7 +105,7 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         $from = $client->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
         $dest = $client->getFolderByPath($target) ?? $client->createFolder($target, false);
         $m = $from->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(false)->get()->first() ?? throw new \RuntimeException('Message introuvable sur le serveur.');
-        $m->move($dest->path, true);
+        $m->move($dest->path, true, true);
         $dest = $client->getFolderByPath($target) ?? $dest;
         $moved = $dest->messages()->whereMessageId($messageId)->leaveUnread()->setFetchBody(false)->get()->first();
 

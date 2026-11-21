@@ -15,7 +15,7 @@ import ToneChip from '../ui/ToneChip.vue'
 
 /** Liste dense des messages (standard Gmail / Outlook / Thunderbird) : expéditeur, heure, objet, aperçu, pastilles. */
 const props = defineProps<{ mails: Mail[]; selectedId: string | null; shared: boolean; folder?: string }>()
-const emit = defineEmits<{ select: [id: string]; bulk: [action: 'archive' | 'trash' | 'inbox', ids: string[]] }>()
+const emit = defineEmits<{ select: [id: string]; bulk: [action: 'archive' | 'trash' | 'inbox' | 'move', ids: string[]] }>()
 const { t } = useI18n()
 const fmt = useFormat()
 const suivis = useSuivisStore()
@@ -55,7 +55,7 @@ function toggle(id: string) {
 }
 const toggleAll = () => { picked.value = allPicked.value ? new Set() : new Set(visible.value.map((m) => m.id)) }
 function clearSelection() { picked.value = new Set(); selecting.value = false }
-const run = (action: 'archive' | 'trash' | 'inbox') => emit('bulk', action, pickedIds.value)
+const run = (action: 'archive' | 'trash' | 'inbox' | 'move') => emit('bulk', action, pickedIds.value)
 defineExpose({ visible, clearSelection })
 </script>
 
@@ -87,6 +87,7 @@ defineExpose({ visible, clearSelection })
       <span class="bulk-acts">
         <BaseButton v-if="folder !== 'archive'" icon="archive" icon-only :title="t('mail.archive')" :label="t('mail.archive')" :disabled="!pickedIds.length" @click="run('archive')" />
         <BaseButton v-if="folder !== 'inbox'" icon="inbox" icon-only :title="t('mail.folder.inbox')" :label="t('mail.bulk.toInbox')" :disabled="!pickedIds.length" @click="run('inbox')" />
+        <BaseButton icon="folder" icon-only :title="t('mail.move')" :label="t('mail.move')" :disabled="!pickedIds.length" @click="run('move')" />
         <BaseButton v-if="folder !== 'trash'" icon="trash" icon-only :title="t('mail.delete')" :label="t('mail.delete')" :disabled="!pickedIds.length" @click="run('trash')" />
       </span>
     </div>

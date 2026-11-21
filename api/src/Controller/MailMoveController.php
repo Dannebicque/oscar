@@ -28,14 +28,27 @@ final class MailMoveController extends AbstractController
             return new JsonResponse(['title' => 'Mail inconnu'], Response::HTTP_NOT_FOUND);
         }
         $target = (string) (json_decode($request->getContent(), true)['folder'] ?? '');
+        $reader = null;
         if (!\in_array($target, self::FOLDERS, true)) {
-            return new JsonResponse(['title' => 'Dossier inconnu. Choisis la boîte de réception, les archives ou la corbeille.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            // Un dossier personnel (ou sous-dossier) : il doit exister sur le serveur, jamais créé au vol par une faute de frappe.
+            if ($target === '' || MailFolderController::isSystem($target)) {
+                return new JsonResponse(['title' => 'Dossier inconnu. Choisis un dossier de la liste.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            try {
+                $reader = $factory->create($mail->getAccount());
+                $known = array_filter($reader->folders(), static fn (array $f) => $f['path'] === $target) !== [];
+            } catch (\Throwable) {
+                return new JsonResponse(['title' => 'Le serveur de messagerie ne répond pas. Rien n’a bougé, réessaie dans un instant.'], Response::HTTP_BAD_GATEWAY);
+            }
+            if (!$known) {
+                return new JsonResponse(['title' => 'Ce dossier n’existe pas sur le serveur de messagerie.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
         if ($mail->getFolder() === 'Sent' || $mail->getFolder() === $target) {
             return new JsonResponse(['title' => 'Ce message est déjà là, ou c’est un message envoyé.'], Response::HTTP_CONFLICT);
         }
         try {
-            $uid = $factory->create($mail->getAccount())->move($mail->getFolder(), $mail->getUid(), $mail->getMessageId(), $target);
+            $uid = ($reader ?? $factory->create($mail->getAccount()))->move($mail->getFolder(), $mail->getUid(), $mail->getMessageId(), $target);
         } catch (\Throwable) {
             return new JsonResponse(['title' => 'Le serveur de messagerie ne répond pas. Rien n’a bougé, réessaie dans un instant.'], Response::HTTP_BAD_GATEWAY);
         }

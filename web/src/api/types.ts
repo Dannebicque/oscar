@@ -1,5 +1,5 @@
 import type {
-  AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
+  FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
   MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
 } from '../domain/types'
 
@@ -67,7 +67,16 @@ export interface MailApi {
   composeHints(subject: string, body: string): Promise<{ task: { title: string; dueAt: string; quote: string } | null }>
   markRead(id: string): Promise<void>
   /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
-  move(id: string, folder: 'inbox' | 'archive' | 'trash'): Promise<void>
+  move(id: string, folder: MoveTarget): Promise<void>
+  /** Dossiers et sous-dossiers de la messagerie (ceux du serveur IMAP). Un dossier ne se supprime que vide. */
+  folders: {
+    list(): Promise<FolderInfo[]>
+    create(name: string, parent?: string): Promise<FolderInfo>
+    rename(path: string, name: string): Promise<{ path: string; name: string }>
+    remove(path: string): Promise<void>
+    /** Ouvrir un dossier : récupère ses derniers messages (100 au plus à la première visite). Renvoie le nombre de nouveaux messages. */
+    open(path: string): Promise<number>
+  }
   /** Boîte partagée : prise en charge. Lève ApiError 409 (« Claire s'en occupe ») si quelqu'un d'autre l'a prise. */
   claim(mailId: string, suiviId: string | null, action: ClaimAction): Promise<void>
   addNote(mailId: string, suiviId: string | null, text: string): Promise<void>

@@ -54,7 +54,7 @@ const FOLDERS: Record<string, MailFolder> = { INBOX: 'inbox', Sent: 'sent', Draf
 
 const toMail = (r: RawMail): Mail => ({
   id: r.id, messageId: r.messageId, parents: [...(r.references ?? []), ...(r.inReplyTo ? [r.inReplyTo] : [])], mailbox: r.mailbox ?? 'personal',
-  folder: FOLDERS[r.folder] ?? 'inbox', from: { name: r.fromName || r.fromAddress, address: r.fromAddress }, to: r.toAddresses.map((a) => ({ name: a, address: a })),
+  folder: FOLDERS[r.folder] ?? `f:${r.folder}`, from: { name: r.fromName || r.fromAddress, address: r.fromAddress }, to: r.toAddresses.map((a) => ({ name: a, address: a })),
   subject: r.subject, paragraphs: [], at: r.date, unread: false, attachments: [], suivi: null, claim: null, composing: null, notes: [], activity: [], hints: {},
 })
 
@@ -89,7 +89,17 @@ export function createHttpApi(baseUrl: string): Api {
       async body(id) { return (await req<{ paragraphs: string[] }>('GET', `/api/mails/${encodeURIComponent(id)}/body`)).paragraphs },
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
       async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
-      async move(id, folder) { await req('POST', `/api/mails/${encodeURIComponent(id)}/move`, { folder: { inbox: 'INBOX', archive: 'Archive', trash: 'Trash' }[folder] }) },
+      async move(id, folder) {
+        const target = folder.startsWith('f:') ? folder.slice(2) : ({ inbox: 'INBOX', archive: 'Archive', trash: 'Trash' } as Record<string, string>)[folder]
+        await req('POST', `/api/mails/${encodeURIComponent(id)}/move`, { folder: target })
+      },
+      folders: {
+        list: () => req('GET', '/api/mail-folders'),
+        create: (name, parent) => req('POST', '/api/mail-folders', { name, ...(parent ? { parent } : {}) }),
+        rename: (path, name) => req('PATCH', '/api/mail-folders', { path, name }),
+        async remove(path) { await req('DELETE', `/api/mail-folders?path=${encodeURIComponent(path)}`) },
+        async open(path) { return (await req<{ fetched: number }>('POST', '/api/mail-folders/sync', { path })).fetched },
+      },
       async attachments(id) {
         const r = await req<{ attachments: { name: string; size: number }[] }>('GET', `/api/mails/${encodeURIComponent(id)}/attachments`)
         return r.attachments.map((a, index) => ({ name: a.name, size: humanSize(a.size), index }))

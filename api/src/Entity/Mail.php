@@ -41,7 +41,7 @@ class Mail implements OwnedInterface
 
     public function __construct(
         #[ORM\ManyToOne] #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')] private MailAccount $account,
-        #[ORM\Column(length: 60)] private string $folder,
+        #[ORM\Column(length: 190)] private string $folder,
         #[ORM\Column] private int $uid,
         #[ORM\Column(length: 255)] private string $messageId,
         #[ORM\Column(length: 255, nullable: true)] private ?string $inReplyTo,
