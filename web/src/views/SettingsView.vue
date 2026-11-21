@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import AccountsPanel from '../components/settings/AccountsPanel.vue'
 import TemplatesPanel from '../components/settings/TemplatesPanel.vue'
 import DirectoryPanel from '../components/settings/DirectoryPanel.vue'
+import SortRulesPanel from '../components/settings/SortRulesPanel.vue'
 import FollowRulesPanel from '../components/settings/FollowRulesPanel.vue'
 import MyAccountPanel from '../components/settings/MyAccountPanel.vue'
 import AiProviderPanel from '../components/settings/AiProviderPanel.vue'
@@ -80,6 +81,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
           <p class="callout" data-tone="neutral">{{ t('settings.relances.never') }}</p>
         </div>
         <FollowRulesPanel />
+        <SortRulesPanel />
       </section>
 
       <section id="set-recap" aria-labelledby="h-recap">

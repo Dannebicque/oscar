@@ -43,6 +43,9 @@ final class MailSynchronizer
                     if ($routed === null && !$header->autoSubmitted) {
                         $this->applyRules($account->getOwner(), $mail);
                     }
+                    if ($routed === null) {
+                        $this->sort($account->getOwner(), $mail, $reader);
+                    }
                 }
                 ++$fetched;
             }
@@ -70,6 +73,30 @@ final class MailSynchronizer
                 ->setResponsible($owner->getDisplayName())->setDueAt($mail->getDate()->modify('+2 days')->setTime(0, 0));
             $s->log($who, 'received', $mail->getDate());
             $this->em->persist($s);
+
+            return;
+        }
+    }
+
+    /** Règles de tri (F-15) : range un mail reçu dans les archives ou la corbeille, jamais s'il a un suivi, jamais de suppression définitive. */
+    private function sort(User $owner, Mail $mail, MailboxReader $reader): void
+    {
+        if (!$reader instanceof \App\Mail\MailboxMover || $this->suivis->findOneBy(['owner' => $owner, 'mailId' => $mail->getMessageId()]) !== null) {
+            return;
+        }
+        foreach ($this->em->getRepository(\App\Entity\SortRule::class)->findBy(['owner' => $owner, 'enabled' => true]) as $rule) {
+            if (!$rule->matches($mail->getFromAddress(), $mail->getSubject())) {
+                continue;
+            }
+            $target = $rule->getAction() === 'trash' ? 'Trash' : 'Archive';
+            try {
+                $uid = $reader->move($mail->getFolder(), $mail->getUid(), $mail->getMessageId(), $target);
+                if ($uid !== null) {
+                    $mail->relocate($target, $uid);
+                }
+            } catch (\Throwable) {
+                // Le serveur n'a pas suivi : le mail reste dans la boîte de réception, rien n'est perdu.
+            }
 
             return;
         }

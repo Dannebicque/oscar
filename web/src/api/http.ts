@@ -170,6 +170,12 @@ export function createHttpApi(baseUrl: string): Api {
     },
     settings: {
       get: () => req('GET', '/api/settings'),
+      sortRules: {
+        list: () => req('GET', '/api/sort-rules'),
+        create: (field, value, action) => req('POST', '/api/sort-rules', { field, value, action }),
+        setEnabled: (id, enabled) => req('PATCH', `/api/sort-rules/${encodeURIComponent(id)}`, { enabled }, { merge: true }),
+        async remove(id) { await req('DELETE', `/api/sort-rules/${encodeURIComponent(id)}`) },
+      },
       templates: {
         list: () => req('GET', '/api/templates'),
         create: (name, body) => req('POST', '/api/templates', { name, body }),

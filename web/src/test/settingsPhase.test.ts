@@ -121,3 +121,26 @@ describe('signatures et modèles de message (F-19)', () => {
     expect(body).toContain('--') // la signature reste en bas
   })
 })
+
+describe('règles de tri (F-15)', () => {
+  it('on ajoute une règle, on la désactive, on refuse un mot trop court, et on la supprime', async () => {
+    const { default: Panel } = await import('../components/settings/SortRulesPanel.vue')
+    const { wrapper } = await mountApp(Panel, '/reglages')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Mail de @newsletter.example → Archiver')
+    await wrapper.find('#sort-field').setValue('subject')
+    await wrapper.find('#sort-value').setValue('ab')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.text()).toContain('3 caractères au moins')
+    await wrapper.find('#sort-value').setValue('facture')
+    await wrapper.find('#sort-action').setValue('trash')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Objet contenant « facture » → Mettre à la corbeille')
+    await wrapper.findAll('button[aria-label^="Supprimer la règle"]')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('newsletter.example')
+    expect(await check(wrapper.element)).toEqual([])
+  })
+})

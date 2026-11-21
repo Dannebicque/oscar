@@ -9,7 +9,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 43 | 20 | 2 |
+| Exigences fonctionnelles F (65) | 44 | 20 | 1 |
 | Non fonctionnelles N (12) | 2 | 9 | 1 |
 | Interface U (11) | 6 | 4 | 1 |
 
@@ -33,7 +33,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-12 | M | ✅ | Relance à 48 h par défaut, délai réglable par utilisateur, **par compte** (Réglages > Comptes > Relances) et par suivi ; heures réelles ou jours ouvrés, au niveau de l'utilisateur ou du compte (API et front, testés). |
 | F-13 | S | 🟡 | Brouillon de réponse (ton cordial/court, créneaux cochés), jamais envoyé ✅. Gabarit déterministe, pas de génération par modèle. |
 | F-14 | S | 🟡 | Résumé extractif d'un message. Pas de résumé d'un fil entier. |
-| F-15 | S | ❌ | Règles de tri déterministes. |
+| F-15 | S | ✅ | Règles de tri (Réglages > Relances et suivi) par expéditeur, domaine ou mot de l'objet : archive ou corbeille à la synchronisation, jamais de suppression définitive, jamais un mail qui a un suivi ; activables, supprimables. Testé (règles, déplacement IMAP simulé). |
 | F-16 | M | 🟡 | Dossiers, liste, lecture texte, répondre, répondre à tous, filtres, fil de discussion ✅. Archiver, déplacer (boîte de réception, archives, corbeille), supprimer (= corbeille, jamais définitif) ✅ : déplacement IMAP d'abord, base ensuite, annulation depuis la notification, vérifié contre Dovecot. Transférer ✅ (rédaction pré-remplie, message cité). Pièces jointes ✅ : liste et téléchargement seulement (jamais affichées, type forcé, `nosniff`), envoi jusqu'à 5 Mo, vérifié contre Dovecot et le SMTP de test. Brouillons enregistrés ✅ (dossier Drafts du serveur, rouvrables, remplacés à chaque enregistrement ; texte seul, sans pièces jointes). Manquent : vidage de la corbeille, affichage HTML isolé. |
 | F-17 | C | ✅ | Trois styles (Moderne, Rétro, Néon), cinq palettes + accent libre, quatre modes, trois densités ; WCAG AA vérifié par test sur chaque combinaison. |
 | F-18 | S | 🟡 | Annuaire LDAP écrit (lecture seule, compte de service, attributs configurables par variables d'environnement, saisie échappée contre l'injection de filtre) ; choix service et téléphone par utilisateur ; repli sur la liste de démonstration. **Jamais essayé contre un vrai annuaire** (testé avec un faux client). |

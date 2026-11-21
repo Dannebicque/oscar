@@ -319,6 +319,12 @@ const en: typeof fr = {
       title: 'Message templates', help: 'Texts to insert while writing, for the replies you write often.', none: 'No templates yet.', name: 'Template name', body: 'Text', vars: 'Variables: {\'{\'}prenom{\'}\'} (recipient first name) and {\'{\'}moi{\'}\'} (your name).',
       add: 'Add the template', saved: 'Template saved.', removed: 'Template removed.', edit: 'Edit template {name}', remove: 'Delete template {name}',
     },
+    sort: {
+      title: 'Sorting rules', help: 'No AI: a sender, a domain or a word in the subject files incoming mail in the archive or the trash. Nothing is deleted for good.',
+      field: { domain: 'A domain', sender: 'A sender', subject: 'A word in the subject' }, action: { archive: 'Archive', trash: 'Move to trash' }, fieldLabel: 'When', valueLabel: 'Domain, address or word', actionLabel: 'Then', add: 'Add the rule', added: 'Rule added.', removed: 'Rule removed.',
+      when: { domain: 'Mail from {\'@\'}{value}', sender: 'Mail from {value}', subject: 'Subject containing “{value}”' }, remove: 'Delete the rule {value}', none: 'No sorting rules.',
+      never: 'A mail that has a follow-up is never filed away. Rules apply to new mail, at sync time.',
+    },
     rules: {
       title: 'Automatic follow-up rules', help: 'By default, Oscar suggests and you confirm. These rules create the follow-up straight away, without confirmation, for the senders you pick.',
       kind: { domain: 'A whole domain', sender: 'One sender' }, kindLabel: 'When the mail comes from', valueLabel: 'Domain or address', add: 'Add the rule', added: 'Rule added.', removed: 'Rule removed.',

@@ -319,6 +319,12 @@ export default {
       title: 'Modèles de message', help: 'Des textes à insérer à la rédaction, pour les réponses que tu écris souvent.', none: 'Aucun modèle pour l’instant.', name: 'Nom du modèle', body: 'Texte', vars: 'Variables : {\'{\'}prenom{\'}\'} (prénom du destinataire) et {\'{\'}moi{\'}\'} (ton nom).',
       add: 'Ajouter le modèle', saved: 'Modèle enregistré.', removed: 'Modèle supprimé.', edit: 'Modifier le modèle {name}', remove: 'Supprimer le modèle {name}',
     },
+    sort: {
+      title: 'Règles de tri', help: 'Sans IA : un expéditeur, un domaine ou un mot de l’objet range le mail reçu dans les archives ou la corbeille. Rien n’est supprimé définitivement.',
+      field: { domain: 'Un domaine', sender: 'Un expéditeur', subject: 'Un mot de l’objet' }, action: { archive: 'Archiver', trash: 'Mettre à la corbeille' }, fieldLabel: 'Quand', valueLabel: 'Domaine, adresse ou mot', actionLabel: 'Alors', add: 'Ajouter la règle', added: 'Règle ajoutée.', removed: 'Règle supprimée.',
+      when: { domain: 'Mail de {\'@\'}{value}', sender: 'Mail de {value}', subject: 'Objet contenant « {value} »' }, remove: 'Supprimer la règle {value}', none: 'Aucune règle de tri.',
+      never: 'Un mail qui a un suivi n’est jamais rangé. Les règles s’appliquent aux nouveaux mails, à la synchronisation.',
+    },
     rules: {
       title: 'Création automatique de suivis', help: 'Par défaut, Oscar suggère et tu valides. Ces règles créent le suivi tout de suite, sans validation, pour les expéditeurs que tu choisis.',
       kind: { domain: 'Tout un domaine', sender: 'Un expéditeur' }, kindLabel: 'Quand le mail vient de', valueLabel: 'Domaine ou adresse', add: 'Ajouter la règle', added: 'Règle ajoutée.', removed: 'Règle supprimée.',

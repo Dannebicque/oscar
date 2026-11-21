@@ -98,6 +98,7 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'iut', label: 'IUT', kind: 'caldav', url: 'https://agenda.iut-troyes.fr/dav/', username: 'david', personal: false },
     { id: 'perso', label: 'Perso', kind: 'google', url: '', username: '', personal: true },
   ]
+  const sortRules: import('./types').SortRule[] = [{ id: 'sort1', field: 'domain', value: 'newsletter.example', action: 'archive', enabled: true }]
   const templates: import('./types').MessageTemplate[] = [{ id: 'tpl1', name: 'Accusé de réception', body: 'Bonjour {prenom},\n\nBien reçu, merci. Je reviens vers toi rapidement.' }]
   const rules: import('./types').FollowRule[] = [{ id: 'rule1', kind: 'domain', value: 'univ-reims.fr', enabled: true }]
   let aiCfg: import('./types').AiConfig = { kind: 'openai', baseUrl: '', model: '', hasKey: false, configured: false }
@@ -216,6 +217,19 @@ export function createMockApi(now: Date = new Date()): Api {
     },
     settings: {
       async get() { return clone(serverSettings) },
+      sortRules: {
+        async list() { return clone(sortRules) },
+        async create(field, value, action) {
+          const v = value.trim().toLowerCase().replace(field === 'domain' ? /^@/ : /$^/, '')
+          if (sortRules.some((r) => r.field === field && r.value === v)) throw new ApiError(409, 'Cette règle existe déjà.', { field: 'value' })
+          if (field === 'subject' ? v.length < 3 : field === 'sender' ? !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) : !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(v)) throw new ApiError(422, field === 'subject' ? 'Indique un mot ou une expression de 3 caractères au moins.' : field === 'sender' ? 'Indique une adresse complète.' : 'Indique un domaine, par exemple univ-reims.fr.', { field: 'value' })
+          const r = { id: uid('sort'), field, value: v, action, enabled: true }
+          sortRules.push(r)
+          return clone(r)
+        },
+        async setEnabled(id, enabled) { const r = sortRules.find((x) => x.id === id)!; r.enabled = enabled; return clone(r) },
+        async remove(id) { const i = sortRules.findIndex((x) => x.id === id); if (i >= 0) sortRules.splice(i, 1) },
+      },
       templates: {
         async list() { return clone(templates) },
         async create(name, body) {

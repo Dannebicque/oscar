@@ -103,12 +103,20 @@ export type ServerSettings = Record<string, string | number | boolean | Record<s
 
 export interface MessageTemplate { id: string; name: string; body: string }
 
+export interface SortRule { id: string; field: 'sender' | 'domain' | 'subject'; value: string; action: 'archive' | 'trash'; enabled: boolean }
+
 export interface FollowRule { id: string; kind: 'sender' | 'domain'; value: string; enabled: boolean }
 
 export interface AiConfig { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; hasKey: boolean; configured: boolean }
 export interface AiConfigInput { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; /** absent : on garde la clé ; chaîne vide : on la retire. */ apiKey?: string }
 
 export interface SettingsApi {
+  sortRules: {
+    list(): Promise<SortRule[]>
+    create(field: SortRule['field'], value: string, action: SortRule['action']): Promise<SortRule>
+    setEnabled(id: string, enabled: boolean): Promise<SortRule>
+    remove(id: string): Promise<void>
+  }
   templates: {
     list(): Promise<MessageTemplate[]>
     create(name: string, body: string): Promise<MessageTemplate>
