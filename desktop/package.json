@@ -1,0 +1,14 @@
+{
+  "name": "oscar-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Application de bureau Oscar (Tauri 2) : le même front que le web, avec trousseau, notifications natives et raccourci global.",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icons": "tauri icon icons/source.png"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}

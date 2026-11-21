@@ -1,0 +1,39 @@
+name: Application de bureau
+
+# Lancement manuel (Actions > Application de bureau > Run workflow) : compile Tauri sur Linux, macOS et Windows.
+on:
+  workflow_dispatch:
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, args: '' }
+          - { os: macos-latest, args: '--target aarch64-apple-darwin' }
+          - { os: windows-latest, args: '' }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: 'web/package-lock.json' }
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+      - name: Dépendances Linux
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libdbus-1-dev libsecret-1-dev
+      - run: npm ci
+        working-directory: web
+      - run: npm ci
+        working-directory: desktop
+      - name: Compilation
+        working-directory: desktop
+        run: npx tauri build ${{ matrix.args }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oscar-${{ matrix.os }}
+          path: desktop/src-tauri/target/**/release/bundle/**

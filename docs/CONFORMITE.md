@@ -9,7 +9,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 35 | 24 | 6 |
+| Exigences fonctionnelles F (65) | 38 | 21 | 6 |
 | Non fonctionnelles N (12) | 2 | 8 | 2 |
 | Interface U (11) | 5 | 4 | 2 |
 
@@ -30,13 +30,13 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 |---|---|---|---|
 | F-10 | M | 🟡 | Synchro IMAP incrémentale par UID, multi-comptes, lecture, envoi SMTP ✅. Assistant de connexion en quatre étapes (adresse, accès, serveurs devinés d'après le domaine, test des deux serveurs avant d'enregistrer) ✅, garde anti-SSRF en production. Recherche sur les en-têtes chargés, pas de plein texte serveur. |
 | F-11 | M | 🟡 | Suggestion de tâche/événement avec accepter, modifier, ignorer ✅. Fournisseur local à règles ; aucun modèle de langage branché. |
-| F-12 | M | 🟡 | Relance par défaut à 48 h, réglable par utilisateur et par suivi ; heures réelles ou jours ouvrés appliqués au calcul (API et front, testés). Pas encore par compte. |
+| F-12 | M | ✅ | Relance à 48 h par défaut, délai réglable par utilisateur, **par compte** (Réglages > Comptes > Relances) et par suivi ; heures réelles ou jours ouvrés, au niveau de l'utilisateur ou du compte (API et front, testés). |
 | F-13 | S | 🟡 | Brouillon de réponse (ton cordial/court, créneaux cochés), jamais envoyé ✅. Gabarit déterministe, pas de génération par modèle. |
 | F-14 | S | 🟡 | Résumé extractif d'un message. Pas de résumé d'un fil entier. |
 | F-15 | S | ❌ | Règles de tri déterministes. |
 | F-16 | M | 🟡 | Dossiers, liste, lecture texte, répondre, répondre à tous, filtres, fil de discussion ✅. Archiver, déplacer (boîte de réception, archives, corbeille), supprimer (= corbeille, jamais définitif) ✅ : déplacement IMAP d'abord, base ensuite, annulation depuis la notification, vérifié contre Dovecot. Transférer ✅ (rédaction pré-remplie, message cité). Pièces jointes ✅ : liste et téléchargement seulement (jamais affichées, type forcé, `nosniff`), envoi jusqu'à 5 Mo, vérifié contre Dovecot et le SMTP de test. Brouillons enregistrés ✅ (dossier Drafts du serveur, rouvrables, remplacés à chaque enregistrement ; texte seul, sans pièces jointes). Manquent : vidage de la corbeille, affichage HTML isolé. |
 | F-17 | C | ✅ | Trois styles (Moderne, Rétro, Néon), cinq palettes + accent libre, quatre modes, trois densités ; WCAG AA vérifié par test sur chaque combinaison. |
-| F-18 | S | 🟡 | Autocomplétion sur une liste de démonstration. LDAP non implémenté, champs configurables absents de Réglages. |
+| F-18 | S | 🟡 | Annuaire LDAP écrit (lecture seule, compte de service, attributs configurables par variables d'environnement, saisie échappée contre l'injection de filtre) ; choix service et téléphone par utilisateur ; repli sur la liste de démonstration. **Jamais essayé contre un vrai annuaire** (testé avec un faux client). |
 | F-19 | S | 🟡 | Signature fixe. Pas de signatures par identité ni de modèles de message. |
 
 ### 4.3 Agenda
@@ -78,7 +78,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-51 | M | ✅ | États nouveau / en cours / en attente / traité ; signaux (retard, relance due, réponse reçue) calculés, jamais stockés. |
 | F-52 | M | ✅ | In-Reply-To/References ; réponse automatique ignorée ; bouton « garder en attente ». |
 | F-53 | M | ✅ | Relance proposée avec brouillon ; envoyer, reporter, ne plus relancer. |
-| F-54 | M | 🟡 | Voir F-12 : jours ouvrés ✅, choix par compte ❌. |
+| F-54 | M | ✅ | Voir F-12 : délai et jours ouvrés par compte ✅, 48 h par défaut. |
 | F-55 | S | ✅ | Aucune relance automatique ; « ne plus relancer ». |
 | F-56 | M | ✅ | Échéance propre, alerte et tri par retard. |
 | F-57 | S | 🟡 | Un seul responsable ✅ ; pas d'écran d'assignation ni de transfert. |
@@ -90,20 +90,20 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-63 | M | 🟡 | Entrée groupée, mode Relances, plafond quotidien, jamais d'envoi groupé ✅ ; regroupement des relances au même destinataire ❌. |
 | F-64 | S | ✅ | Carte « Suggéré par l'IA », champs modifiables, rien sans clic ; refus non mémorisé. |
 | F-65 | M | ✅ | Réponse reçue → « à traiter » + alerte, jamais de clôture automatique. |
-| F-66 | S | 🟡 | Règle de création automatique côté API (alias) ; pas d'écran de gestion des règles. |
+| F-66 | S | ✅ | Règles par expéditeur ou domaine (Réglages > Relances et suivi) : visibles, désactivables, supprimables ; la règle de boîte partagée y est rappelée. Les messages automatiques sont ignorés, pas de doublon. |
 | F-67 | S | ✅ | Sans responsable : nouveau / pris par X / traité par X ; reprise, libération. |
 | F-68 | S | ✅ | Avertissement « X s'en occupe », indicateur « X rédige », notification des autres membres. |
 | F-69 | S | ✅ | Notes internes ; IA coupée par défaut sur une boîte partagée. |
 | F-70 | M | ✅ | Priorités classées avec raison, tableau, filtres par type et par situation, Mes suivis / Équipe, synthèse d'Oscar, activité récente. |
 | F-71 | M | ✅ | Prochain RDV (en cours ou suivant, ensuite, journée terminée), agenda perso optionnel. |
 | F-72 | M | ✅ | Accueil allégé, trois états dont premier lancement en quatre étapes. |
-| F-73 | M | 🟡 | Destinataires, Cc/Cci, objet, signature, suivi précoché avec délai, date d'alerte annoncée ✅. Manque la suggestion de tâche/date à valider à l'envoi et l'annuaire LDAP. |
+| F-73 | M | 🟡 | Destinataires avec annuaire en autocomplétion (LDAP si configuré), Cc/Cci, objet, signature, suivi précoché avec délai du compte, date d'alerte annoncée ✅. Manque la suggestion de tâche/date à valider à l'envoi. |
 | F-74 | S | 🟡 | Créneaux libres cochables, brouillon modifiable avec ton, rien sans clic ✅. Pose en provisoire dans l'agenda ❌ ; bascule « agenda perso » seulement dans Réglages. |
 
 ### 4.7 Notifications, connexions, journal
 | ID | P | État | Remarques |
 |---|---|---|---|
-| F-75 | M | 🟡 | Dans l'application (regroupées, dédoublonnées) ✅. Notification du bureau (Tauri) et e-mail ❌ ; pas de choix de canal par type. |
+| F-75 | M | 🟡 | Un canal par type d'événement (application, bureau, e-mail) dans Alertes ✅, une seule alerte par fait sur chaque canal, e-mail testé. Le canal « bureau » est écrit côté front (notifications natives) mais l'application Tauri n'a pas été compilée. |
 | F-76 | M | ✅ | Réponse reçue / relance due en tête des priorités avec le motif. |
 | F-77 | M | ✅ | Barre d'état : messagerie, agendas, IA avec mode ; détail et « Réessayer ». |
 | F-78 | M | 🟡 | Journal exportable, filtre par compte, cartes de connexion. Pas de filtre par niveau (le journal n'a pas de gravité). |
@@ -116,8 +116,8 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 |---|---|---|
 | N-01 | 🟡 | axe-core automatisé sur chaque écran, clavier, focus, réduction des animations. Pas de test lecteur d'écran réel. |
 | N-02 | 🟡 | Zones live, sans vol de focus ; vérification à l'oreille manquante. |
-| N-03 | 🟡 | Annulation des actions courantes ✅. Capture rapide : champ sur l'accueil ; pas de raccourci global. |
-| N-04 | 🟡 | Identifiants chiffrés (libsodium), clé hors base ✅. HTTPS non contrôlé ici ; trousseau système (bureau) ❌. |
+| N-03 | 🟡 | Annulation des actions courantes ✅. Capture rapide : touche `q` dans l'application, depuis n'importe quel écran ✅ ; raccourci global du bureau écrit (Tauri), non essayé. |
+| N-04 | 🟡 | Identifiants chiffrés (libsodium), clé hors base ✅. Trousseau du système sur bureau : commandes écrites (crate `keyring`), non compilées. HTTPS non contrôlé ici. |
 | N-05 | 🟡 | CAS testé sur des réponses simulées, **jamais contre le CAS réel**. Comptes locaux ✅ : inscription (désactivable, `APP_REGISTRATION`), connexion avec essais limités et message identique que le compte existe ou non, mot de passe oublié (lien à usage unique d'une heure, réponse neutre), changement de mot de passe (autres appareils déconnectés). Sessions révocables ✅ ; TOTP/passkey ❌. |
 | N-06 | 🟡 | Export JSON de mes données et suppression définitive du compte (cascade) ✅, depuis Réglages > Mon compte. Pas de durées de conservation réglables ni de registre des traitements. Le journal des appels IA ne contient aucun contenu. |
 | N-07 | ❌ | Performances non mesurées (100 000 mails). |
@@ -151,12 +151,12 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Réception | 🟡 | Voir F-16 (corbeille, HTML). |
 | Mes suivis | ✅ | |
 | Tâches | ✅ | Listes + détail comme la maquette. |
-| Réglages | 🟡 | Section « Mon compte » ✅. Manquent : champs LDAP, règles de création automatique de suivis, délai par compte, canaux de notification par type. |
+| Réglages | ✅ | Mon compte, comptes avec délai de relance, annuaire, règles de suivi, IA externe, apparence. Reste à comparer ligne à ligne à la maquette. |
 | Agenda | 🟡 | Grille, bascule par calendrier, panneau « événement sélectionné », échéances de la période, conflits signalés ✅ ; invitations ❌. |
 | Équipe | 🟡 | Périmètre « Équipe » de la page Suivis ; pas d'écran dédié. |
 | Écrire | 🟡 | Voir F-73. |
 | Récapitulatif | ✅ | |
-| État et notifications | 🟡 | Barre d'état, notifications, journal ✅ ; choix des canaux ❌. |
+| État et notifications | ✅ | Barre d'état, notifications avec choix des canaux, journal. |
 | Réponse assistée | 🟡 | Voir F-74. |
 
 ## 5. Maquettes : comparaison écran par écran
@@ -175,8 +175,8 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | DesktopComposer | partiel | Reste : bloc « Suggéré par l'IA · à vérifier » pour la tâche à créer à l'envoi, bandeau LDAP, identité d'expéditeur. |
 | DesktopAlias | non comparé | Les états nouveau / pris / traité, notes et collision existent ; pas d'écran dédié « boîte partagée ». |
 | DesktopAgenda / MobAgenda | partiel | Fait : bascule de calendriers, panneau de l'événement sélectionné, échéances de la période. Reste : invitation reçue à accepter. |
-| DesktopNotifs | non comparé | Reste : « Comment être prévenu » (canal par type). |
-| DesktopReglages | non comparé | Voir tableau des écrans (LDAP, règles, délai par compte). |
+| DesktopNotifs | partiel | Fait : « Comment être prévenu » (canal par type). |
+| DesktopReglages | partiel | Fait : LDAP, règles de suivi, délai par compte. Reste à comparer le détail. |
 | MobTaches, Suivis (mobile), Relance | partiel | Relance : brouillon, envoyer, reporter, ne plus relancer présents. Mise en page mobile contrôlée seulement par les tests de gabarit. |
 
 ## 6. Architecture et garde-fous IA (sections 3 et 5)
@@ -189,7 +189,7 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | Mercure (temps réel) | ❌ | Interrogation du serveur chaque minute. |
 | FrankenPHP | ❌ | `php -S` en développement ; pas d'image de production. |
 | Cache hors ligne (service worker, IndexedDB) | ❌ | |
-| Tauri 2 | ❌ | Non commencé. |
+| Tauri 2 | 🟡 | Socle écrit dans `desktop/` (trousseau, notifications natives, raccourci global, barre système, instance unique, icônes, CI manuelle) et pont côté web testé. **Le code Rust n'a pas été compilé** (pas de chaîne Rust sur la machine de développement). |
 | Playwright | ❌ | Remplacé par `scripts/e2e.py` (HTTP + IMAP réels). |
 | Affichage HTML isolé (iframe sandbox) | ❌ | Texte brut seulement : aucun contenu actif ne s'exécute. |
 | Identifiants chiffrés, clé hors base | ✅ | |
@@ -206,8 +206,8 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 
 1. **Webmail (F-16)** : vidage de la corbeille, HTML isolé, pièces jointes dans les brouillons.
 2. **Fournisseur d'IA** : l'essayer contre un vrai service (OpenAI, Mistral, Ollama) et brancher un modèle auto-hébergé pour l'IA de l'université.
-3. **Réglages manquants** : LDAP, règles de création de suivis, délai par compte, jours ouvrés, canaux de notification par type.
-4. **Agenda** : invitations (F-25), bascule par calendrier, panneau de détail, conflits (F-21), vrai serveur CalDAV de test, Google.
-5. **Tauri** (dans le MVP du cahier), puis PWA et hors ligne.
+3. **Tauri** : compiler `desktop/`, corriger, signer, mises à jour automatiques, essais sur les trois systèmes et lecteurs d'écran.
+4. **Agenda** : invitations (F-25), vrai serveur CalDAV de test, Google.
+5. PWA et hors ligne.
 6. **Production** : image, Compose, documentation d'installation, test du CAS réel, RGPD (export, suppression, conservation).
 7. **Suivi** : tâche liée à un suivi (F-36), filtres par compte/projet/étiquette (F-59), regroupement des relances au même destinataire.

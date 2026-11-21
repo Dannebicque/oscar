@@ -16,6 +16,8 @@ export const useUiStore = defineStore('ui', () => {
   const announcement = ref('')
   /** Fenêtre d'aide des raccourcis clavier. */
   const shortcutsOpen = ref(false)
+  /** Fenêtre de capture rapide d'une tâche (N-03). */
+  const quickCaptureOpen = ref(false)
 
   function announce(message: string) {
     // Vider puis remplir force la relecture, même si le message est identique.
@@ -35,5 +37,5 @@ export const useUiStore = defineStore('ui', () => {
     return t.id
   }
 
-  return { toasts, announcement, shortcutsOpen, announce, dismiss, notify }
+  return { toasts, announcement, shortcutsOpen, quickCaptureOpen, announce, dismiss, notify }
 })

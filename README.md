@@ -80,3 +80,11 @@ données isolées par utilisateur ; connexion par CAS en production (connexion d
 ### Données de démonstration
 
 `php bin/console app:dev:setup` (lancé par `scripts/dev-up.sh`) crée aussi deux agendas de démonstration pour david, `demo://iut` (pro) et `demo://perso` (perso) : un emploi du temps recalculé autour d'aujourd'hui, avec un conflit d'horaire et deux rendez-vous dans l'heure qui vient, sans serveur CalDAV. Un événement créé dans un agenda de démonstration disparaît à la synchronisation suivante.
+
+### Application de bureau
+
+`desktop/` contient le socle Tauri 2 (trousseau, notifications natives, raccourci global de capture rapide, barre système). Voir `desktop/README.md` : le code Rust n'a pas encore été compilé.
+
+### Annuaire LDAP et canaux de notification
+
+`LDAP_URL`, `LDAP_BASE_DN`, `LDAP_BIND_DN`, `LDAP_BIND_PASSWORD` et les `LDAP_ATTR_*` branchent l'annuaire de l'établissement (lecture seule) ; vide, la saisie des destinataires garde sa liste de démonstration. Les canaux de notification (application, bureau, e-mail) se règlent par type dans Alertes ; l'e-mail passe par `MAILER_DSN`.

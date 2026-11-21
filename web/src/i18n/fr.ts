@@ -184,7 +184,9 @@ export default {
     title: 'Récapitulatif', morning: 'Récap du matin', evening: 'Bilan du soir', mailsToHandle: 'Mails importants non traités', events: 'Événements à venir', tasks: 'Tâches du jour et en retard',
     relances: 'Relances dues', nothing: 'Rien à signaler.', intro: 'Voilà ce qui compte maintenant. Je prépare, tu décides.', example: 'Exemple de récap', sentTo: 'Envoyé à david{\'@\'}iut-troyes.fr à {time}.',
   },
+  quick: { title: 'Capture rapide', help: 'Une tâche en deux gestes : tape un titre, Entrée.' },
   alerts: {
+    moreDesktop: '+ {n} autres notifications dans Oscar.',
     channelsTitle: 'Comment être prévenu', channelsHelp: 'Un canal par type d’événement. Les alertes sont regroupées pour ne pas se multiplier.', event: 'Événement', channel: { app: 'Dans l’application', desktop: 'Bureau', email: 'E-mail' },
     channelsNote: '« Connexion en échec » n’alerte qu’après plusieurs échecs de suite. Le canal « Bureau » concerne l’application de bureau ; l’e-mail est envoyé à l’adresse de ton compte.',
     messages: {
@@ -207,7 +209,7 @@ export default {
   },
   shortcuts: {
     title: 'Raccourcis clavier', help: 'Les mêmes que Gmail, pour garder tes repères. Ils ne fonctionnent pas dans un champ de saisie.', then: 'puis', off: 'Tu peux les désactiver dans Réglages > Apparence et accessibilité.',
-    keys: { c: 'Écrire un message', '/': 'Rechercher dans les mails', j: 'Message suivant', k: 'Message précédent', r: 'Répondre', gi: 'Aller aux mails', gs: 'Aller aux suivis', gt: 'Aller aux tâches', ga: 'Aller à l’agenda', gh: 'Aller à l’accueil', '?': 'Afficher cette aide' },
+    keys: { c: 'Écrire un message', q: 'Capturer une tâche', '/': 'Rechercher dans les mails', j: 'Message suivant', k: 'Message précédent', r: 'Répondre', gi: 'Aller aux mails', gs: 'Aller aux suivis', gt: 'Aller aux tâches', ga: 'Aller à l’agenda', gh: 'Aller à l’accueil', '?': 'Afficher cette aide' },
   },
   oscar: {
     name: 'Oscar', tone: 'Ton d’Oscar', toneHelp: 'Oscar parle toujours en phrases courtes et sans reproche. Le ton léger ajoute une pointe d’humour ; il disparaît de lui-même dès qu’il y a une erreur.',

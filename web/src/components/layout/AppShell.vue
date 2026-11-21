@@ -7,6 +7,10 @@ import { useAuthStore } from '../../stores/auth'
 import { useSettingsStore } from '../../stores/settings'
 import { useShortcuts } from '../../composables/useShortcuts'
 import { useSystemStore } from '../../stores/system'
+import QuickCaptureDialog from './QuickCaptureDialog.vue'
+import { onNative } from '../../desktop/bridge'
+import { useDesktopNotifications } from '../../desktop/useDesktopNotifications'
+import { useUiStore } from '../../stores/ui'
 import ShortcutsDialog from './ShortcutsDialog.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
 import ToastHost from '../ui/ToastHost.vue'
@@ -23,6 +27,12 @@ const settings = useSettingsStore()
 const accounts = useAccountsStore()
 const router = useRouter()
 useShortcuts()
+useDesktopNotifications()
+const ui = useUiStore()
+/** Bureau : le raccourci global et le menu de la barre système ouvrent la capture rapide. */
+let offCapture: (() => void) | undefined
+onMounted(async () => { offCapture = await onNative('oscar://quick-capture', () => { ui.quickCaptureOpen = true }) })
+onBeforeUnmount(() => offCapture?.())
 
 /** Charge les données de la session, puis les rafraîchit chaque minute (le temps réel viendra avec Mercure). */
 let poll: ReturnType<typeof setInterval> | undefined
@@ -80,6 +90,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
     <StatusBar />
   </div>
   <ShortcutsDialog />
+  <QuickCaptureDialog />
   <ToastHost />
 </template>
 

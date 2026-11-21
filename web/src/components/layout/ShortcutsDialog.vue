@@ -6,7 +6,7 @@ import BaseDialog from '../ui/BaseDialog.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
-const ROWS = [['c'], ['/'], ['j'], ['k'], ['r'], ['g', 'i'], ['g', 's'], ['g', 't'], ['g', 'a'], ['g', 'h'], ['?']] as const
+const ROWS = [['c'], ['q'], ['/'], ['j'], ['k'], ['r'], ['g', 'i'], ['g', 's'], ['g', 't'], ['g', 'a'], ['g', 'h'], ['?']] as const
 const id = (keys: readonly string[]) => keys.join('')
 </script>
 

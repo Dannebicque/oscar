@@ -58,7 +58,7 @@ Réponse assistée aux disponibilités (F-74) côté suggestion et brouillon, av
 
 ## Hors du MVP actuel
 
-Application Tauri (le cahier la place dans le MVP : **non commencée**), PWA, connecteur Google Agenda, invitations iCalendar (F-25),
+Application Tauri (le cahier la place dans le MVP : socle écrit dans `desktop/`, **jamais compilé**), PWA, connecteur Google Agenda, invitations iCalendar (F-25),
 partage d'agenda (F-26), règles de tri (F-15), signatures et modèles (F-19), LDAP (F-18), récap affiché sur l'accueil à partir du
 dernier envoi, Mercure (temps réel : l'application interroge le serveur chaque minute).
 

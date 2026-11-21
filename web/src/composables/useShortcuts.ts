@@ -5,7 +5,7 @@ import { useUiStore } from '../stores/ui'
 
 /**
  * Raccourcis clavier alignés sur Gmail, la référence que les utilisateurs de webmail connaissent (U-11) :
- *   c écrire · / rechercher · j / k message suivant / précédent · r répondre · ? aide · g puis i s t a h pour aller à…
+ *   c écrire · q capturer une tâche · / rechercher · j / k message suivant / précédent · r répondre · ? aide · g puis i s t a h pour aller à…
  * Règles d'accessibilité (WCAG 2.1.4) : jamais actifs dans un champ de saisie, une fenêtre ou avec une touche de modification,
  * et désactivables dans Réglages.
  */
@@ -38,6 +38,7 @@ export function useShortcuts() {
     }
     if (k === 'g') { pendingG = true; timer = setTimeout(() => (pendingG = false), 1200); return }
     if (k === 'c') { e.preventDefault(); void router.push('/ecrire') }
+    else if (k === 'q') { e.preventDefault(); ui.quickCaptureOpen = true }
     else if (k === '/') {
       e.preventDefault()
       const focus = () => document.getElementById('mail-q')?.focus()

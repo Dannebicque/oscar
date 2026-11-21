@@ -60,7 +60,7 @@ describe('réglages complétés : relance par compte, règles de suivi, canaux, 
     expect((email.element as HTMLInputElement).checked).toBe(false)
     await email.setValue(true)
     expect(useSettingsStore(pinia).s.notifyChannels.replyReceived.email).toBe(true)
-    expect((wrapper.find('input[aria-label="Connexion en échec : E-mail"]').element as HTMLInputElement).checked).toBe(true) // défaut
+    expect((wrapper.find('input[aria-label="Connexion : E-mail"]').element as HTMLInputElement).checked).toBe(true) // défaut
     expect(await check(wrapper.element)).toEqual([])
   })
 

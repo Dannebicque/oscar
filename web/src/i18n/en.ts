@@ -184,7 +184,9 @@ const en: typeof fr = {
     title: 'Recap', morning: 'Morning recap', evening: 'Evening review', mailsToHandle: 'Important unhandled mails', events: 'Upcoming events', tasks: 'Tasks today and overdue',
     relances: 'Reminders due', nothing: 'Nothing to report.', intro: 'Here is what matters now. I prepare, you decide.', example: 'Recap example', sentTo: 'Sent to david{\'@\'}iut-troyes.fr at {time}.',
   },
+  quick: { title: 'Quick capture', help: 'A task in two moves: type a title, press Enter.' },
   alerts: {
+    moreDesktop: '+ {n} more notifications in Oscar.',
     channelsTitle: 'How to be notified', channelsHelp: 'One channel per kind of event. Alerts are grouped so they don’t pile up.', event: 'Event', channel: { app: 'In the app', desktop: 'Desktop', email: 'Email' },
     channelsNote: '“Connection failed” only alerts after several failures in a row. “Desktop” applies to the desktop app; email goes to your account address.',
     messages: {
@@ -207,7 +209,7 @@ const en: typeof fr = {
   },
   shortcuts: {
     title: 'Keyboard shortcuts', help: 'The same as Gmail, so you keep your bearings. They do not work inside a text field.', then: 'then', off: 'You can turn them off in Settings > Appearance and accessibility.',
-    keys: { c: 'Write a message', '/': 'Search mail', j: 'Next message', k: 'Previous message', r: 'Reply', gi: 'Go to mail', gs: 'Go to follow-ups', gt: 'Go to tasks', ga: 'Go to calendar', gh: 'Go to home', '?': 'Show this help' },
+    keys: { c: 'Write a message', q: 'Capture a task', '/': 'Search mail', j: 'Next message', k: 'Previous message', r: 'Reply', gi: 'Go to mail', gs: 'Go to follow-ups', gt: 'Go to tasks', ga: 'Go to calendar', gh: 'Go to home', '?': 'Show this help' },
   },
   oscar: {
     name: 'Oscar', tone: 'Oscar’s tone', toneHelp: 'Oscar always speaks in short sentences, never blames you. The light tone adds a touch of humor; it disappears by itself whenever something goes wrong.',
