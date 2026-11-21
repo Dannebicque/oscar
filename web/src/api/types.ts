@@ -78,6 +78,8 @@ export interface AgendaApi {
   sources(): Promise<CalendarSource[]>
   events(): Promise<CalEvent[]>
   create(e: Omit<CalEvent, 'id'>): Promise<CalEvent>
+  /** Créneaux OCCUPÉS des collègues d'une boîte partagée qui ont accepté le partage (F-26) : jamais un titre ni un lieu. */
+  teamBusy(mailbox: string, from: Date, to: Date): Promise<{ member: string; start: string; end: string }[]>
 }
 
 export interface AccountsApi {

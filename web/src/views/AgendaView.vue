@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { api } from '../api'
 import CalendarGrid, { type GridView } from '../components/agenda/CalendarGrid.vue'
 import Callout from '../components/ui/Callout.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -17,6 +18,7 @@ import { conflictIds } from '../domain/agenda'
 import { isoDay } from '../domain/dates'
 import { useAgendaStore } from '../stores/agenda'
 import { useSuivisStore } from '../stores/suivis'
+import { useAccountsStore } from '../stores/accounts'
 import { useTasksStore } from '../stores/tasks'
 import { useUiStore } from '../stores/ui'
 
@@ -26,7 +28,8 @@ const store = useAgendaStore()
 const ui = useUiStore()
 const tasks = useTasksStore()
 const suivis = useSuivisStore()
-onMounted(() => Promise.all([store.load(), tasks.load(), suivis.load()]))
+const accounts = useAccountsStore()
+onMounted(() => Promise.all([store.load(), tasks.load(), suivis.load(), accounts.loaded ? Promise.resolve() : accounts.load().catch(() => undefined)]))
 
 const narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches
 const view = ref<GridView>(narrow ? 'timeGridDay' : 'timeGridWeek')
@@ -35,6 +38,20 @@ const title = ref('')
 const range = ref<{ start: Date; end: Date } | null>(null)
 /** Calendriers masqués (bascule par source) : la grille n'affiche que ceux qui restent actifs. */
 const hidden = ref<Set<string>>(new Set())
+/** Disponibilités de l'équipe (F-26) : créneaux occupés des collègues qui partagent leur agenda pro, sans aucun détail. */
+const teamOn = ref(false)
+const teamBusy = ref<{ member: string; start: string; end: string }[]>([])
+const box = computed(() => accounts.shared[0]?.slug ?? '')
+/** FullCalendar annonce la période à chaque rendu : on ne réagit que si elle change vraiment (sinon boucle de rendu). */
+function setRange(d: { start: Date; end: Date; title: string }) {
+  title.value = d.title
+  if (range.value?.start.getTime() !== d.start.getTime() || range.value?.end.getTime() !== d.end.getTime()) range.value = { start: d.start, end: d.end }
+}
+async function loadTeam() {
+  if (!teamOn.value || !box.value || !range.value) { if (teamBusy.value.length) teamBusy.value = []; return }
+  teamBusy.value = await api.agenda.teamBusy(box.value, range.value.start, range.value.end).catch(() => [])
+}
+watch([teamOn, range], loadTeam)
 const shownEvents = computed(() => store.events.filter((e) => !hidden.value.has(e.calendar)))
 function toggleSource(id: string) {
   const next = new Set(hidden.value)
@@ -66,6 +83,17 @@ const openId = ref<string | null>(null)
 const opened = computed(() => store.events.find((e) => e.id === openId.value) ?? null)
 const openedSource = computed(() => (opened.value ? store.sourceOf(opened.value.calendar) : undefined))
 
+/** Un événement peut générer une tâche de préparation (F-23) : un clic, jamais automatique ; échéance la veille (jour ouvré précédent). */
+const prepDone = ref<Set<string>>(new Set())
+async function addPrep() {
+  const e = opened.value
+  if (!e) return
+  const d = new Date(e.start)
+  do d.setDate(d.getDate() - 1); while (d.getDay() === 0 || d.getDay() === 6)
+  await tasks.add({ title: t('agenda.prepTitle', { title: e.title }), dueAt: isoDay(d), origin: 'event', source: e.title })
+  prepDone.value = new Set([...prepDone.value, e.id])
+  ui.notify(t('agenda.prepAdded', { title: e.title }))
+}
 const showNew = ref(false)
 const form = ref({ title: '', day: isoDay(new Date()), start: '09:00', end: '10:00', location: '', calendar: '' })
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
@@ -117,6 +145,9 @@ async function create() {
               <span>{{ s.label }}<template v-if="s.personal"> · {{ t('agenda.private') }}</template></span>
             </button>
           </li>
+          <li v-if="box">
+            <button type="button" class="src team" :class="{ off: !teamOn }" :aria-pressed="teamOn" @click="teamOn = !teamOn"><span class="bar" aria-hidden="true" /><BaseIcon name="users" :size="16" /><span>{{ t('agenda.teamToggle') }}</span></button>
+          </li>
         </ul>
         <Callout v-if="!store.loading && store.sources.length === 0" class="nosource" :level="2" tone="warn" icon="calendar" :title="t('agenda.noSource')">
           <p>{{ t('agenda.noSourceHelp') }}</p>
@@ -124,8 +155,8 @@ async function create() {
         </Callout>
         <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
         <CalendarGrid
-          ref="grid" :events="shownEvents" :sources="store.sources" :view="view" :conflicts="conflicts"
-          @open="openId = $event" @select="startCreate" @dates="(d) => { title = d.title; range = { start: d.start, end: d.end } }"
+          ref="grid" :events="shownEvents" :busy="teamBusy" :sources="store.sources" :view="view" :conflicts="conflicts"
+          @open="openId = $event" @select="startCreate" @dates="setRange"
         />
         <p class="hint note">{{ t('agenda.legend') }} {{ t('agenda.freeBusy') }}</p>
       </div>
@@ -144,7 +175,10 @@ async function create() {
               <dd><ToneChip :tone="openedSource?.personal ? 'neutral' : 'info'" :icon="openedSource?.personal ? 'user' : 'calendar'" :label="openedSource?.label ?? ''" /></dd>
             </dl>
             <p v-if="conflicts.has(opened.id)" class="conflict"><ToneChip tone="warn" icon="alert" :label="t('agenda.conflict')" /></p>
-            <div><BaseButton icon="x" :label="t('common.close')" @click="openId = null" /></div>
+            <div class="evacts">
+              <BaseButton icon="task" :disabled="prepDone.has(opened.id)" :label="prepDone.has(opened.id) ? t('agenda.prepDone') : t('agenda.prepTask')" @click="addPrep" />
+              <BaseButton icon="x" :label="t('common.close')" @click="openId = null" />
+            </div>
           </template>
         </section>
 
@@ -193,6 +227,7 @@ async function create() {
 .src:not(.personal) .bar { background: var(--c-primary); }
 .src.off { background: var(--c-surface); color: var(--c-text-muted); text-decoration: line-through; }
 .src.off .bar { background: var(--c-border-strong); }
+.evacts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .evt { font-size: var(--fs-lg); font-weight: 800; margin: 0; }
 .dues { list-style: none; margin: 0; padding: 0; display: grid; }
 .due { display: grid; gap: 2px; min-height: var(--target); padding: var(--space-2) 0; border-top: var(--bw) solid var(--c-border); color: var(--c-text); text-decoration: none; }

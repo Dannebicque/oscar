@@ -143,6 +143,7 @@ export function createHttpApi(baseUrl: string): Api {
         const rows = await req<{ id: string; calendarId: string; title: string; start: string; end: string; location: string | null }[]>('GET', '/api/calendar-events')
         return rows.map((e) => ({ id: e.id, calendar: e.calendarId, title: e.title, start: e.start, end: e.end, location: e.location ?? null }))
       },
+      teamBusy: (mailbox, from, to) => req('GET', `/api/team/busy?mailbox=${encodeURIComponent(mailbox)}&from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`),
       async create(e) {
         const r = await req<{ id: string; calendarId: string; location: string | null }>('POST', '/api/calendar-events', { calendarId: e.calendar, title: e.title, start: e.start, end: e.end, location: e.location })
         return { ...e, id: r.id, location: r.location ?? null }

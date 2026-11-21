@@ -18,7 +18,7 @@ import BaseIcon from '../ui/BaseIcon.vue'
  */
 export type GridView = 'timeGridWeek' | 'timeGridDay' | 'dayGridMonth' | 'listWeek'
 
-const props = defineProps<{ events: CalEvent[]; sources: CalendarSource[]; view: GridView; conflicts: Set<string> }>()
+const props = defineProps<{ events: CalEvent[]; sources: CalendarSource[]; view: GridView; conflicts: Set<string>; busy?: { member: string; start: string; end: string }[] }>()
 const emit = defineEmits<{
   open: [id: string]
   select: [range: { start: Date; end: Date }]
@@ -29,13 +29,17 @@ const cal = ref<InstanceType<typeof FullCalendar> | null>(null)
 const api = (): CalendarApi | undefined => cal.value?.getApi()
 
 const sourceOf = (id: string) => props.sources.find((s) => s.id === id)
-const items = computed<EventInput[]>(() =>
-  props.events.map((e) => ({
+const items = computed<EventInput[]>(() => [
+  ...(props.busy ?? []).map((b, i) => ({
+    id: `busy-${i}`, title: t('agenda.busyOf', { who: b.member }), start: b.start, end: b.end, editable: false, classNames: ['ev-busy'],
+    extendedProps: { location: null, source: t('agenda.team'), personal: false, conflict: false, busy: true },
+  })),
+  ...props.events.map((e) => ({
     id: e.id, title: e.title, start: e.start, end: e.end,
     classNames: [sourceOf(e.calendar)?.personal ? 'ev-personal' : 'ev-work', ...(props.conflicts.has(e.id) ? ['ev-conflict'] : [])],
     extendedProps: { location: e.location, source: sourceOf(e.calendar)?.label ?? '', personal: !!sourceOf(e.calendar)?.personal, conflict: props.conflicts.has(e.id) },
   })),
-)
+])
 
 const options = computed(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
@@ -61,7 +65,7 @@ const options = computed(() => ({
   businessHours: { daysOfWeek: [1, 2, 3, 4, 5], startTime: '08:00', endTime: '18:00' },
   events: items.value,
   select: (a: DateSelectArg) => { emit('select', { start: a.start, end: a.end }); api()?.unselect() },
-  eventClick: (a: EventClickArg) => emit('open', a.event.id),
+  eventClick: (a: EventClickArg) => { if (!a.event.id.startsWith('busy-')) emit('open', a.event.id) },
   datesSet: (a: { start: Date; end: Date; view: { title: string; currentStart: Date } }) =>
     emit('dates', { start: a.start, end: a.end, title: a.view.title, current: a.view.currentStart }),
 }))
@@ -127,6 +131,7 @@ defineExpose({
 .grid-wrap .fc-event.ev-personal {
   --fc-event-bg-color: var(--c-cal2-soft); --fc-event-border-color: var(--c-cal2); --fc-event-text-color: var(--c-on-cal2-soft);
 }
+.grid-wrap .fc-event.ev-busy { background: repeating-linear-gradient(135deg, var(--c-surface-2) 0 6px, var(--c-surface) 6px 12px); border: 1px dashed var(--c-border-strong); color: var(--c-text-muted); }
 .grid-wrap .fc-event.ev-conflict { outline: 2px dashed var(--c-warn); outline-offset: -2px; }
 .grid-wrap .fc-event:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; z-index: 5; }
 .grid-wrap .ev { display: flex; flex-direction: column; gap: 1px; padding: 2px 4px; overflow: hidden; line-height: 1.25; font-size: var(--fs-sm); }

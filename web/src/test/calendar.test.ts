@@ -155,3 +155,30 @@ describe('agenda sans calendrier connecté', () => {
     expect(alert.find('a.btn').attributes('href')).toContain('/reglages')
   })
 })
+
+describe('agenda d’équipe et préparation (F-26, F-23)', () => {
+  it('« Équipe : disponibilités » affiche des créneaux occupés sans détail, et un événement peut générer une tâche de préparation', async () => {
+    const { wrapper, pinia } = await mountApp(AgendaView, '/agenda')
+    await flushPromises()
+    const { useAccountsStore } = await import('../stores/accounts')
+    await useAccountsStore(pinia).load()
+    await flushPromises()
+    const toggle = wrapper.find('button.src.team')
+    expect(toggle.exists()).toBe(true)
+    await toggle.trigger('click')
+    await flushPromises()
+    await new Promise((r) => setTimeout(r, 50))
+    await flushPromises()
+    const busy = wrapper.findAll('.fc-event.ev-busy')
+    expect(busy.length).toBeGreaterThan(0)
+    expect(busy[0].text()).toContain('Occupé · ')
+    // Préparation : un clic sur un événement, puis le bouton.
+    const ev = wrapper.findAll('.fc-event').find((e) => e.text().includes('Point équipe'))!
+    await ev.trigger('click')
+    await flushPromises()
+    await wrapper.find('aside').findAll('button').find((b) => b.text() === 'Créer une tâche de préparation')!.trigger('click')
+    await flushPromises()
+    const { useTasksStore } = await import('../stores/tasks')
+    expect(useTasksStore(pinia).items.some((t) => t.title === 'Préparer : Point équipe' && t.origin === 'event')).toBe(true)
+  })
+})

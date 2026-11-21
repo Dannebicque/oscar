@@ -192,6 +192,7 @@ export function createMockApi(now: Date = new Date()): Api {
     agenda: {
       async sources() { return clone(sources) },
       async events() { return clone(events) },
+      async teamBusy(_m, from) { const d = (h: number, m: number) => { const x = new Date(from); x.setDate(x.getDate() + 2); x.setHours(h, m, 0, 0); return x.toISOString() }; return [{ member: 'Claire', start: d(10, 0), end: d(11, 30) }, { member: 'Marc', start: d(14, 0), end: d(15, 0) }] },
       async create(e) { const n = { ...e, id: uid('e') }; events = [...events, n]; return clone(n) },
     },
     accounts: {

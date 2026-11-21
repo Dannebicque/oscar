@@ -9,7 +9,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 41 | 20 | 4 |
+| Exigences fonctionnelles F (65) | 43 | 20 | 2 |
 | Non fonctionnelles N (12) | 2 | 9 | 1 |
 | Interface U (11) | 6 | 4 | 1 |
 
@@ -45,10 +45,10 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-20 | M | ✅ | CalDAV lecture/création (récurrences, écriture serveur d'abord). Testé contre des réponses simulées, **jamais contre un vrai serveur**. Google : ❌ (v2). Un événement existant ne se modifie ni ne se supprime. |
 | F-21 | S | ✅ | Chevauchements signalés dans la grille et dans le détail de l'événement. |
 | F-22 | S | ✅ | Créneaux libres proposés depuis une demande de disponibilités (libre/occupé seulement). |
-| F-23 | C | ❌ | Tâches de préparation générées par un événement. |
+| F-23 | C | ✅ | Dans le panneau de l'événement sélectionné : « Créer une tâche de préparation » (échéance la veille, jour ouvré précédent ; origine « événement »). Jamais automatique. |
 | F-24 | S | 🟡 | Plusieurs agendas affichés ensemble, bascule par calendrier, création dans l'agenda choisi ✅ ; une seule couleur par type (pro / perso), pas une couleur par source. |
 | F-25 | S | 🟡 | Invitation iCalendar reçue par mail (`METHOD:REQUEST`) : carte dans le lecteur avec accepter, peut-être, refuser ; la réponse (iTIP `REPLY`) part à l'organisateur sur clic seulement, l'événement entre dans l'agenda choisi sans doublon, chevauchements signalés ; testé et vérifié sur la pile réelle. Manque : envoyer une invitation, notification « invitation reçue » (il faudrait lire le corps à la synchro), mises à jour et annulations. |
-| F-26 | C | ❌ | Partage d'agenda (libre/occupé) avec l'équipe. |
+| F-26 | C | ✅ | Bascule « Équipe : disponibilités » dans l'agenda : créneaux occupés (« Occupé · Claire ») des collègues de la même boîte partagée qui ont activé « Partager mon agenda pro » (désactivé par défaut). Agenda pro seulement, jamais de titre, de lieu ni de participant ; testé côté API. |
 
 ### 4.4 Tâches
 | ID | P | État | Remarques |
