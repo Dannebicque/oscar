@@ -9,7 +9,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 34 | 24 | 7 |
+| Exigences fonctionnelles F (65) | 35 | 24 | 6 |
 | Non fonctionnelles N (12) | 2 | 8 | 2 |
 | Interface U (11) | 5 | 4 | 2 |
 
