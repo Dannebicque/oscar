@@ -1,6 +1,6 @@
 import { addDays, atTime, isoDay } from '../domain/dates'
 import { handle as claimHandle, release as claimRelease, reopen as claimReopen, take as claimTake, takeOver as claimTakeOver } from '../domain/claim'
-import { ApiError, type Api, type ServerSettings } from './types'
+import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSettings } from './types'
 import type {
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
 } from '../domain/types'
@@ -41,6 +41,7 @@ export function createMockApi(now: Date = new Date()): Api {
   })
   const claim = (state: 'new' | 'taken' | 'handled', by: string | null = null) => ({ state, by })
 
+  let scheduledMails: { row: ScheduledMail; payload: SendPayload }[] = []
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
     m('m5', { from: { name: 'Claire Roux', address: 'claire.roux@iut-troyes.fr' }, subject: 'Disponibilités pour la réunion pédagogique', at: hoursAgo(5), unread: true, paragraphs: ['Bonjour,', 'Pourrais-tu m’indiquer tes disponibilités la semaine du 30 novembre pour une réunion d’une heure ?', 'Merci !', 'Claire'], hints: { summary: 'Claire demande tes disponibilités la semaine du 30 novembre pour une réunion d’une heure.', availability: { slots: [0, 1, 2, 3, 4].map((i) => ({ start: iso(10 + i, 9 + i), end: iso(10 + i, 10 + i) })) } } }),
@@ -68,10 +69,10 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'perso', label: 'Perso', kind: 'google', personal: true },
   ]
   let events: CalEvent[] = [
-    { id: 'e1', calendar: 'iut', title: 'Point équipe', start: iso(0, 9), end: iso(0, 9, 45), location: 'Salle B12' },
-    { id: 'e2', calendar: 'iut', title: 'Soutenance de stage : M. Lemoine', start: iso(0, 14), end: iso(0, 15), location: 'Salle B104' },
+    { id: 'e1', calendar: 'iut', title: 'Point équipe', start: iso(0, 9), end: iso(0, 9, 45), location: 'Salle B12', attendees: [{ name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }] },
+    { id: 'e2', calendar: 'iut', title: 'Soutenance de stage : M. Lemoine', start: iso(0, 14), end: iso(0, 15), location: 'Salle B104', attendees: [{ name: 'Claire Petit', address: 'claire.petit@entreprise.fr' }] },
     { id: 'e3', calendar: 'perso', title: 'Dentiste', start: iso(0, 17), end: iso(0, 18), location: null },
-    { id: 'e4', calendar: 'iut', title: 'Réunion pédagogique', start: iso(1, 10), end: iso(1, 11, 30), location: 'Visio' },
+    { id: 'e4', calendar: 'iut', title: 'Réunion pédagogique', start: iso(1, 10), end: iso(1, 11, 30), location: 'Visio', attendees: [{ name: 'Claire Roux', address: 'claire.roux@iut-troyes.fr' }] },
     { id: 'e5', calendar: 'iut', title: 'Conseil de département', start: iso(2, 14), end: iso(2, 16), location: 'Amphi 2' },
     { id: 'e6', calendar: 'iut', title: 'Jury de stage', start: iso(4, 9), end: iso(4, 12), location: 'Salle B104' },
   ]
@@ -137,6 +138,18 @@ export function createMockApi(now: Date = new Date()): Api {
       async move(id, folder) { mails = mails.map((x) => (x.id === id ? { ...x, folder } : x)) },
       async attachments(id) { return clone(findMail(id)?.attachments ?? []).map((a, index) => ({ ...a, index })) },
       async download() { /* démo : rien à télécharger */ },
+      async schedule(p, sendAt) {
+        const row = { id: `s${Date.now()}`, subject: p.subject, to: p.to, sendAt, status: 'pending' as const, attachments: p.attachments?.length ?? 0 }
+        scheduledMails = [...scheduledMails, { row, payload: clone(p) }]
+        return row
+      },
+      async scheduled() { return scheduledMails.map((x) => x.row) },
+      async cancelScheduled(id) {
+        const x = scheduledMails.find((y) => y.row.id === id)
+        if (!x) throw new ApiError(404, 'Mail programmé introuvable.')
+        scheduledMails = scheduledMails.filter((y) => y !== x)
+        return x.payload
+      },
       async saveDraft(p) {
         mails = [...mails.filter((x) => x.id !== p.replaces), m(`d${Date.now()}`, { folder: 'drafts', from: { name: ME, address: 'david@iut-troyes.fr' }, to: p.to.map((a) => ({ name: a, address: a })), subject: p.subject, at: new Date().toISOString(), paragraphs: p.body.split(/\n{2,}/).filter(Boolean) })]
       },

@@ -13,7 +13,7 @@ contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
 | F-01 | Deux récaps par jour, horaires réglables, fuseau de l'utilisateur | ✅ | Planificateur Symfony (`CheckRecapsMessage`), un seul récap par créneau et par jour. |
 | F-02 | Contenu du récap | ✅ | Mails importants, événements du jour, tâches du jour et en retard, relances dues. Agenda perso exclu sauf réglage. |
 | F-03 | Diffusion par e-mail et accueil, canaux désactivables | 🟡 | E-mail ✅ ; l'écran « Récapitulatif » existe mais lit les données du front, il n'affiche pas encore le dernier récap envoyé. |
-| F-10 | Synchro IMAP multi-comptes, lecture, recherche, envoi SMTP | 🟡 | Synchro incrémentale par UID, lecture, envoi ✅. La recherche porte sur les en-têtes déjà chargés (pas de recherche plein texte serveur). |
+| F-10 | Synchro IMAP multi-comptes, lecture, recherche, envoi SMTP | 🟡 | Synchro incrémentale par UID, lecture, envoi ✅. La recherche porte sur les en-têtes déjà chargés (pas de recherche plein texte serveur) ; **recherche avancée** : expéditeur, objet, période, pièce jointe, avec suivi, non lus, par panneau ou par opérateurs (`de:`, `objet:`, `apres:`, `avant:`, `pj`, `suivi`, `nonlu`). |
 | F-11 | Tâches proposées depuis un mail | 🟡 | Résumé extractif du message (carte « Résumé d'Oscar ») et brouillon de réponse (ton cordial ou court, créneaux cochés) ✅, jamais envoyés : l'utilisateur relit et clique. Fournisseur local à règles (dates en français « avant mardi », « jeudi à 10h »). Pas de modèle de langage branché : l'interface `AiProvider` l'attend. |
 | F-12 | Relance après 48 h, délai réglable | 🟡 | Délai réglable par utilisateur et par suivi (via l'échéance). Jours ouvrés appliqués. Pas par compte. |
 | F-16 | Webmail convaincant | 🟡 | Dossiers, liste, lecture (texte brut), répondre, filtres ✅. Archiver, déplacer, supprimer (corbeille), transférer ✅ et fil de discussion ✅. Pièces jointes ✅ (téléchargement et envoi jusqu'à 5 Mo). Brouillons enregistrés ✅. **Pas encore** : vidage de la corbeille, HTML isolé. |
@@ -53,7 +53,7 @@ Réponse assistée aux disponibilités (F-74) côté suggestion et brouillon, av
 | N-11 | 🟡 | Environnement de développement en une commande (`scripts/dev-up.sh`) ✅. Image de production et Compose écrits (`docs/INSTALL.md`), **jamais construits**. |
 | U-01, U-03, U-08 | ✅ | Barre du bas, rail latéral, couleur jamais seule. |
 | U-09, F-17 | ✅ | Trois styles (Moderne, Rétro, Néon), cinq palettes et accent libre corrigé pour le contraste, quatre modes, trois densités. Chaque combinaison vérifiée WCAG AA par test. |
-| U-11 | ✅ | Raccourcis Gmail (c, /, j, k, r, g+i/s/t/a/h, ?), désactivables. |
+| U-11 | ✅ | Raccourcis Gmail (c, /, j, k, r, e, #, s, g+i/s/t/a/h, ?), désactivables. |
 | U-02 | ❌ | Balayage entre vues (S). |
 
 ## Hors du MVP actuel

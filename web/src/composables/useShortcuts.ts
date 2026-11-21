@@ -5,11 +5,14 @@ import { useUiStore } from '../stores/ui'
 
 /**
  * Raccourcis clavier alignés sur Gmail, la référence que les utilisateurs de webmail connaissent (U-11) :
- *   c écrire · q capturer une tâche · / rechercher · j / k message suivant / précédent · r répondre · ? aide · g puis i s t a h pour aller à…
+ *   c écrire · q capturer une tâche · / rechercher · j / k message suivant / précédent · r répondre · e archiver · # corbeille · s suivre
+ *   ? aide · g puis i s t a h pour aller à…
  * Règles d'accessibilité (WCAG 2.1.4) : jamais actifs dans un champ de saisie, une fenêtre ou avec une touche de modification,
  * et désactivables dans Réglages.
  */
-export const SHORTCUT_EVENTS = { move: 'oscar:move', reply: 'oscar:reply' } as const
+export const SHORTCUT_EVENTS = { move: 'oscar:move', reply: 'oscar:reply', act: 'oscar:act', advance: 'oscar:advance' } as const
+/** Tri d'un mail depuis le clavier : e archiver, # corbeille, s suivre (F-73). */
+export type ShortcutAction = 'archive' | 'trash' | 'follow'
 
 const GO: Record<string, string> = { i: '/mails', s: '/suivis', t: '/taches', a: '/agenda', h: '/', r: '/recap' }
 
@@ -47,6 +50,10 @@ export function useShortcuts() {
     } else if (k === '?') { e.preventDefault(); ui.shortcutsOpen = true }
     else if (k === 'j' || k === 'k') window.dispatchEvent(new CustomEvent(SHORTCUT_EVENTS.move, { detail: k === 'j' ? 1 : -1 }))
     else if (k === 'r') window.dispatchEvent(new CustomEvent(SHORTCUT_EVENTS.reply))
+    else if (k === 'e' || k === '#' || k === 'Delete' || k === 's') {
+      e.preventDefault()
+      window.dispatchEvent(new CustomEvent<ShortcutAction>(SHORTCUT_EVENTS.act, { detail: k === 'e' ? 'archive' : k === 's' ? 'follow' : 'trash' }))
+    }
   }
   onMounted(() => document.addEventListener('keydown', onKey))
   onBeforeUnmount(() => document.removeEventListener('keydown', onKey))

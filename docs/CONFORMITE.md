@@ -95,9 +95,9 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-68 | S | ✅ | Avertissement « X s'en occupe », indicateur « X rédige », notification des autres membres. |
 | F-69 | S | ✅ | Notes internes ; IA coupée par défaut sur une boîte partagée. |
 | F-70 | M | ✅ | Priorités classées avec raison, tableau, filtres par type et par situation, Mes suivis / Équipe, synthèse d'Oscar, activité récente. |
-| F-71 | M | ✅ | Prochain RDV (en cours ou suivant, ensuite, journée terminée), agenda perso optionnel. |
+| F-71 | M | ✅ | Prochain RDV (en cours ou suivant, ensuite, journée terminée), agenda perso optionnel. **Avant ce rendez-vous** : les trois derniers échanges de mails (90 jours) avec les participants lus dans l'agenda (ORGANIZER et ATTENDEE), sinon avec un mot du titre dans l'objet ; sur l'accueil et dans le détail d'un événement. Calcul local : l'IA ne reçoit rien (ni titres, ni participants). |
 | F-72 | M | ✅ | Accueil allégé, trois états dont premier lancement en quatre étapes. |
-| F-73 | M | ✅ | Destinataires avec annuaire (LDAP si configuré), Cc/Cci, objet, signature, suivi précoché avec délai du compte et date d'alerte annoncée, **suggestion de tâche pendant la rédaction** (« avant mardi ») : proposée, cochée par l'utilisateur, créée seulement si le message part. |
+| F-73 | M | ✅ | Destinataires avec annuaire (LDAP si configuré), Cc/Cci, objet, signature, suivi précoché avec délai du compte et date d'alerte annoncée, **suggestion de tâche pendant la rédaction** (« avant mardi ») : proposée, cochée par l'utilisateur, créée seulement si le message part. **Annuler l'envoi** : après le clic, le message attend 10 s par défaut (0, 5, 10, 20 ou 30 s dans Réglages) ; « Annuler » le rouvre dans l'éditeur, « Envoyer maintenant » saute l'attente ; rien n'est parti ni créé pendant l'attente. **Mails programmés** : l'utilisateur choisit l'heure (demain matin, lundi matin, après-midi, ou date libre), le serveur envoie à l'heure (planificateur chaque minute, jamais deux fois), dossier « Programmés » pour annuler ou modifier ; un échec est signalé par une alerte et le message reste. La tâche cochée n'est pas créée pour un mail programmé (elle ne naît qu'à l'envoi). |
 | F-74 | S | 🟡 | Créneaux libres cochables, brouillon modifiable avec ton, rien sans clic ✅. Pose en provisoire dans l'agenda ❌ ; bascule « agenda perso » seulement dans Réglages. |
 
 ### 4.7 Notifications, connexions, journal
@@ -141,7 +141,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | U-08 | M | ✅ | Icône + libellé partout, jamais la couleur seule ; contrastes vérifiés. |
 | U-09 | S | ✅ | Trois styles, cinq palettes, accent libre, modes clair/sombre/contraste. |
 | U-10 | S | ❌ | Ordre de repli des panneaux paramétrable. |
-| U-11 | S | ✅ | Raccourcis alignés sur Gmail, désactivables. |
+| U-11 | S | ✅ | Raccourcis alignés sur Gmail, désactivables : c, q, /, j, k, r, **e (archiver), # ou Suppr (corbeille), s (suivre)**, g puis i/s/t/a/h, ?. Après archivage ou corbeille, la liste passe au message suivant (traitement à la chaîne) ; l'annulation reste proposée. |
 
 ## 4. Écrans prévus (section 10.2)
 

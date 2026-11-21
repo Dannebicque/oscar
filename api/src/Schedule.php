@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Mail\SendDueMailsMessage;
 use App\Recap\CheckRecapsMessage;
 use App\Recap\CheckRelancesMessage;
 use App\Recap\SyncAllMessage;
@@ -29,6 +30,8 @@ class Schedule implements ScheduleProviderInterface
             // Synchronisation incrémentale des boîtes et agendas (F-10, F-20).
             ->add(RecurringMessage::every('2 minutes', new SyncAllMessage()))
             ->add(RecurringMessage::every('1 minute', new CheckRecapsMessage()))
+            // Mails programmés : envoyés à l'heure choisie par l'utilisateur (F-73).
+            ->add(RecurringMessage::every('1 minute', new SendDueMailsMessage()))
             ->add(RecurringMessage::every('15 minutes', new CheckRelancesMessage()))
         ;
     }

@@ -9,7 +9,7 @@ import { clock } from '../../domain/clock'
 import { followUpDue, isoDay } from '../../domain/dates'
 import type { Attachment, Mail } from '../../domain/types'
 import { useFormat } from '../../composables/useFormat'
-import { SHORTCUT_EVENTS } from '../../composables/useShortcuts'
+import { SHORTCUT_EVENTS, type ShortcutAction } from '../../composables/useShortcuts'
 import { useAgendaStore } from '../../stores/agenda'
 import { useMailsStore } from '../../stores/mails'
 import { useSettingsStore } from '../../stores/settings'
@@ -55,6 +55,14 @@ onMounted(() => { void mails.loadBody(props.mail.id); void mails.loadAttachments
 const onReplyKey = () => reply(false)
 onMounted(() => window.addEventListener(SHORTCUT_EVENTS.reply, onReplyKey))
 onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.reply, onReplyKey))
+// e / # / s : archiver, corbeille, suivre. Mêmes gestes que les boutons, donc même annulation possible.
+function onActKey(e: Event) {
+  const a = (e as CustomEvent<ShortcutAction>).detail
+  if (a === 'follow') { if (!suivi.value && !shared.value) void createSuivi(false) }
+  else if (props.mail.folder !== (a === 'archive' ? 'archive' : 'trash')) void relocate(a)
+}
+onMounted(() => window.addEventListener(SHORTCUT_EVENTS.act, onActKey))
+onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.act, onActKey))
 const bodyLoading = computed(() => mails.loadingBody.has(props.mail.id))
 const bodyFailed = computed(() => mails.bodyError.has(props.mail.id))
 
@@ -95,7 +103,10 @@ async function relocate(folder: 'inbox' | 'archive' | 'trash') {
   try {
     const undo = await mails.moveTo(props.mail.id, folder)
     ui.notify(t('mail.moved', { subject: props.mail.subject, folder: t(`mail.folder.${folder}`) }), { undo: undo ? async () => { await undo(); ui.notify(t('mail.movedBack')) } : undefined })
-    router.push({ name: 'mails' })
+    // La liste propose le message suivant (traitement à la chaîne au clavier) ; sans liste, retour aux mails.
+    const step = { handled: false, id: props.mail.id }
+    window.dispatchEvent(new CustomEvent(SHORTCUT_EVENTS.advance, { detail: step }))
+    if (!step.handled) router.push({ name: 'mails' })
   } catch (e) {
     ui.notify(e instanceof Error && e.message ? e.message : t('common.actionFailed'), { tone: 'error' })
   }

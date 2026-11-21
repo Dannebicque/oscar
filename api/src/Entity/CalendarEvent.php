@@ -48,6 +48,10 @@ class CalendarEvent implements OwnedInterface
     #[ORM\Column(length: 300, nullable: true)]
     private ?string $location = null;
 
+    /** @var list<array{name: string, address: string}> */
+    #[ORM\Column(type: Types::JSON, options: ['default' => '[]'])]
+    private array $attendees = [];
+
     public function __construct()
     {
         $this->id = Uuid::v7()->toRfc4122();
@@ -73,4 +77,8 @@ class CalendarEvent implements OwnedInterface
     public function setEnd(\DateTimeImmutable $v): static { $this->end = $v; return $this; }
     public function getLocation(): ?string { return $this->location; }
     public function setLocation(?string $v): static { $this->location = $v; return $this; }
+    /** @return list<array{name: string, address: string}> */
+    public function getAttendees(): array { return $this->attendees; }
+    /** @param list<array{name: string, address: string}> $v */
+    public function setAttendees(array $v): static { $this->attendees = $v; return $this; }
 }

@@ -211,9 +211,11 @@ export interface CalEvent {
   start: string // ISO
   end: string
   location: string | null
+  /** Participants (organisateur compris), quand le serveur d'agenda les donne : sert à retrouver les échanges de mails. */
+  attendees?: { name: string; address: string }[]
 }
 
-export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied'
+export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed'
 export interface AppNotification {
   id: string
   kind: NotificationKind

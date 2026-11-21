@@ -78,11 +78,29 @@ final class CalDavProvider implements CalendarProvider
                 if ($uid === '' || $end <= $from || $start >= $to) {
                     continue;
                 }
-                $out[] = new CalendarEventData($uid, trim((string) ($ev->SUMMARY ?? '')) ?: '(sans titre)', $start, $end, isset($ev->LOCATION) && trim((string) $ev->LOCATION) !== '' ? trim((string) $ev->LOCATION) : null);
+                $out[] = new CalendarEventData($uid, trim((string) ($ev->SUMMARY ?? '')) ?: '(sans titre)', $start, $end, isset($ev->LOCATION) && trim((string) $ev->LOCATION) !== '' ? trim((string) $ev->LOCATION) : null, $this->people($ev));
             }
         }
 
         return $out;
+    }
+
+    /** @return list<array{name: string, address: string}> */
+    private function people(\Sabre\VObject\Component $ev): array
+    {
+        $out = [];
+        foreach (['ORGANIZER', 'ATTENDEE'] as $prop) {
+            foreach ($ev->select($prop) as $p) {
+                $address = strtolower(trim(preg_replace('/^mailto:/i', '', (string) $p)));
+                if (!filter_var($address, \FILTER_VALIDATE_EMAIL) || isset($out[$address])) {
+                    continue;
+                }
+                $name = isset($p['CN']) ? trim((string) $p['CN']) : '';
+                $out[$address] = ['name' => mb_substr($name !== '' ? $name : $address, 0, 120), 'address' => $address];
+            }
+        }
+
+        return \array_slice(array_values($out), 0, 30);
     }
 
     private function options(CalendarAccount $a): array

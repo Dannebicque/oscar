@@ -37,12 +37,14 @@ export interface Settings {
   dirShowPhone: boolean
   /** Ton d'Oscar : léger (pointe d'humour) ou sobre. L'humour disparaît toujours dans une erreur. */
   oscarTone: 'light' | 'neutral'
+  /** Délai d'annulation de l'envoi, en secondes (0 = envoi immédiat) (F-73). */
+  undoSendSeconds: 0 | 5 | 10 | 20 | 30
   /** Raccourcis clavier à une touche : désactivables (WCAG 2.1.4). */
   shortcuts: boolean
 }
 
 export const DEFAULTS: Settings = {
-  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
+  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
   recapMorning: '08:00', recapEvening: '17:30', recapEmail: true, recapHome: true, includePersonalCalendar: false,
   shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true, notifyChannels: {}, dirShowDepartment: true, dirShowPhone: false,
 }
@@ -73,6 +75,7 @@ export function parseSettings(raw: string | null): Settings {
     if (!DENSITIES.includes(out.density)) out.density = DEFAULTS.density
     if (out.locale !== 'fr' && out.locale !== 'en') out.locale = DEFAULTS.locale
     if (!['university', 'external', 'off'].includes(out.aiMode)) out.aiMode = DEFAULTS.aiMode
+    if (![0, 5, 10, 20, 30].includes(out.undoSendSeconds)) out.undoSendSeconds = DEFAULTS.undoSendSeconds
     if (!['light', 'neutral'].includes(out.oscarTone)) out.oscarTone = DEFAULTS.oscarTone
   } catch {
     /* données corrompues : valeurs par défaut */

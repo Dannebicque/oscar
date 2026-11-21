@@ -98,10 +98,11 @@ const en: typeof fr = {
     thread: { title: 'Conversation', count: '{n} messages', me: 'Me', show: 'Show', hide: 'Hide', earlier: 'Earlier message' },
     expand: 'Expand folders', collapse: 'Collapse',
     title: 'Mail', folders: 'Folders', compose: 'Write', list: 'Message list', reading: 'Reading',
-    folder: { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', archive: 'Archive', trash: 'Trash', suivis: 'Follow-ups' },
+    folder: { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', archive: 'Archive', trash: 'Trash', suivis: 'Follow-ups', scheduled: 'Scheduled' },
     shared: 'Shared mailboxes', sharedMembers: 'Members: {names}. Everyone receives every mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Shared mailbox · {n} members',
     filters: { all: 'All', unread: 'Unread', attach: 'Attachment', week: 'This week' }, filterLabel: 'Filter',
+    adv: { toggle: 'Advanced filters', active: '{n} active', reset: 'Clear all', from: 'From', subject: 'Subject', after: 'Received after', before: 'Received before', attachment: 'With attachment', followed: 'With a follow-up', unread: 'Unread only', help: 'Tip: type from:claire, subject:quote, after:2026-11-01, before:2026-11-30, pj, suivi or nonlu straight into the search.' },
     search: 'Search mail', searchPlaceholder: 'Search',
     unread: 'unread', attachment: 'attachment', from: 'From {who}', via: 'via contact{\'@\'}',
     empty: 'No messages here.', selectOne: 'Pick a message to read it.',
@@ -204,8 +205,9 @@ const en: typeof fr = {
       replyReceived: '{who} replied to “{subject}”.',
       relanceDue: 'Reminder due: “{subject}” ({who}). | {n} reminders to send.',
       invitation: 'Invitation: {title}.', connectionFailed: '{account}: reconnection needed.',
+      scheduledFailed: 'Not sent: “{subject}” could not be sent. Reopen it under Scheduled.',
       takenOver: '{who} took over “{subject}”.', memberReplied: '{who} replied to “{subject}”.',
-    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
+    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { scheduledFailed: 'Scheduled send failed', replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
   journal: {
     log: 'Log',
     messages: {
@@ -218,9 +220,21 @@ const en: typeof fr = {
     actions: { retry: 'Try again from the status bar.', reconnect: 'Reconnect the account in Settings.', none: 'Nothing to do.' },
     types: { send: 'Sending', calendar: 'Calendar', auth: 'Authentication', sync: 'Synchronization' }, back: 'Back to settings',
   },
+  brief: { title: 'Before this meeting', none: 'No recent exchange with the participants.', noPeople: 'No known participant for this meeting.', receivedFrom: 'Received from {who}', sentTo: 'Sent to {who}' },
+  undoSend: {
+    pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
+    kept: 'Your message is kept: reopen it and try again.',
+  },
+  schedule: {
+    open: 'Schedule', title: 'Schedule sending', help: 'The message goes out at the chosen time, not before. You can cancel it until it has left.',
+    presets: { tomorrow: 'Tomorrow morning', monday: 'Monday morning', afternoon: 'This afternoon', tomorrowAfternoon: 'Tomorrow afternoon' }, custom: 'Or pick a date and time', confirm: 'Schedule sending',
+    future: 'Pick a time in the future.', done: 'Message scheduled for {when}.', taskLater: 'The task you ticked is not created for you: it only is once the message leaves.',
+    list: 'Scheduled mails', empty: 'No scheduled mail. Write a message, then choose “Schedule”.', at: 'Goes out {when}', cancel: 'Cancel sending', edit: 'Edit', failed: 'Not sent: the outgoing server refused it. Reopen the message to try again.', sending: 'Leaving now',
+    cancelled: 'Sending cancelled. The message is open again.',
+  },
   shortcuts: {
     title: 'Keyboard shortcuts', help: 'The same as Gmail, so you keep your bearings. They do not work inside a text field.', then: 'then', off: 'You can turn them off in Settings > Appearance and accessibility.',
-    keys: { c: 'Write a message', q: 'Capture a task', '/': 'Search mail', j: 'Next message', k: 'Previous message', r: 'Reply', gi: 'Go to mail', gs: 'Go to follow-ups', gt: 'Go to tasks', ga: 'Go to calendar', gh: 'Go to home', '?': 'Show this help' },
+    keys: { c: 'Write a message', q: 'Capture a task', '/': 'Search mail', j: 'Next message', k: 'Previous message', r: 'Reply', e: 'Archive the message', '#': 'Move to trash (or Delete)', s: 'Follow the message', gi: 'Go to mail', gs: 'Go to follow-ups', gt: 'Go to tasks', ga: 'Go to calendar', gh: 'Go to home', '?': 'Show this help' },
   },
   oscar: {
     name: 'Oscar', tone: 'Oscar’s tone', toneHelp: 'Oscar always speaks in short sentences, never blames you. The light tone adds a touch of humor; it disappears by itself whenever something goes wrong.',
@@ -333,6 +347,7 @@ const en: typeof fr = {
       when: { domain: 'Any mail from {\'@\'}{value}', sender: 'Any mail from {value}' }, alias: 'Any mail arriving at {address}', on: 'On', off: 'Off', remove: 'Delete the rule {value}', none: 'No rules yet.',
       never: 'A rule only creates a “to handle” follow-up. Nothing is sent, nothing is closed, and automatic messages (out-of-office, newsletters) are ignored.',
     },
+    undoSend: { legend: 'Undo send', off: 'Send right away', seconds: '{n} seconds', help: 'After you click “Send”, the message waits this long before it leaves: you can undo it. Nothing leaves without your click.' },
     relances: {
       delay: 'Delay before a reminder', delayHelp: 'Default for the account david{\'@\'}iut-troyes.fr', h24: '24 hours', h48: '48 hours', h72: '3 days', h168: '1 week',
       businessDays: 'Count in business days', businessDaysHelp: 'Otherwise: real hours.', cap: 'Maximum reminders proposed per day',
@@ -357,7 +372,7 @@ const en: typeof fr = {
       never: 'Oscar reads your mail to suggest, never to act. No mail is sent and no follow-up is created without your click.',
     },
     look: {
-      shortcuts: 'Keyboard shortcuts', shortcutsHelp: 'Single keys like Gmail’s (c, j, k, r, /). Turn them off if they get in the way of voice dictation or an adapted keyboard.',
+      shortcuts: 'Keyboard shortcuts', shortcutsHelp: 'Single keys like Gmail’s (c, j, k, r, e, #, s, /). Turn them off if they get in the way of voice dictation or an adapted keyboard.',
       style: 'Style', styleHelp: 'Shape, depth and typography. Colors are set separately.',
       styles: { modern: 'Modern', retro: 'Retro', neon: 'Neon' },
       styleDesc: { modern: 'Clean and calm, close to the mockups.', retro: 'Warm paper, thick strokes, monospaced type.', neon: 'Deep night, glowing edges, vivid accents.' },

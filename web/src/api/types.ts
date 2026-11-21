@@ -37,7 +37,15 @@ export interface SendPayload {
   attachments?: { name: string; type: string; content: string }[]
 }
 
+/** Mail programmé (F-73) : écrit, et envoyé à l'heure choisie par l'utilisateur. */
+export interface ScheduledMail { id: string; subject: string; to: string[]; sendAt: string; status: 'pending' | 'sending' | 'failed'; attachments: number }
+
 export interface MailApi {
+  /** Programme l'envoi à l'heure choisie (clic explicite) ; rien ne part avant. */
+  schedule(p: SendPayload, sendAt: string): Promise<ScheduledMail>
+  scheduled(): Promise<ScheduledMail[]>
+  /** Annule un mail programmé et rend le message pour le rouvrir dans l'éditeur. */
+  cancelScheduled(id: string): Promise<SendPayload>
   list(): Promise<Mail[]>
   /** Corps en texte brut, lu à la demande (jamais de HTML). */
   body(id: string): Promise<string[]>

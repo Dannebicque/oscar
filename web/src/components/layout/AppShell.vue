@@ -9,6 +9,7 @@ import { useSwipeNav } from '../../composables/useSwipeNav'
 import { useShortcuts } from '../../composables/useShortcuts'
 import { useSystemStore } from '../../stores/system'
 import OfflineBanner from './OfflineBanner.vue'
+import UndoSendBar from './UndoSendBar.vue'
 import QuickCaptureDialog from './QuickCaptureDialog.vue'
 import { onNative } from '../../desktop/bridge'
 import { useDesktopNotifications } from '../../desktop/useDesktopNotifications'
@@ -89,7 +90,8 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
       <button v-if="session.token" type="button" class="link wide out" :aria-label="t('nav.signOut')" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOutShort') }}</span></button>
     </nav>
 
-    <main id="main" tabindex="-1" :class="{ bleed: route.meta.bleed }"><OfflineBanner class="ob" /><div class="page"><RouterView /></div></main>
+    <main id="main" tabindex="-1" :class="{ bleed: route.meta.bleed }"><UndoSendBar />
+    <OfflineBanner class="ob" /><div class="page"><RouterView /></div></main>
     <StatusBar />
   </div>
   <ShortcutsDialog />

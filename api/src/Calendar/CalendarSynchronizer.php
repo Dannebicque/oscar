@@ -35,10 +35,10 @@ final class CalendarSynchronizer
                 $row = (new CalendarEvent())->setOwner($account->getOwner())->setCalendar($account)->setUid($uid);
                 $this->em->persist($row);
                 ++$stats['added'];
-            } elseif ($row->getTitle() !== $e->title || $row->getStart() != $e->start || $row->getEnd() != $e->end || $row->getLocation() !== $e->location) {
+            } elseif ($row->getTitle() !== $e->title || $row->getStart() != $e->start || $row->getEnd() != $e->end || $row->getLocation() !== $e->location || $row->getAttendees() !== $e->attendees) {
                 ++$stats['updated'];
             }
-            $row->setTitle($e->title)->setStart($e->start)->setEnd($e->end)->setLocation($e->location);
+            $row->setTitle($e->title)->setStart($e->start)->setEnd($e->end)->setLocation($e->location)->setAttendees($e->attendees);
         }
         foreach ($local as $uid => $l) {
             // On ne supprime que dans la fenêtre synchronisée : l'historique plus ancien reste consultable.

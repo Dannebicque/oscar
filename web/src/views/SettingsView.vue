@@ -42,6 +42,7 @@ const themeOpts = computed(() => THEMES.map((x) => ({ value: x.id, label: t(`set
 const densityOpts = computed(() => DENSITIES.map((d) => ({ value: d, label: t(`settings.look.densities.${d}`) })))
 const langOpts = computed(() => LOCALES.map((l) => ({ value: l, label: l === 'fr' ? 'Français' : 'English' })))
 const delayOpts = computed(() => ([24, 48, 72, 168] as const).map((h) => ({ value: h, label: t(`settings.relances.h${h}`) })))
+const undoOpts = computed(() => ([0, 5, 10, 20, 30] as const).map((n) => ({ value: n, label: n === 0 ? t('settings.undoSend.off') : t('settings.undoSend.seconds', { n }) })))
 const capOpts = [3, 5, 10].map((n) => ({ value: n as 3 | 5 | 10, label: String(n) }))
 const toneOpts = computed(() => (['light', 'neutral'] as const).map((k) => ({ value: k, label: t(`oscar.tones.${k}`), help: say('noMeeting', {}, k) })))
 const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((m) => ({ value: m, label: t(`settings.ai.${m}`), help: t(`settings.ai.${m}Help`) })))
@@ -68,6 +69,10 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
         <div class="card stack">
           <SwitchField v-model="s.includePersonalCalendar" :label="t('settings.accounts.includePersonal')" :help="t('settings.accounts.includePersonalHelp')" />
           <SwitchField v-model="s.shareBusy" :label="t('settings.accounts.shareBusy')" :help="t('settings.accounts.shareBusyHelp')" />
+        </div>
+        <div class="card stack">
+          <RadioGroup v-model="s.undoSendSeconds" name="undo" :legend="t('settings.undoSend.legend')" :options="undoOpts" />
+          <p class="hint">{{ t('settings.undoSend.help') }}</p>
         </div>
       </section>
 

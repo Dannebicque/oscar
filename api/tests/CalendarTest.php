@@ -81,7 +81,7 @@ final class CalendarTest extends ApiTestCase
 
     public function testCalDavParsesEventsAndExpandsRecurrence(): void
     {
-        $ics1 = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//t//EN\r\nBEGIN:VEVENT\r\nUID:one@x\r\nDTSTAMP:20261101T000000Z\r\nDTSTART:20261123T090000Z\r\nDTEND:20261123T100000Z\r\nSUMMARY:Soutenance\r\nLOCATION:B104\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+        $ics1 = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//t//EN\r\nBEGIN:VEVENT\r\nUID:one@x\r\nDTSTAMP:20261101T000000Z\r\nDTSTART:20261123T090000Z\r\nDTEND:20261123T100000Z\r\nSUMMARY:Soutenance\r\nLOCATION:B104\r\nORGANIZER;CN=Sophie Laurent:mailto:Sophie.Laurent@univ-reims.fr\r\nATTENDEE;CN=Claire Petit:mailto:claire@iut-troyes.fr\r\nATTENDEE:mailto:claire@iut-troyes.fr\r\nATTENDEE:mailto:pas-une-adresse\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
         $ics2 = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//t//EN\r\nBEGIN:VEVENT\r\nUID:weekly@x\r\nDTSTAMP:20261101T000000Z\r\nDTSTART:20261124T080000Z\r\nDTEND:20261124T083000Z\r\nRRULE:FREQ=DAILY;COUNT=3\r\nSUMMARY:Point\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
         $xml = '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
             .'<d:response><d:propstat><d:prop><c:calendar-data>'.htmlspecialchars($ics1).'</c:calendar-data></d:prop></d:propstat></d:response>'
@@ -93,7 +93,9 @@ final class CalendarTest extends ApiTestCase
         $titles = array_map(fn ($e) => $e->title.'@'.$e->start->setTimezone(new \DateTimeZone('UTC'))->format('md'), $events);
         sort($titles);
         self::assertSame(['Point@1124', 'Point@1125', 'Point@1126', 'Soutenance@1123'], $titles, 'récurrence développée, élément illisible ignoré');
-        self::assertSame('B104', array_values(array_filter($events, fn ($e) => $e->title === 'Soutenance'))[0]->location);
+        $s = array_values(array_filter($events, fn ($e) => $e->title === 'Soutenance'))[0];
+        self::assertSame('B104', $s->location);
+        self::assertSame([['name' => 'Sophie Laurent', 'address' => 'sophie.laurent@univ-reims.fr'], ['name' => 'Claire Petit', 'address' => 'claire@iut-troyes.fr']], $s->attendees, 'participants lus, sans doublon ni adresse invalide');
     }
 
     public function testCalDavServerErrorsAreReported(): void

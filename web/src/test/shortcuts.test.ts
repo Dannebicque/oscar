@@ -108,3 +108,18 @@ describe('liste de mails : j / k', () => {
     expect(router.currentRoute.value.params.id).toBe(order[0]) // pas de débordement au début
   })
 })
+
+describe('tri au clavier : e archiver, # corbeille, s suivre', () => {
+  it('chaque touche émet l’action, jamais dans un champ de saisie', async () => {
+    await setup()
+    const seen: string[] = []
+    const on = (e: Event) => seen.push((e as CustomEvent<string>).detail)
+    window.addEventListener('oscar:act', on)
+    press('e'); press('#'); press('s'); press('Delete')
+    expect(new Set(seen)).toEqual(new Set(['archive', 'trash', 'follow']))
+    const n = seen.length
+    press('e', document.getElementById('field')!)
+    expect(seen).toHaveLength(n)
+    window.removeEventListener('oscar:act', on)
+  })
+})

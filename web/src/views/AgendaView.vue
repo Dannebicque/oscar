@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../api'
 import CalendarGrid, { type GridView } from '../components/agenda/CalendarGrid.vue'
+import MeetingBrief from '../components/agenda/MeetingBrief.vue'
 import Callout from '../components/ui/Callout.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseDialog from '../components/ui/BaseDialog.vue'
@@ -179,6 +180,7 @@ async function create() {
               <dd><ToneChip :tone="openedSource?.personal ? 'neutral' : 'info'" :icon="openedSource?.personal ? 'user' : 'calendar'" :label="openedSource?.label ?? ''" /></dd>
             </dl>
             <p v-if="conflicts.has(opened.id)" class="conflict"><ToneChip tone="warn" icon="alert" :label="t('agenda.conflict')" /></p>
+            <MeetingBrief :event="opened" />
             <div class="evacts">
               <BaseButton icon="task" :disabled="prepDone.has(opened.id)" :label="prepDone.has(opened.id) ? t('agenda.prepDone') : t('agenda.prepTask')" @click="addPrep" />
               <BaseButton icon="x" :label="t('common.close')" @click="openId = null" />

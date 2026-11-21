@@ -5,12 +5,15 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { resetApi } from '../api'
 import { createMockApi } from '../api/mock'
 import { i18n, setLocale } from '../i18n'
+import { useSettingsStore } from '../stores/settings'
 
 /** Monte un composant avec Pinia, i18n et un routeur mémoire, sur une API simulée fraîche. */
-export async function mountApp(component: Component, path = '/', props: Record<string, unknown> = {}, opts: { host?: boolean } = {}) {
+export async function mountApp(component: Component, path = '/', props: Record<string, unknown> = {}, opts: { host?: boolean; undoSeconds?: 0 | 5 | 10 | 20 | 30 } = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
   resetApi(createMockApi())
+  // Les tests existants envoient d'un coup ; le délai d'annulation a ses propres tests.
+  useSettingsStore().s.undoSendSeconds = opts.undoSeconds ?? 0
   setLocale('fr')
   const router = createRouter({
     history: createMemoryHistory(),

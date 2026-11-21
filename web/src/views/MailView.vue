@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import ScheduledList from '../components/mail/ScheduledList.vue'
 import MailList from '../components/mail/MailList.vue'
 import MailReader from '../components/mail/MailReader.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -22,11 +23,11 @@ const mails = useMailsStore()
 const suivis = useSuivisStore()
 const accounts = useAccountsStore()
 
-type Box = { mailbox: string; folder: MailFolder | 'suivis' }
+type Box = { mailbox: string; folder: MailFolder | 'suivis' | 'scheduled' }
 const box = ref<Box>({ mailbox: 'personal', folder: 'inbox' })
 const compact = ref(false)
 const listRef = ref<InstanceType<typeof MailList> | null>(null)
-onMounted(() => Promise.all([mails.load(), suivis.load(), accounts.load()]))
+onMounted(() => Promise.all([mails.load(), suivis.load(), accounts.load(), mails.loadScheduled()]))
 
 const FOLDERS: MailFolder[] = ['inbox', 'sent', 'drafts', 'archive', 'trash']
 const ICON: Record<MailFolder, string> = { inbox: 'inbox', sent: 'send', drafts: 'draft', archive: 'archive', trash: 'trash' }
@@ -63,6 +64,18 @@ function onMove(e: Event) {
   const next = items[Math.min(items.length - 1, Math.max(0, i + ((e as CustomEvent<number>).detail ?? 1)))]
   if (next) { select(next.id); document.querySelector(`[data-mail="${next.id}"] button`)?.scrollIntoView({ block: 'nearest' }) }
 }
+// Après archivage ou corbeille : on passe au message suivant de la liste (ou au précédent s'il n'y en a plus), pour traiter à la chaîne.
+function onAdvance(e: Event) {
+  const step = (e as CustomEvent<{ handled: boolean; id: string }>).detail
+  const items = listRef.value?.visible ?? []
+  const i = items.findIndex((m) => m.id === step.id)
+  const next = items[i + 1] ?? items[i - 1]
+  step.handled = true
+  if (next && i >= 0) select(next.id)
+  else router.push({ name: 'mails' })
+}
+onMounted(() => window.addEventListener(SHORTCUT_EVENTS.advance, onAdvance))
+onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.advance, onAdvance))
 onMounted(() => window.addEventListener(SHORTCUT_EVENTS.move, onMove))
 import { onBeforeUnmount } from 'vue'
 onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
@@ -85,6 +98,11 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
               <BaseIcon name="follow" :size="18" /><span class="lbl">{{ t('mail.folder.suivis') }}</span><span class="n">{{ suivisCount }}</span>
             </button>
           </li>
+          <li>
+            <button type="button" class="fbtn" :aria-current="box.mailbox === 'personal' && box.folder === 'scheduled' ? 'true' : undefined" :aria-label="compact ? t('mail.folder.scheduled') : undefined" @click="pick('personal', 'scheduled')">
+              <BaseIcon name="clock" :size="18" /><span class="lbl">{{ t('mail.folder.scheduled') }}</span><span v-if="mails.scheduled.length" class="n">{{ mails.scheduled.length }}</span>
+            </button>
+          </li>
         </ul>
         <template v-if="accounts.shared.length">
           <h2 class="sec lbl">{{ t('mail.shared') }}</h2>
@@ -102,6 +120,7 @@ onBeforeUnmount(() => window.removeEventListener(SHORTCUT_EVENTS.move, onMove))
       <div class="mid">
         <header class="mid-head"><h1>{{ folderTitle }}</h1><p v-if="sharedBox && currentShared" class="hint">{{ t('mail.sharedMembers', { names: currentShared.members.map((m) => m.displayName).join(', ') }) }}</p></header>
         <p v-if="mails.loading" class="muted pad">{{ t('common.loading') }}</p>
+        <ScheduledList v-else-if="box.folder === 'scheduled'" />
         <MailList v-else ref="listRef" :mails="list" :selected-id="id ?? null" :shared="sharedBox" @select="select" />
       </div>
 

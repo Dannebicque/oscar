@@ -6,6 +6,7 @@ import { useOscar } from '../../oscar/useOscar'
 import { useAgendaStore } from '../../stores/agenda'
 import BaseButton from '../ui/BaseButton.vue'
 import Callout from '../ui/Callout.vue'
+import MeetingBrief from '../agenda/MeetingBrief.vue'
 
 /** Encart « Prochain RDV » (F-71) : en cours (avec heure de fin) ou suivant, délai, lieu et rendez-vous d'après. */
 const props = defineProps<{ now: Date }>()
@@ -32,6 +33,7 @@ const n = computed(() => agenda.next)
       </template>
     </template>
     <p v-else class="big">{{ say('noMeeting') }}</p>
+    <MeetingBrief v-if="n.next && !n.noneToday" :event="n.next" />
     <template #actions><BaseButton :label="t('home.openAgenda')" @click="$router.push('/agenda')" /></template>
   </Callout>
 </template>

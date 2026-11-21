@@ -4,6 +4,7 @@ defineProps<{ name: string; size?: number }>()
 
 const PATHS: Record<string, string> = {
   home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
+  filter: 'M3 5h18l-7 8v6l-4-2v-4z',
   mail: 'M3 6h18v12H3zM3 7l9 7 9-7',
   follow: 'M5 3v18M5 4h11l-2 4 2 4H5',
   calendar: 'M4 5h16v15H4zM4 10h16M8 3v4M16 3v4',

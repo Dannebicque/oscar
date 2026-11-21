@@ -98,10 +98,11 @@ export default {
     thread: { title: 'Conversation', count: '{n} messages', me: 'Moi', show: 'Afficher', hide: 'Masquer', earlier: 'Message précédent' },
     expand: 'Développer les dossiers', collapse: 'Réduire',
     title: 'Mails', folders: 'Dossiers', compose: 'Écrire', list: 'Liste des messages', reading: 'Lecture',
-    folder: { inbox: 'Boîte de réception', sent: 'Envoyés', drafts: 'Brouillons', archive: 'Archives', trash: 'Corbeille', suivis: 'Suivis' },
+    folder: { inbox: 'Boîte de réception', sent: 'Envoyés', drafts: 'Brouillons', archive: 'Archives', trash: 'Corbeille', suivis: 'Suivis', scheduled: 'Programmés' },
     shared: 'Boîtes partagées', sharedMembers: 'Membres : {names}. Tout le monde reçoit chaque mail.',
     sharedTitle: 'contact{\'@\'}', sharedCount: 'Boîte partagée · {n} membres',
     filters: { all: 'Tous', unread: 'Non lus', attach: 'Pièce jointe', week: 'Cette semaine' }, filterLabel: 'Filtrer',
+    adv: { toggle: 'Filtres avancés', active: '{n} actif(s)', reset: 'Tout effacer', from: 'Expéditeur', subject: 'Objet', after: 'Reçu après le', before: 'Reçu avant le', attachment: 'Avec pièce jointe', followed: 'Avec un suivi', unread: 'Non lus seulement', help: 'Astuce : tape de:claire, objet:devis, apres:2026-11-01, avant:2026-11-30, pj, suivi ou nonlu directement dans la recherche.' },
     search: 'Rechercher dans les mails', searchPlaceholder: 'Rechercher',
     unread: 'non lu', attachment: 'pièce jointe', from: 'De {who}', via: 'via contact{\'@\'}',
     empty: 'Aucun message ici.', selectOne: 'Choisis un message pour le lire.',
@@ -204,8 +205,9 @@ export default {
       replyReceived: '{who} a répondu à « {subject} ».',
       relanceDue: 'Relance due : « {subject} » ({who}). | {n} relances à faire.',
       invitation: 'Invitation : {title}.', connectionFailed: '{account} : reconnexion nécessaire.',
+      scheduledFailed: 'Pas parti : « {subject} » n’a pas pu être envoyé. Rouvre-le dans Programmés.',
       takenOver: '{who} a repris « {subject} ».', memberReplied: '{who} a répondu à « {subject} ».',
-    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
+    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { scheduledFailed: 'Envoi programmé en échec', replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
   journal: {
     log: 'Journal',
     messages: {
@@ -218,9 +220,21 @@ export default {
     actions: { retry: 'Réessaie depuis la barre d’état.', reconnect: 'Reconnecte le compte dans Réglages.', none: 'Rien à faire.' },
     types: { send: 'Envoi', calendar: 'Agenda', auth: 'Authentification', sync: 'Synchronisation' }, back: 'Retour aux réglages',
   },
+  brief: { title: 'Avant ce rendez-vous', none: 'Aucun échange récent avec les participants.', noPeople: 'Aucun participant connu pour ce rendez-vous.', receivedFrom: 'Reçu de {who}', sentTo: 'Envoyé à {who}' },
+  undoSend: {
+    pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
+    kept: 'Ton message est conservé : rouvre-le et réessaie.',
+  },
+  schedule: {
+    open: 'Programmer', title: 'Programmer l’envoi', help: 'Le message part à l’heure choisie, pas avant. Tu peux l’annuler tant qu’il n’est pas parti.',
+    presets: { tomorrow: 'Demain matin', monday: 'Lundi matin', afternoon: 'Cet après-midi', tomorrowAfternoon: 'Demain après-midi' }, custom: 'Ou choisis une date et une heure', confirm: 'Programmer l’envoi',
+    future: 'Choisis une heure à venir.', done: 'Message programmé pour le {when}.', taskLater: 'La tâche cochée sera à créer toi-même : elle ne l’est que lorsque le message part.',
+    list: 'Mails programmés', empty: 'Aucun mail programmé. Écris un message, puis choisis « Programmer ».', at: 'Part le {when}', cancel: 'Annuler l’envoi', edit: 'Modifier', failed: 'Pas parti : le serveur d’envoi a refusé. Rouvre le message pour réessayer.', sending: 'Part maintenant',
+    cancelled: 'Envoi annulé. Le message est rouvert.',
+  },
   shortcuts: {
     title: 'Raccourcis clavier', help: 'Les mêmes que Gmail, pour garder tes repères. Ils ne fonctionnent pas dans un champ de saisie.', then: 'puis', off: 'Tu peux les désactiver dans Réglages > Apparence et accessibilité.',
-    keys: { c: 'Écrire un message', q: 'Capturer une tâche', '/': 'Rechercher dans les mails', j: 'Message suivant', k: 'Message précédent', r: 'Répondre', gi: 'Aller aux mails', gs: 'Aller aux suivis', gt: 'Aller aux tâches', ga: 'Aller à l’agenda', gh: 'Aller à l’accueil', '?': 'Afficher cette aide' },
+    keys: { c: 'Écrire un message', q: 'Capturer une tâche', '/': 'Rechercher dans les mails', j: 'Message suivant', k: 'Message précédent', r: 'Répondre', e: 'Archiver le message', '#': 'Mettre à la corbeille (ou Suppr)', s: 'Suivre le message', gi: 'Aller aux mails', gs: 'Aller aux suivis', gt: 'Aller aux tâches', ga: 'Aller à l’agenda', gh: 'Aller à l’accueil', '?': 'Afficher cette aide' },
   },
   oscar: {
     name: 'Oscar', tone: 'Ton d’Oscar', toneHelp: 'Oscar parle toujours en phrases courtes et sans reproche. Le ton léger ajoute une pointe d’humour ; il disparaît de lui-même dès qu’il y a une erreur.',
@@ -333,6 +347,7 @@ export default {
       when: { domain: 'Tout mail reçu de {\'@\'}{value}', sender: 'Tout mail reçu de {value}' }, alias: 'Tout mail arrivant sur {address}', on: 'Activée', off: 'Désactivée', remove: 'Supprimer la règle {value}', none: 'Aucune règle pour l’instant.',
       never: 'Une règle ne crée qu’un suivi « à traiter ». Rien n’est envoyé, rien n’est clos, et les messages automatiques (absence, newsletters) sont ignorés.',
     },
+    undoSend: { legend: 'Annuler l’envoi', off: 'Envoyer tout de suite', seconds: '{n} secondes', help: 'Après ton clic sur « Envoyer », le message attend ce délai avant de partir : tu peux l’annuler. Rien ne part sans ton clic.' },
     relances: {
       delay: 'Délai avant relance', delayHelp: 'Par défaut, pour le compte david{\'@\'}iut-troyes.fr', h24: '24 heures', h48: '48 heures', h72: '3 jours', h168: '1 semaine',
       businessDays: 'Compter en jours ouvrés', businessDaysHelp: 'Sinon : heures réelles.', cap: 'Nombre maximal de relances proposées par jour',
@@ -357,7 +372,7 @@ export default {
       never: 'Oscar lit tes mails pour proposer, jamais pour agir. Aucun mail n’est envoyé et aucun suivi n’est créé sans ton clic.',
     },
     look: {
-      shortcuts: 'Raccourcis clavier', shortcutsHelp: 'Touches simples comme celles de Gmail (c, j, k, r, /). Désactive-les si elles gênent ta dictée vocale ou ton clavier adapté.',
+      shortcuts: 'Raccourcis clavier', shortcutsHelp: 'Touches simples comme celles de Gmail (c, j, k, r, e, #, s, /). Désactive-les si elles gênent ta dictée vocale ou ton clavier adapté.',
       style: 'Style', styleHelp: 'La forme, le relief et la typographie. Les couleurs se règlent à part.',
       styles: { modern: 'Moderne', retro: 'Rétro', neon: 'Néon' },
       styleDesc: { modern: 'Sobre et net, proche des maquettes.', retro: 'Papier chaud, traits épais, police à chasse fixe.', neon: 'Nuit profonde, bords lumineux, accents vifs.' },

@@ -20,7 +20,7 @@ const ui = useUiStore()
 
 const META: Record<NotificationKind, { icon: string; tone: 'info' | 'warn' | 'danger' | 'neutral' }> = {
   replyReceived: { icon: 'mail', tone: 'info' }, relanceDue: { icon: 'clock', tone: 'warn' }, invitation: { icon: 'calendar', tone: 'neutral' }, connectionFailed: { icon: 'alert', tone: 'danger' },
-  takenOver: { icon: 'user', tone: 'warn' }, memberReplied: { icon: 'send', tone: 'info' },
+  takenOver: { icon: 'user', tone: 'warn' }, memberReplied: { icon: 'send', tone: 'info' }, scheduledFailed: { icon: 'alert', tone: 'danger' },
 }
 const sorted = computed(() => [...system.notifications].sort((a, b) => b.at.localeCompare(a.at)))
 async function markAll() {

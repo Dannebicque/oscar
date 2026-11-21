@@ -11,6 +11,8 @@ final readonly class CalendarEventData
         public \DateTimeImmutable $start,
         public \DateTimeImmutable $end,
         public ?string $location = null,
+        /** @var list<array{name: string, address: string}> participants (ORGANIZER et ATTENDEE), pour relier l'événement aux échanges de mails */
+        public array $attendees = [],
     ) {
     }
 }

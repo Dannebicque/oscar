@@ -104,6 +104,13 @@ export function createHttpApi(baseUrl: string): Api {
         link.click()
         URL.revokeObjectURL(url)
       },
+      schedule: async (p, sendAt) => {
+        const accounts = await mailAccounts()
+        if (accounts.length === 0) throw new ApiError(422, 'no-account')
+        return req('POST', '/api/scheduled-mails', { mail: { accountId: accounts[0].id, ...p }, sendAt })
+      },
+      scheduled: () => req('GET', '/api/scheduled-mails'),
+      cancelScheduled: (id) => req('DELETE', `/api/scheduled-mails/${encodeURIComponent(id)}`),
       async saveDraft(p) {
         const accounts = await mailAccounts()
         if (accounts.length === 0) throw new ApiError(422, 'no-account')
@@ -140,8 +147,8 @@ export function createHttpApi(baseUrl: string): Api {
         return (await req<CalendarAccount[]>('GET', '/api/calendar-accounts')).map((a) => ({ id: a.id, label: a.label, kind: a.kind, personal: a.personal }))
       },
       async events(): Promise<CalEvent[]> {
-        const rows = await req<{ id: string; calendarId: string; title: string; start: string; end: string; location: string | null }[]>('GET', '/api/calendar-events')
-        return rows.map((e) => ({ id: e.id, calendar: e.calendarId, title: e.title, start: e.start, end: e.end, location: e.location ?? null }))
+        const rows = await req<{ id: string; calendarId: string; title: string; start: string; end: string; location: string | null; attendees?: { name: string; address: string }[] }[]>('GET', '/api/calendar-events')
+        return rows.map((e) => ({ id: e.id, calendar: e.calendarId, title: e.title, start: e.start, end: e.end, location: e.location ?? null, attendees: e.attendees ?? [] }))
       },
       teamBusy: (mailbox, from, to) => req('GET', `/api/team/busy?mailbox=${encodeURIComponent(mailbox)}&from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`),
       async create(e) {

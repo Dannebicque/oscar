@@ -7,6 +7,7 @@ import type { MessageTemplate } from '../api/types'
 import OscarMark from '../components/OscarMark.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
+import BaseDialog from '../components/ui/BaseDialog.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
 import CheckboxField from '../components/ui/CheckboxField.vue'
 import SelectField from '../components/ui/SelectField.vue'
@@ -23,6 +24,8 @@ import { useOscar } from '../oscar/useOscar'
 import { useAccountsStore } from '../stores/accounts'
 import { useTasksStore } from '../stores/tasks'
 import { useMailsStore } from '../stores/mails'
+import { useOutgoingStore } from '../stores/outgoing'
+import type { SendPayload } from '../api/types'
 import { useSettingsStore } from '../stores/settings'
 import { useUiStore } from '../stores/ui'
 
@@ -36,6 +39,7 @@ const accounts = useAccountsStore()
 const outbox = useOutbox()
 const tasks = useTasksStore()
 const ui = useUiStore()
+const outgoing = useOutgoingStore()
 const { say } = useOscar()
 
 const to = ref<string[]>([])
@@ -116,6 +120,20 @@ onMounted(async () => {
   templates.value = await api.settings.templates.list().catch(() => [])
   const acc = accounts.mail[0]
   if (acc?.relanceHours) delayHours.value = acc.relanceHours
+  // Envoi annulé (ou parti en échec) : on reprend le message exactement où il était.
+  const back = route.query.restore ? outgoing.takeRestore() : null
+  if (back) {
+    to.value = back.to; cc.value = back.cc; bcc.value = back.bcc
+    showCc.value = back.cc.length > 0 || back.bcc.length > 0
+    subject.value = back.subject
+    body.value = back.body
+    follow.value = back.followHours !== undefined
+    if (back.followHours) delayHours.value = back.followHours
+    files.value = (back.attachments ?? []).map((a) => new File([Uint8Array.from(atob(a.content), (c) => c.charCodeAt(0))], a.name, { type: a.type }))
+    quoteOn.value = false
+    if (back.inReplyToMailId) void router.replace({ name: 'compose', query: { reply: back.inReplyToMailId } })
+    return
+  }
   const dr = draftId.value ? mails.byId(draftId.value) : undefined
   if (dr) {
     to.value = dr.to.map((x) => x.address)
@@ -166,35 +184,104 @@ const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.na
 const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { v: 168, k: 'd7' }]
 const delayOptions = computed(() => DELAYS.map((d) => ({ value: d.v, label: t(`compose.delays.${d.k}`) })))
 
+/** Le message tel qu'il part (ou tel qu'il est programmé). */
+async function buildPayload(): Promise<SendPayload> {
+  return {
+    to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: quoteOn.value && original.value ? body.value + quote.value : body.value,
+    attachments: await Promise.all(files.value.map(async (f) => ({ name: f.name, type: f.type || 'application/octet-stream', content: await readBase64(f) }))),
+    followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
+    inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
+  }
+}
+const valid = () => { submitted.value = true; return !!subject.value.trim() && to.value.length > 0 }
+
 async function send() {
-  submitted.value = true
-  if (!subject.value.trim() || to.value.length === 0) return
+  if (!valid()) return
   sending.value = true
-  let payload: Parameters<typeof mails.send>[0] | null = null
   try {
-    payload = {
-      to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: quoteOn.value && original.value ? body.value + quote.value : body.value,
-      attachments: await Promise.all(files.value.map(async (f) => ({ name: f.name, type: f.type || 'application/octet-stream', content: await readBase64(f) }))),
-      followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
-      inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
+    const payload = await buildPayload()
+    // Ce que l'envoi aura besoin de savoir, figé maintenant : l'éditeur peut être fermé quand le message part.
+    const after = {
+      draft: draftId.value, subject: subject.value.trim(), to: who.value,
+      task: taskOn.value && taskHint.value && taskTitle.value.trim() ? { title: taskTitle.value.trim(), dueAt: taskHint.value.dueAt } : null,
     }
+    const seconds = settings.s.undoSendSeconds
+    if (seconds > 0) {
+      // Annuler l'envoi : le message attend quelques secondes, rien n'est parti ni créé tant qu'il attend.
+      outgoing.hold(payload, seconds, () => deliver(payload, after))
+      await router.push({ name: 'mails' })
+    } else {
+      await deliver(payload, after, true)
+    }
+  } finally {
+    sending.value = false
+  }
+}
+
+interface After { draft: string | null; subject: string; to: string; task: { title: string; dueAt: string } | null }
+/** Le message part vraiment : le suivi est créé par le serveur, la tâche cochée seulement maintenant. */
+async function deliver(payload: SendPayload, after: After, leave = false) {
+  try {
     const r = await mails.send(payload)
-    if (draftId.value) await mails.moveTo(draftId.value, 'trash').catch(() => undefined)
-    // Le message est parti : seulement maintenant, la tâche cochée est créée (jamais avant, jamais sans clic).
-    if (taskOn.value && taskHint.value && taskTitle.value.trim()) await tasks.add({ title: taskTitle.value.trim(), dueAt: taskHint.value.dueAt, origin: 'ai', source: subject.value.trim() }).catch(() => undefined)
-    ui.notify(r.followDueAt ? say('sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
-    router.push({ name: 'mails' })
+    if (after.draft) await mails.moveTo(after.draft, 'trash').catch(() => undefined)
+    if (after.task) await tasks.add({ title: after.task.title, dueAt: after.task.dueAt, origin: 'ai', source: after.subject }).catch(() => undefined)
+    ui.notify(r.followDueAt ? say('sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: after.to }))
+    if (leave) await router.push({ name: 'mails' })
   } catch (e) {
     // Pas de réseau (F-80) : le message, déjà envoyé par un clic, patiente dans la file et part au retour de la connexion.
-    if (payload && isOffline(e)) {
+    if (isOffline(e)) {
       await outbox.queue(payload)
-      if (draftId.value) draftId.value = null
-      router.push({ name: 'mails' })
+      if (leave) await router.push({ name: 'mails' })
       return
     }
     // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour, avec une action (§5, F-79).
     const noAccount = e instanceof ApiError && e.message === 'no-account'
-    ui.notify(noAccount ? t('compose.noAccount') : say('errorSend'), { tone: 'error' })
+    outgoing.restore = payload
+    ui.notify(noAccount ? t('compose.noAccount') : `${say('errorSend')} ${t('undoSend.kept')}`, { tone: 'error' })
+    if (!leave) void router.push({ name: 'compose', query: { restore: '1' } })
+  }
+}
+
+/** Programmer l'envoi (F-73) : l'utilisateur choisit l'heure ; rien ne part avant. */
+const showSchedule = ref(false)
+const scheduleAt = ref('')
+const scheduleError = ref('')
+const pad = (n: number) => String(n).padStart(2, '0')
+const toLocalInput = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+function atHour(d: Date, h: number) { const x = new Date(d); x.setHours(h, 0, 0, 0); return x }
+const presets = computed(() => {
+  const now = clock.now()
+  const tomorrow = atHour(new Date(now.getTime() + 86_400_000), 8)
+  const monday = atHour(new Date(now.getTime() + (((8 - now.getDay()) % 7) || 7) * 86_400_000), 8)
+  return [
+    { key: 'tomorrow', at: tomorrow },
+    { key: 'monday', at: monday },
+    now.getHours() < 13 ? { key: 'afternoon', at: atHour(now, 14) } : { key: 'tomorrowAfternoon', at: atHour(new Date(now.getTime() + 86_400_000), 14) },
+  ]
+})
+function openSchedule() {
+  if (!valid()) return
+  scheduleAt.value = toLocalInput(presets.value[0].at)
+  scheduleError.value = ''
+  showSchedule.value = true
+}
+async function schedule() {
+  const at = new Date(scheduleAt.value)
+  if (Number.isNaN(at.getTime()) || at.getTime() < clock.now().getTime()) { scheduleError.value = t('schedule.future'); return }
+  sending.value = true
+  try {
+    const row = await mails.schedule(await buildPayload(), at.toISOString())
+    if (draftId.value) await mails.moveTo(draftId.value, 'trash').catch(() => undefined)
+    showSchedule.value = false
+    ui.notify(t('schedule.done', { when: fmt.dateTime(at.toISOString()) }), {
+      undo: async () => {
+        outgoing.restore = await mails.cancelScheduled(row.id)
+        await router.push({ name: 'compose', query: { restore: '1' } })
+      },
+    })
+    await router.push({ name: 'mails' })
+  } catch (e) {
+    scheduleError.value = e instanceof ApiError && e.message === 'no-account' ? t('compose.noAccount') : e instanceof Error && e.message ? e.message : t('common.actionFailed')
   } finally {
     sending.value = false
   }
@@ -292,6 +379,7 @@ async function saveDraft() {
       </fieldset>
       <div class="actions">
         <BaseButton variant="primary" type="submit" icon="send" :disabled="sending" :label="t('compose.send')" />
+        <BaseButton icon="clock" :label="t('schedule.open')" @click="openSchedule" />
         <BaseButton icon="paperclip" :label="t('compose.attach')" @click="fileInput?.click()" />
         <input ref="fileInput" type="file" multiple class="sr-only" tabindex="-1" :aria-label="t('compose.attach')" @change="pickFiles" />
         <BaseButton :label="t('compose.saveDraft')" @click="saveDraft" />
@@ -305,6 +393,22 @@ async function saveDraft() {
       <p class="hint">{{ say('neverSend') }}</p>
     </aside>
   </form>
+
+  <BaseDialog :open="showSchedule" :title="t('schedule.title')" :description="t('schedule.help')" @close="showSchedule = false">
+    <div class="sched">
+      <ul class="presets">
+        <li v-for="p in presets" :key="p.key"><BaseButton :label="`${t(`schedule.presets.${p.key}`)} · ${fmt.dateTime(p.at.toISOString())}`" :pressed="scheduleAt === toLocalInput(p.at)" @click="scheduleAt = toLocalInput(p.at)" /></li>
+      </ul>
+      <label for="sched-at" class="lbl">{{ t('schedule.custom') }}</label>
+      <input id="sched-at" v-model="scheduleAt" type="datetime-local" class="input" />
+      <p v-if="taskOn" class="hint">{{ t('schedule.taskLater') }}</p>
+      <p v-if="scheduleError" class="error-text" role="alert">{{ scheduleError }}</p>
+    </div>
+    <template #footer>
+      <BaseButton variant="primary" icon="clock" :disabled="sending" :label="t('schedule.confirm')" @click="schedule" />
+      <BaseButton :label="t('common.cancel')" @click="showSchedule = false" />
+    </template>
+  </BaseDialog>
 </template>
 
 <style scoped>
@@ -332,5 +436,8 @@ async function saveDraft() {
 .th { display: flex; gap: var(--space-2); align-items: center; margin: 0; color: var(--c-ai); }
 .follow { display: grid; gap: var(--space-3); margin: 0; }
 .check { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.sched { display: grid; gap: var(--space-2); }
+.presets { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.lbl { font-weight: 700; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 </style>

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { api, ApiError } from '../api'
-import type { SendPayload } from '../api/types'
+import type { ScheduledMail, SendPayload } from '../api/types'
 import type { ClaimAction, Mail, MailFolder, Suivi } from '../domain/types'
 import { useSuivisStore } from './suivis'
 
@@ -184,6 +184,20 @@ export const useMailsStore = defineStore('mails', () => {
     return s
   }
 
+  /** Mails programmés (F-73) : écrits, en attente de l'heure choisie par l'utilisateur. */
+  const scheduled = ref<ScheduledMail[]>([])
+  async function loadScheduled() { scheduled.value = await api.mails.scheduled().catch(() => []) }
+  async function schedule(p: SendPayload, sendAt: string) {
+    const row = await api.mails.schedule(p, sendAt)
+    scheduled.value = [...scheduled.value, row].sort((a, b) => a.sendAt.localeCompare(b.sendAt))
+    return row
+  }
+  async function cancelScheduled(id: string) {
+    const payload = await api.mails.cancelScheduled(id)
+    scheduled.value = scheduled.value.filter((x) => x.id !== id)
+    return payload
+  }
+
   /** Envoi (F-73) : le suivi est créé par le serveur, seulement si le message est parti. */
   async function send(p: SendPayload) {
     const r = await api.mails.send(p)
@@ -196,5 +210,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

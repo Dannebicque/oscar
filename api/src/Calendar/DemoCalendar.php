@@ -23,6 +23,14 @@ final class DemoCalendar
         [5, '09:00', '10:00', 'Permanence étudiants', 'Bureau 214'],
         [5, '16:30', '17:00', 'Point hebdomadaire de l’équipe', 'Visio'],
     ];
+    /** Participants de démonstration (titre => adresses), pour le rappel « avant ce rendez-vous ». */
+    private const PEOPLE = [
+        'Point avec Claire' => [['name' => 'Claire Roux', 'address' => 'claire@iut-troyes.fr']],
+        'Préparation du jury' => [['name' => 'Sophie Laurent', 'address' => 'sophie.laurent@univ-reims.fr']],
+        'Appel de l’imprimeur' => [['name' => 'Marc Dubois', 'address' => 'marc.dubois@imprimerie.fr']],
+        'Soutenance de stage : M. Lemoine' => [['name' => 'Claire Petit', 'address' => 'claire.petit@entreprise.fr']],
+        'Jury de projet' => [['name' => 'Sophie Laurent', 'address' => 'sophie.laurent@univ-reims.fr']],
+    ];
     private const PERSONAL = [
         [2, '18:30', '20:00', 'Badminton', 'Gymnase municipal'],
         [3, '08:00', '08:45', 'Rendez-vous médical', 'Cabinet du Dr Perrin'],
@@ -43,7 +51,7 @@ final class DemoCalendar
                 $start = $day->modify($s);
                 $end = $day->modify($e);
                 if ($end > $from && $start < $to) {
-                    $out[] = new CalendarEventData(sprintf('demo-%s-%s-%d@oscar', $kind, $day->format('Ymd'), $dow.crc32($title)), $title, $start, $end, $place);
+                    $out[] = new CalendarEventData(sprintf('demo-%s-%s-%d@oscar', $kind, $day->format('Ymd'), $dow.crc32($title)), $title, $start, $end, $place, self::PEOPLE[$title] ?? []);
                 }
             }
         }
@@ -52,8 +60,8 @@ final class DemoCalendar
             $now = new \DateTimeImmutable('now', $tz);
             $first = $now->setTime((int) $now->format('G') + 1, 0);
             if ((int) $first->format('G') < 19) {
-                $out[] = new CalendarEventData('demo-iut-today-1@oscar', 'Point avec Sophie Laurent', $first, $first->modify('+45 minutes'), 'Visio');
-                $out[] = new CalendarEventData('demo-iut-today-2@oscar', 'Relecture du planning des soutenances', $first->modify('+2 hours'), $first->modify('+3 hours'), 'Bureau 214');
+                $out[] = new CalendarEventData('demo-iut-today-1@oscar', 'Point avec Sophie Laurent', $first, $first->modify('+45 minutes'), 'Visio', [['name' => 'Sophie Laurent', 'address' => 'sophie.laurent@univ-reims.fr']]);
+                $out[] = new CalendarEventData('demo-iut-today-2@oscar', 'Relecture du planning des soutenances', $first->modify('+2 hours'), $first->modify('+3 hours'), 'Bureau 214', [['name' => 'Sophie Laurent', 'address' => 'sophie.laurent@univ-reims.fr'], ['name' => 'Claire Petit', 'address' => 'claire.petit@iut-troyes.fr']]);
             }
         }
 
