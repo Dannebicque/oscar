@@ -1,5 +1,7 @@
 # État du MVP au regard du cahier des charges v2
 
+> Vue complète (toutes les exigences, écrans et maquettes) : [CONFORMITE.md](CONFORMITE.md).
+
 Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas fait.
 « Testé » = couvert par un test automatisé (`api/tests`, `web/src/test`) ; les écrans ont aussi été parcourus dans un navigateur
 contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
