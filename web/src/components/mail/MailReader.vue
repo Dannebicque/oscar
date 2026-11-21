@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { api, session } from '../../api'
 import { collisionWith } from '../../domain/claim'
 import { clock } from '../../domain/clock'
-import { isoDay, addDays } from '../../domain/dates'
+import { followUpDue, isoDay } from '../../domain/dates'
 import type { Attachment, Mail } from '../../domain/types'
 import { useFormat } from '../../composables/useFormat'
 import { SHORTCUT_EVENTS } from '../../composables/useShortcuts'
@@ -103,7 +103,7 @@ async function act(fn: () => Promise<unknown>, msg: string) {
   }
 }
 async function createSuivi(ai = false) {
-  const due = isoDay(addDays(clock.now(), Math.ceil(settings.s.relanceHours / 24) + 1))
+  const due = isoDay(followUpDue(clock.now(), settings.s.relanceHours, settings.s.businessDays))
   await mails.follow(props.mail.id, { dueAt: due, suggestedByAi: ai })
   ui.notify(t('mail.suiviCreated', { subject: props.mail.subject }))
 }

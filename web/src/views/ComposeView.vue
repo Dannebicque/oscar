@@ -15,7 +15,7 @@ import RecipientInput from '../components/ui/RecipientInput.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import { useFormat } from '../composables/useFormat'
 import { clock } from '../domain/clock'
-import { addDays, isoDay } from '../domain/dates'
+import { followUpDue, isoDay } from '../domain/dates'
 import { searchDirectory } from '../domain/directory'
 import { useOscar } from '../oscar/useOscar'
 import { useMailsStore } from '../stores/mails'
@@ -119,7 +119,7 @@ async function regenerate() {
 watch([aiTone, slotStarts], () => { if (aiDraft.value && !edited.value) void regenerate() }, { deep: true })
 const toggleSlot = (start: string, on: boolean) => { slotStarts.value = on ? [...slotStarts.value, start] : slotStarts.value.filter((x) => x !== start) }
 const title = computed(() => (original.value ? t('compose.replyTo', { who: original.value.from.name }) : t('compose.title')))
-const dueDate = computed(() => isoDay(addDays(clock.now(), Math.ceil(delayHours.value / 24))))
+const dueDate = computed(() => isoDay(followUpDue(clock.now(), delayHours.value, settings.s.businessDays)))
 const invalid = computed(() => submitted.value && (!subject.value.trim() || to.value.length === 0))
 const who = computed(() => (to.value[0] ? searchDirectory(to.value[0], 1)[0]?.name ?? to.value[0] : '…'))
 const DELAYS = [{ v: 24, k: 'h24' }, { v: 48, k: 'h48' }, { v: 72, k: 'd3' }, { v: 168, k: 'd7' }]

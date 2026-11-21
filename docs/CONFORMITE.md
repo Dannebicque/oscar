@@ -30,7 +30,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 |---|---|---|---|
 | F-10 | M | 🟡 | Synchro IMAP incrémentale par UID, multi-comptes, lecture, envoi SMTP ✅. Recherche sur les en-têtes chargés, pas de plein texte serveur. |
 | F-11 | M | 🟡 | Suggestion de tâche/événement avec accepter, modifier, ignorer ✅. Fournisseur local à règles ; aucun modèle de langage branché. |
-| F-12 | M | 🟡 | Relance par défaut à 48 h, réglable par utilisateur et par suivi. Pas par compte ; « jours ouvrés » enregistré mais non appliqué au calcul. |
+| F-12 | M | 🟡 | Relance par défaut à 48 h, réglable par utilisateur et par suivi ; heures réelles ou jours ouvrés appliqués au calcul (API et front, testés). Pas encore par compte. |
 | F-13 | S | 🟡 | Brouillon de réponse (ton cordial/court, créneaux cochés), jamais envoyé ✅. Gabarit déterministe, pas de génération par modèle. |
 | F-14 | S | 🟡 | Résumé extractif d'un message. Pas de résumé d'un fil entier. |
 | F-15 | S | ❌ | Règles de tri déterministes. |
@@ -78,7 +78,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-51 | M | ✅ | États nouveau / en cours / en attente / traité ; signaux (retard, relance due, réponse reçue) calculés, jamais stockés. |
 | F-52 | M | ✅ | In-Reply-To/References ; réponse automatique ignorée ; bouton « garder en attente ». |
 | F-53 | M | ✅ | Relance proposée avec brouillon ; envoyer, reporter, ne plus relancer. |
-| F-54 | M | 🟡 | Voir F-12 (par compte et jours ouvrés manquants). |
+| F-54 | M | 🟡 | Voir F-12 : jours ouvrés ✅, choix par compte ❌. |
 | F-55 | S | ✅ | Aucune relance automatique ; « ne plus relancer ». |
 | F-56 | M | ✅ | Échéance propre, alerte et tri par retard. |
 | F-57 | S | 🟡 | Un seul responsable ✅ ; pas d'écran d'assignation ni de transfert. |

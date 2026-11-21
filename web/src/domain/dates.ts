@@ -31,3 +31,14 @@ export function parseDay(s: string): Date {
 export function daysBetween(fromDay: string, toDay: string): number {
   return Math.round((parseDay(toDay).getTime() - parseDay(fromDay).getTime()) / 86_400_000)
 }
+
+/** Échéance d'une relance (F-12, F-54) : heures réelles, ou jours ouvrés (samedi et dimanche ne comptent pas). Même règle que l'API. */
+export function followUpDue(from: Date, hours: number, businessDays: boolean): Date {
+  if (!businessDays) return addDays(from, Math.ceil(hours / 24))
+  let d = from
+  for (let left = Math.max(1, Math.ceil(hours / 24)); left > 0; ) {
+    d = addDays(d, 1)
+    if (d.getDay() !== 0 && d.getDay() !== 6) left--
+  }
+  return d
+}

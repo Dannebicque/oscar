@@ -117,3 +117,12 @@ describe('fil de conversation (F-50)', () => {
     expect(s.threadOf(s.items[1]).map((m) => m.id)).toEqual(['1', '2'])
   })
 })
+
+describe('délai de relance en jours ouvrés (F-12, F-54)', () => {
+  it('saute le week-end en mode jours ouvrés et le garde en heures réelles', async () => {
+    const { followUpDue } = await import('../domain/dates')
+    const friday = new Date(2026, 10, 20, 10, 0)
+    expect(followUpDue(friday, 48, true).getDay()).toBe(2) // mardi
+    expect(followUpDue(friday, 48, false).getDay()).toBe(0) // dimanche
+  })
+})
