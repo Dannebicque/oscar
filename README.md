@@ -69,3 +69,10 @@ Raccourcis clavier alignés sur Gmail (c, /, j, k, r, g puis i/s/t/a/h, ?), dés
 
 Identifiants de messagerie chiffrés (libsodium) avec une clé `APP_VAULT_KEY` hors base ; jetons d'accès opaques, hachés, révocables ;
 données isolées par utilisateur ; connexion par CAS en production (connexion de développement limitée à `dev` et `test`).
+
+### Connexion et comptes
+
+- **CAS** (établissement) : `CAS_BASE_URL`. **Comptes locaux** (adresse + mot de passe, au moins 10 caractères, haché) : inscription, connexion, mot de passe oublié, changement de mot de passe, export et suppression des données (Réglages > Mon compte).
+- `APP_REGISTRATION=open|closed` ferme l'inscription (à fermer en production CAS seul). `FRONT_URL` et `MAILER_FROM` servent au courriel de réinitialisation (`MAILER_DSN` pour l'envoi réel ; en développement, le lien s'affiche à l'écran).
+- Connexion : message identique que le compte existe ou non, cinq essais par quart d'heure, lien de réinitialisation à usage unique valable une heure, sessions fermées après un changement de mot de passe.
+- **Assistant de connexion de la messagerie** (`/bienvenue`) : les serveurs sont devinés d'après le domaine, les deux serveurs sont testés **avant** d'enregistrer le compte. En production, les adresses privées ou réservées et les ports qui ne sont pas ceux d'un serveur de messagerie sont refusés (anti-SSRF, `HostGuard`).

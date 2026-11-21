@@ -103,6 +103,25 @@ def main():
     conns = call("GET", "/api/connections", david)[1]
     check(any(c["id"] == "mail" and c["state"] == "ok" for c in conns), "la barre d'état voit la messagerie connectée")
 
+    print("Comptes locaux : inscription, connexion, mot de passe oublié, assistant de messagerie")
+    email, pwd = f"e2e{RUN}@example.org", "phrase-de-passe-e2e-1"
+    st, reg = call("POST", "/api/auth/register", body={"name": "E2E", "email": email, "password": pwd})
+    check(st == 201, "inscription d'un compte local")
+    check(call("POST", "/api/auth/login", body={"email": email, "password": pwd})[0] == 200, "connexion par adresse et mot de passe")
+    check(call("POST", "/api/auth/login", body={"email": email, "password": "faux-faux-faux"})[0] == 401, "un mauvais mot de passe est refusé")
+    st, f = call("POST", "/api/auth/forgot", body={"email": email})
+    new = "nouvelle-phrase-e2e-2"
+    if st == 200 and f and f.get("devLink"):
+        tok = f["devLink"].split("token=")[1]
+        check(call("POST", "/api/auth/reset", body={"token": tok, "password": new})[0] == 204, "réinitialisation par le lien reçu")
+        check(call("POST", "/api/auth/login", body={"email": email, "password": new})[0] == 200, "connexion avec le nouveau mot de passe")
+    pw_now = new if f else pwd
+    tok_now = call("POST", "/api/auth/login", body={"email": email, "password": pw_now})[1]["token"]
+    st, probe = call("POST", "/api/mail-accounts/probe", tok_now, {"imapHost": "127.0.0.1", "imapPort": 1143, "imapEncryption": "none", "smtpHost": "127.0.0.1", "smtpPort": 1025, "smtpEncryption": "none", "username": "david", "password": "oscar-test"})
+    check(st == 200 and probe["imap"]["ok"] and probe["smtp"]["ok"], "le test des serveurs réussit avant d'enregistrer le compte")
+    check(call("POST", "/api/mail-accounts/probe", tok_now, {"imapHost": "127.0.0.1", "imapPort": 1143, "imapEncryption": "none", "smtpHost": "127.0.0.1", "smtpPort": 1025, "smtpEncryption": "none", "username": "david", "password": "faux"})[1]["imap"]["ok"] is False, "un mauvais mot de passe de messagerie est signalé")
+    check(call("DELETE", "/api/me", tok_now, {"password": pw_now})[0] == 204, "suppression du compte (nettoyage)")
+
     print()
     print("Tout est bon." if not failures else f"{len(failures)} vérification(s) en échec :\n  - " + "\n  - ".join(failures))
     sys.exit(1 if failures else 0)
