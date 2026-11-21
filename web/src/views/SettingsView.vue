@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountsPanel from '../components/settings/AccountsPanel.vue'
 import MyAccountPanel from '../components/settings/MyAccountPanel.vue'
+import AiProviderPanel from '../components/settings/AiProviderPanel.vue'
 import AppearancePanel from '../components/settings/AppearancePanel.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
@@ -25,6 +26,14 @@ const system = useSystemStore()
 const { say } = useOscar()
 
 const sections = ['myaccount', 'accounts', 'relances', 'recap', 'ai', 'look', 'journal'] as const
+const active = ref<string>(sections[0])
+let observer: IntersectionObserver | null = null
+onMounted(() => {
+  if (typeof IntersectionObserver === 'undefined') return
+  observer = new IntersectionObserver((entries) => { const hit = entries.find((e) => e.isIntersecting); if (hit) active.value = hit.target.id.replace('set-', '') }, { rootMargin: '-10% 0px -70% 0px' })
+  for (const k of sections) { const el = document.getElementById(`set-${k}`); if (el) observer.observe(el) }
+})
+onBeforeUnmount(() => observer?.disconnect())
 const themeOpts = computed(() => THEMES.map((x) => ({ value: x.id, label: t(`settings.look.themes.${x.id}`), icon: x.icon })))
 const densityOpts = computed(() => DENSITIES.map((d) => ({ value: d, label: t(`settings.look.densities.${d}`) })))
 const langOpts = computed(() => LOCALES.map((l) => ({ value: l, label: l === 'fr' ? 'Français' : 'English' })))
@@ -37,8 +46,8 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
 <template>
   <PageHeader :title="t('settings.title')" />
   <div class="layout">
-    <nav class="toc" :aria-label="t('settings.sections')">
-      <ul><li v-for="k in sections" :key="k"><a :href="`#set-${k}`">{{ t(`settings.nav.${k}`) }}</a></li></ul>
+    <nav class="toc card" :aria-label="t('settings.sections')">
+      <ul><li v-for="k in sections" :key="k"><a :href="`#set-${k}`" :aria-current="active === k ? 'true' : undefined" @click="active = k">{{ t(`settings.nav.${k}`) }}</a></li></ul>
     </nav>
 
     <div class="sections">
@@ -92,6 +101,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
           <SwitchField v-model="s.aiDraftRelance" :label="t('settings.ai.draftRelance')" :help="t('settings.ai.draftRelanceHelp')" />
           <p class="callout" data-tone="neutral">{{ t('settings.ai.never') }}</p>
         </div>
+        <AiProviderPanel v-if="s.aiMode === 'external'" />
       </section>
 
       <section id="set-look" aria-labelledby="h-look">
@@ -111,11 +121,12 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
 </template>
 
 <style scoped>
-.layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--space-5); align-items: start; }
-.toc { position: sticky; top: var(--space-4); }
-.toc ul { display: grid; gap: 2px; }
-.toc a { display: flex; align-items: center; min-height: var(--target); padding: 0 var(--space-3); border-radius: var(--radius-sm); text-decoration: none; color: var(--c-text); }
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.toc { position: sticky; top: 0; padding: var(--space-2); }
+.toc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.toc a { display: flex; align-items: center; min-height: var(--target); padding: 0 var(--space-3); border-radius: var(--radius-md); text-decoration: none; color: var(--c-text); }
 .toc a:hover { background: var(--c-surface-2); }
+.toc a[aria-current='true'] { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; }
 .sections { display: grid; gap: var(--space-6); min-width: 0; }
 section { display: grid; gap: var(--space-3); scroll-margin-top: var(--space-4); }
 h2 { font-size: var(--fs-lg); display: flex; gap: var(--space-2); align-items: center; }

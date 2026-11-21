@@ -5,7 +5,7 @@ import BaseIcon from './BaseIcon.vue'
 import FormField from './FormField.vue'
 
 /** Champ de mot de passe avec bouton « afficher » (aria-pressed) : utile au clavier adapté et à la saisie sur mobile. */
-defineProps<{ modelValue: string; label: string; hint?: string; error?: string; required?: boolean; autocomplete?: 'current-password' | 'new-password'; id?: string }>()
+defineProps<{ modelValue: string; label: string; hint?: string; error?: string; required?: boolean; autocomplete?: 'current-password' | 'new-password' | 'off'; id?: string }>()
 defineEmits<{ 'update:modelValue': [v: string] }>()
 const { t } = useI18n()
 const shown = ref(false)

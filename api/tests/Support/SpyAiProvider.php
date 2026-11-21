@@ -21,7 +21,7 @@ final class SpyAiProvider implements AiProvider
         return (new HeuristicProvider())->analyse($subject, $body, $mailDate, $busy);
     }
 
-    public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines): string
+    public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines, string $original = ''): string
     {
         return (new HeuristicProvider())->draftReply($contact, $subject, $me, $locale, $tone, $slotLines);
     }

@@ -199,13 +199,13 @@ Comparaison de textes (maquette contre catalogue français) puis contrôle visue
 | IA interdite par compte | ✅ | Par dossier ❌. |
 | Boîte partagée : IA seulement activée par un administrateur | ✅ | Coupée par défaut. |
 | IA de l'université par défaut, externe désactivée | ✅ | Mode visible dans la barre d'état. |
-| Fournisseurs Ollama et cloud | ❌ | L'interface `AiProvider` les attend ; seul le fournisseur à règles existe. |
-| Sortie JSON validée par schéma | 🟡 | Sorties construites par le code local ; à ajouter avec un vrai modèle. |
+| Fournisseurs Ollama et cloud | 🟡 | Fournisseur externe configurable par l'utilisateur (OpenAI, Mistral, Anthropic, Ollama, tout service compatible OpenAI) : clé chiffrée, jamais renvoyée, test de connexion, ce qui est envoyé affiché. Testé avec des réponses simulées, **jamais contre un vrai service**. Pas de modèle auto-hébergé fourni. |
+| Sortie JSON validée par schéma | ✅ | Chaque champ de la sortie d'un modèle externe est validé (dates, longueurs) ; une valeur invalide est ignorée au profit de la proposition locale. |
 
 ## 7. Ce qui reste à faire, par ordre de valeur
 
 1. **Webmail (F-16)** : vidage de la corbeille, HTML isolé, pièces jointes dans les brouillons.
-2. **Fournisseur d'IA réel** derrière `AiProvider` (Ollama d'abord), sorties validées par schéma.
+2. **Fournisseur d'IA** : l'essayer contre un vrai service (OpenAI, Mistral, Ollama) et brancher un modèle auto-hébergé pour l'IA de l'université.
 3. **Réglages manquants** : LDAP, règles de création de suivis, délai par compte, jours ouvrés, canaux de notification par type.
 4. **Agenda** : invitations (F-25), bascule par calendrier, panneau de détail, conflits (F-21), vrai serveur CalDAV de test, Google.
 5. **Tauri** (dans le MVP du cahier), puis PWA et hors ligne.

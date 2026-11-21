@@ -15,7 +15,12 @@
   .card.clickable { transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
   .card.clickable:hover { transform: translateY(var(--hover-lift)); }
   :root[data-style='retro'] .card, :root[data-style='retro'] .callout, :root[data-style='retro'] .panel { border-color: var(--c-border-strong); }
-  :root[data-style='neon'][data-theme='dark'] .card { box-shadow: var(--glow); }
+  :root[data-style='neon'][data-theme='dark'] .card, :root[data-style='neon'][data-theme='dark'] .callout { box-shadow: var(--glow-soft); transition: box-shadow .2s ease; }
+  :root[data-style='neon'][data-theme='dark'] .card:hover, :root[data-style='neon'][data-theme='dark'] .card:focus-within { box-shadow: var(--glow); }
+  :root[data-style='neon'][data-theme='dark'] h1, :root[data-style='neon'][data-theme='dark'] h2 { text-shadow: var(--text-glow); }
+  :root[data-style='neon'][data-theme='dark'] .row { box-shadow: var(--glow-soft); }
+  :root[data-style='neon'][data-theme='dark'] .row:hover { box-shadow: var(--glow); }
+  :root[data-style='neon'][data-theme='dark'] .input:focus, :root[data-style='neon'][data-theme='dark'] .input:focus-visible { box-shadow: var(--glow); }
 
   /* Panneau d'application : colonne bordée, sans ombre (rail, dossiers, liste, lecture). */
   .panel { background: var(--c-surface); border-right: var(--bw) solid var(--c-border); min-width: 0; }
@@ -79,7 +84,10 @@
   .btn[aria-pressed='true'] { background: var(--c-primary-soft); color: var(--c-on-primary-soft); border-color: var(--c-accent); }
   :root[data-style='retro'] .btn { box-shadow: var(--shadow-1); }
   :root[data-style='retro'] .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+  :root[data-style='neon'][data-theme='dark'] .btn { box-shadow: var(--glow-soft); }
+  :root[data-style='neon'][data-theme='dark'] .btn:hover:not(:disabled) { box-shadow: var(--glow); }
   :root[data-style='neon'][data-theme='dark'] .btn.primary { box-shadow: var(--glow); }
+  :root[data-style='neon'][data-theme='dark'] .btn.primary:hover:not(:disabled) { box-shadow: 0 0 0 1px var(--c-primary), 0 0 22px var(--c-primary), 0 0 48px var(--c-primary); }
 
   /* ── Divers ─────────────────────────────────────────────────── */
   .kbd { display: inline-block; min-width: 1.6em; padding: 0 6px; text-align: center; font: 600 0.8rem/1.6 var(--font-sans); background: var(--c-surface-2); border: var(--bw) solid var(--c-border-strong); border-bottom-width: 2px; border-radius: 6px; }

@@ -38,7 +38,7 @@ final class HeuristicProvider implements AiProvider
         return new MailAnalysis($slots === [] ? null : $slots, $event, $task, $follow, $this->summary($text));
     }
 
-    public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines): string
+    public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines, string $original = ''): string
     {
         $first = explode(' ', trim($contact))[0] ?: $contact;
         $list = $slotLines === [] ? '' : implode("\n", array_map(static fn (string $l) => '- '.$l, $slotLines));

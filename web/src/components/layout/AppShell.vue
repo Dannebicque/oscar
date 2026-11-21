@@ -73,7 +73,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
       <RouterLink to="/reglages" class="link wide" :class="{ current: route.name === 'settings' || route.name === 'journal' }" :aria-current="route.name === 'settings' ? 'page' : undefined">
         <BaseIcon name="settings" :size="22" /><span>{{ t('nav.settings') }}</span>
       </RouterLink>
-      <button v-if="session.token" type="button" class="link wide out" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOut') }}</span></button>
+      <button v-if="session.token" type="button" class="link wide out" :aria-label="t('nav.signOut')" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOutShort') }}</span></button>
     </nav>
 
     <main id="main" tabindex="-1" :class="{ bleed: route.meta.bleed }"><div class="page"><RouterView /></div></main>
@@ -91,7 +91,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
 /* L'application occupe la fenêtre : la zone centrale défile, la barre d'état reste visible (standard des clients de messagerie). */
 .shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'nav main' 'status status'; height: 100dvh; }
 .topbar { display: none; }
-.nav { grid-area: nav; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-2); background: var(--c-surface); border-right: var(--bw) solid var(--c-border); }
+.nav { grid-area: nav; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-2); background: var(--c-surface); border-right: var(--bw) solid var(--c-border); }
 main { grid-area: main; padding: var(--space-5) var(--space-5); min-width: 0; min-height: 0; overflow-y: auto; scroll-padding-top: var(--space-5); }
 .page { width: 100%; }
 main.bleed { padding: 0; overflow: hidden; }
@@ -99,14 +99,17 @@ main.bleed .page { max-width: none; height: 100%; margin: 0; }
 .brand { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; color: var(--c-text); font-weight: 800; }
 .rail-brand { justify-content: center; margin-bottom: var(--space-3); }
 .logo { width: 38px; height: 38px; border-radius: var(--radius-md); background: var(--c-primary); display: inline-flex; align-items: center; justify-content: center; color: var(--c-on-primary); box-shadow: var(--glow); }
-.link { position: relative; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: 0.75rem; color: var(--c-text-muted); text-decoration: none; border-radius: var(--radius-md); font-weight: 600; border: var(--bw) solid transparent; }
+.link { box-sizing: border-box; width: 100%; min-width: 0; padding: var(--space-1) 2px; position: relative; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: 0.75rem; color: var(--c-text-muted); text-decoration: none; border-radius: var(--radius-md); font-weight: 600; border: var(--bw) solid transparent; }
 .link:hover { background: var(--c-surface-2); }
 .link.current { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; border-color: color-mix(in srgb, var(--c-accent) 40%, transparent); }
 .link.center { color: var(--c-text); font-weight: 800; }
 .orb { width: 36px; height: 36px; border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--glow); }
 .link.center:hover .orb { background: var(--c-primary-hover); }
+.link > span:not(.orb):not(.badge) { max-width: 100%; text-align: center; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; }
+.link > :deep(svg), .link > .orb { flex: none; }
 .spacer { margin-top: auto; }
-.out { border: 0; background: transparent; font: inherit; font-size: 0.75rem; cursor: pointer; }
+:root[data-style='neon'][data-theme='dark'] .link.current { box-shadow: var(--glow-soft); text-shadow: var(--text-glow); }
+.out { border: 0; background: transparent; padding-inline: 2px; font: inherit; font-size: 0.75rem; cursor: pointer; }
 .badge { position: absolute; top: 6px; right: 14px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--c-danger-solid); color: var(--c-on-danger-solid); font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 :root[data-theme='contrast'] .badge { background: var(--c-text); color: var(--c-bg); }
 

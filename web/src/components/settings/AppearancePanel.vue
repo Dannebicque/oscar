@@ -60,7 +60,7 @@ function onHex(e: Event) {
       <RadioGroupRoot class="palettes" :model-value="s.palette" :aria-labelledby="'ap-pal'" @update:model-value="pickPalette">
         <label v-for="p in PALETTE_IDS" :key="p" class="pal" :class="{ on: s.palette === p }">
           <RadioGroupItem class="sr-radio" :value="p" :aria-label="t(`settings.look.palettes.${p}`)" />
-          <span class="sw" :style="{ background: swatch(p) }" />
+          <span class="swatch" :style="{ background: swatch(p) }" />
           <span>{{ t(`settings.look.palettes.${p}`) }}</span>
         </label>
       </RadioGroupRoot>
@@ -100,7 +100,7 @@ h3 { margin-bottom: var(--space-1); }
 .sr-radio { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .palettes { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 .pal { grid-auto-flow: column; align-items: center; min-height: var(--target); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3); border-radius: var(--radius-pill); }
-.sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--c-surface); box-shadow: 0 0 0 1px var(--c-border-strong); }
+.swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--c-surface); box-shadow: 0 0 0 1px var(--c-border-strong); }
 .custom { display: grid; gap: var(--space-2); margin-top: var(--space-3); }
 .color { width: var(--target); height: var(--target); padding: 2px; border: var(--bw) solid var(--c-border-strong); border-radius: var(--radius-sm); background: var(--c-surface); }
 .hex { width: 9ch; font-family: ui-monospace, monospace; }

@@ -10,6 +10,7 @@ export default {
     dueOn: 'Échéance {date}', on: 'le {date}', never: 'Jamais',
   },
   nav: {
+    signOutShort: 'Quitter',
     signOut: 'Se déconnecter',
     label: 'Navigation principale', home: 'Accueil', mails: 'Mails', suivis: 'Suivis', agenda: 'Agenda', tasks: 'Tâches',
     alerts: 'Alertes', settings: 'Réglages', alertsCount: 'Alertes, {n} non lue | Alertes, {n} non lue | Alertes, {n} non lues',
@@ -300,6 +301,12 @@ export default {
     },
     recap: { morning: 'Récap du matin', evening: 'Bilan du soir', email: 'Recevoir par e-mail', emailHelp: 'Envoyé à david{\'@\'}iut-troyes.fr.', home: 'Afficher sur l’accueil', homeHelp: 'L’encart « Aujourd’hui » reprend le dernier récap.', example: 'Voir un exemple de récap' },
     ai: {
+      externalTitle: 'Ton fournisseur d’IA externe', notConfigured: 'Tant que le service n’est pas configuré, Oscar ne lit rien et ne propose rien.', service: 'Service', presets: { openai: 'OpenAI', mistral: 'Mistral AI', anthropic: 'Anthropic (Claude)', ollama: 'Ollama (modèle sur ta machine)', custom: 'Autre service compatible OpenAI' },
+      baseUrl: 'Adresse de l’API', baseUrlHelp: 'En production, l’adresse doit commencer par https://.', model: 'Modèle', modelHelp: 'Le nom exact du modèle chez ce fournisseur.',
+      apiKey: 'Clé d’API', keyHelp: 'Créée dans l’espace client du fournisseur. Chiffrée sur le serveur avec une clé hors base de données, elle ne s’affiche plus jamais.', keyKept: 'Une clé est enregistrée. Saisis-en une nouvelle pour la remplacer.', keyOptional: 'Facultative pour un modèle local.',
+      saved: 'Fournisseur enregistré.', keyRemoved: 'Clé retirée.', removeKey: 'Retirer la clé', test: 'Tester la connexion', testing: 'Je contacte le service…', saveBeforeTest: 'Enregistre tes changements avant de tester.',
+      willSendTitle: 'Ce qui sera envoyé', processedBy: 'Le texte est traité par {host}, hors de l’infrastructure de ton établissement.', sends1: 'L’objet et le texte des mails que tu ouvres, pour les résumer et proposer tâches et réponses.', sends2: 'Le nom du contact et ton nom, pour rédiger un brouillon.',
+      neverSends: 'Et jamais :', never1: 'Les pièces jointes.', never2: 'Rien de ton agenda : les créneaux libres sont calculés chez toi.', never3: 'Les mails des boîtes où l’IA est interdite, ni ceux des boîtes partagées sans accord d’un administrateur.',
       mode: 'Mode d’Oscar', university: 'IA de l’université', universityHelp: 'Par défaut. Les mails ne quittent pas l’infrastructure de l’établissement.',
       external: 'Fournisseur externe', externalHelp: 'Clé personnelle ou service externe. Désactivé par défaut.',
       off: 'IA coupée', offHelp: 'Oscar ne lit rien. Tout le reste fonctionne.',

@@ -21,6 +21,8 @@ export const PALETTES: Record<Exclude<PaletteId, 'custom'>, { light: string; dar
   corail: { light: '#be123c', dark: '#fb7185' },
   graphite: { light: '#334155', dark: '#cbd5e1' },
 }
+/** Néon, mode sombre : les mêmes palettes, mais saturées au maximum (tubes de néon). Le contraste reste corrigé par `ensureOnAll`. */
+const NEON_DARK: Record<Exclude<PaletteId, 'custom'>, string> = { azur: '#22e4ff', emeraude: '#3dff8f', ambre: '#ffd23f', corail: '#ff3fa4', graphite: '#e6edff' }
 export const PALETTE_IDS = [...Object.keys(PALETTES), 'custom'] as PaletteId[]
 
 export interface ThemeInput { style: StyleId; palette: PaletteId; mode: ResolvedMode; customAccent?: string }
@@ -45,7 +47,7 @@ function neutrals(style: StyleId, mode: ResolvedMode): Neutrals {
     // Nuit profonde, bords lumineux. En clair : fond blanc bleuté et traits vifs, sans halo.
     neon: {
       light: { bg: '#eef0ff', surface: '#ffffff', surface2: '#e6e9ff', border: '#c8cdf5', borderStrong: '#5b5fa8', text: '#14163a', muted: '#454a82' },
-      dark: { bg: '#07081a', surface: '#0f1130', surface2: '#171a44', border: '#2c3078', borderStrong: '#8a90e8', text: '#eceeff', muted: '#b3b8f0' },
+      dark: { bg: '#04030c', surface: '#0a0722', surface2: '#130e38', border: '#2b2478', borderStrong: '#8d86ff', text: '#f1f0ff', muted: '#bdb8f5' },
     },
   }
   return t[style][mode]
@@ -81,7 +83,8 @@ function ensureOnAll(color: string, backgrounds: string[], target: number): stri
  */
 function accentFor(input: ThemeInput, n: Neutrals): { base: string; text: string } {
   if (input.mode === 'contrast') return { base: '#ffe14d', text: '#ffe14d' }
-  const pick = input.palette === 'custom' && isHex(input.customAccent) ? input.customAccent : PALETTES[input.palette === 'custom' ? 'azur' : input.palette][input.mode === 'light' ? 'light' : 'dark']
+  const named = input.palette === 'custom' ? 'azur' : input.palette
+  const pick = input.palette === 'custom' && isHex(input.customAccent) ? input.customAccent : input.style === 'neon' && input.mode === 'dark' ? NEON_DARK[named] : PALETTES[named][input.mode === 'light' ? 'light' : 'dark']
   const text = ensureOnAll(pick, [n.bg, n.surface, n.surface2], 4.5)
   const base = input.mode === 'light' ? ensureContrast(pick, '#ffffff', 4.5) : ensureOnAll(pick, [n.bg, n.surface], 3)
   return { base, text }
@@ -127,14 +130,22 @@ function styleTokens(style: StyleId, mode: ResolvedMode, accent: string, n: Neut
     }
   }
   if (style === 'neon') {
-    const glow = mode === 'light' ? 'none' : high ? 'none' : `0 0 0 1px ${mix(n.surface, accent, 0.55)}, 0 0 20px ${mix(n.bg, accent, 0.45)}`
+    const on = mode === 'dark'
+    const a = (k: number) => mix(n.bg, accent, k)
+    const neon2 = accent.toLowerCase() === NEON_DARK.corail ? '#22e4ff' : '#ff3fa4'
+    // Trois couches : trait fin, halo proche, halo large. En clair et en contraste élevé : pas de halo.
+    const glow = on ? `0 0 0 1px ${mix(n.surface, accent, 0.6)}, 0 0 12px ${a(0.55)}, 0 0 34px ${a(0.3)}` : 'none'
+    const soft = on ? `0 0 0 1px ${mix(n.surface, accent, 0.32)}, 0 0 18px ${a(0.22)}` : 'none'
+    const line = mix(n.bg, accent, 0.07)
     return {
       '--font-sans': "'Space Grotesk Variable', 'Inter Variable', system-ui, sans-serif", '--font-display': "'Space Grotesk Variable', 'Inter Variable', system-ui, sans-serif",
       '--radius-sm': '10px', '--radius-md': '14px', '--radius-lg': '20px', '--radius-pill': '999px', '--bw': '1px', '--bw-card': '1px',
-      '--shadow-1': mode === 'light' ? '0 1px 3px rgb(20 22 58 / 0.14)' : `0 0 0 1px ${mix(n.surface, accent, 0.3)}`, '--shadow-2': glow === 'none' ? '0 10px 30px rgb(20 22 58 / 0.25)' : glow,
-      '--glow': glow, '--tracking': '0.01em', '--label-case': 'none', '--fs-base-scale': '1',
-      '--bg-image': mode === 'dark' ? `radial-gradient(60rem 30rem at 85% -10%, ${mix(n.bg, accent, 0.22)}, transparent 65%), radial-gradient(40rem 24rem at -10% 110%, ${mix(n.bg, '#8b5cf6', 0.18)}, transparent 60%)` : 'none',
-      '--bg-size': 'auto', '--hover-lift': '0px',
+      '--shadow-1': mode === 'light' ? '0 1px 3px rgb(20 22 58 / 0.14)' : soft, '--shadow-2': glow === 'none' ? '0 10px 30px rgb(20 22 58 / 0.25)' : glow,
+      '--glow': glow, '--glow-soft': soft, '--text-glow': on ? `0 0 10px ${a(0.8)}, 0 0 26px ${a(0.45)}` : 'none', '--neon-2': neon2,
+      '--tracking': '0.01em', '--label-case': 'none', '--fs-base-scale': '1',
+      // Quadrillage de synthwave, deux nappes de lumière (accent en haut à droite, seconde couleur en bas à gauche).
+      '--bg-image': on ? `linear-gradient(${line} 1px, transparent 1px), linear-gradient(90deg, ${line} 1px, transparent 1px), radial-gradient(60rem 32rem at 88% -8%, ${a(0.3)}, transparent 65%), radial-gradient(46rem 28rem at -8% 108%, ${mix(n.bg, neon2, 0.24)}, transparent 62%)` : 'none',
+      '--bg-size': on ? '56px 56px, 56px 56px, auto, auto' : 'auto', '--hover-lift': '0px',
     }
   }
   return {

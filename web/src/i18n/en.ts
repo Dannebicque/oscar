@@ -12,6 +12,7 @@ const en: typeof fr = {
     dueOn: 'Due {date}', on: 'on {date}', never: 'Never',
   },
   nav: {
+    signOutShort: 'Sign out',
     signOut: 'Sign out',
     label: 'Main navigation', home: 'Home', mails: 'Mail', suivis: 'Follow-ups', agenda: 'Calendar', tasks: 'Tasks',
     alerts: 'Alerts', settings: 'Settings', alertsCount: 'Alerts, {n} unread | Alerts, {n} unread | Alerts, {n} unread',
@@ -300,6 +301,12 @@ const en: typeof fr = {
     },
     recap: { morning: 'Morning recap', evening: 'Evening review', email: 'Receive by email', emailHelp: 'Sent to david{\'@\'}iut-troyes.fr.', home: 'Show on the home page', homeHelp: 'The “Today” card shows the latest recap.', example: 'See a recap example' },
     ai: {
+      externalTitle: 'Your external AI provider', notConfigured: 'Until the service is configured, Oscar reads nothing and suggests nothing.', service: 'Service', presets: { openai: 'OpenAI', mistral: 'Mistral AI', anthropic: 'Anthropic (Claude)', ollama: 'Ollama (model on your machine)', custom: 'Other OpenAI-compatible service' },
+      baseUrl: 'API address', baseUrlHelp: 'In production, the address must start with https://.', model: 'Model', modelHelp: 'The exact model name at this provider.',
+      apiKey: 'API key', keyHelp: 'Created in the provider’s dashboard. Encrypted on the server with a key kept outside the database, it is never shown again.', keyKept: 'A key is saved. Type a new one to replace it.', keyOptional: 'Optional for a local model.',
+      saved: 'Provider saved.', keyRemoved: 'Key removed.', removeKey: 'Remove the key', test: 'Test the connection', testing: 'Contacting the service…', saveBeforeTest: 'Save your changes before testing.',
+      willSendTitle: 'What will be sent', processedBy: 'The text is processed by {host}, outside your institution’s infrastructure.', sends1: 'The subject and text of the mails you open, to summarise them and suggest tasks and replies.', sends2: 'The contact’s name and yours, to write a draft.',
+      neverSends: 'And never:', never1: 'Attachments.', never2: 'Anything from your calendar: free slots are computed on your side.', never3: 'Mail from mailboxes where AI is forbidden, or from shared mailboxes without an administrator’s approval.',
       mode: 'Oscar’s mode', university: 'University AI', universityHelp: 'Default. Mails never leave the institution’s infrastructure.',
       external: 'External provider', externalHelp: 'Personal key or external service. Off by default.',
       off: 'AI off', offHelp: 'Oscar reads nothing. Everything else keeps working.',

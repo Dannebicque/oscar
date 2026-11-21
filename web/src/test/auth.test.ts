@@ -116,3 +116,22 @@ describe('mon compte (N-05, N-06)', () => {
     expect(await check(wrapper.element)).toEqual([])
   })
 })
+
+describe('IA externe : configuration (§5)', () => {
+  it('choisir « fournisseur externe » demande de configurer le service, dit ce qui est envoyé et chiffre la clé', async () => {
+    const { default: Panel } = await import('../components/settings/AiProviderPanel.vue')
+    const { wrapper } = await mountApp(Panel, '/reglages')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Tant que le service n’est pas configuré')
+    expect(wrapper.text()).toContain('Les pièces jointes')
+    expect(wrapper.text()).toContain('Rien de ton agenda')
+    await wrapper.find('#ai-key').setValue('sk-secret')
+    await wrapper.findAll('button').find((b) => b.text() === 'Enregistrer')!.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Une clé est enregistrée')
+    expect((wrapper.find('#ai-key').element as HTMLInputElement).value).toBe('') // la clé ne reste pas à l’écran
+    expect(wrapper.text()).not.toContain('Tant que le service n’est pas configuré')
+    expect(wrapper.text()).toContain('api.openai.com')
+    expect(await check(wrapper.element)).toEqual([])
+  })
+})

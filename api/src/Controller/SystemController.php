@@ -33,7 +33,9 @@ final class SystemController extends AbstractController
             }
         }
         $mode = ($em->getRepository(UserSettings::class)->findOneBy(['owner' => $user]) ?? new UserSettings($user))->all()['aiMode'];
-        $out[] = ['id' => 'ai', 'state' => 'ok', 'detail' => (string) $mode, 'lastOk' => null];
+        // IA externe choisie mais pas configurée : la barre d'état le dit (Oscar ne lit rien tant que le service n'est pas prêt).
+        $notReady = $mode === 'external' && !($em->getRepository(\App\Entity\AiProviderConfig::class)->findOneBy(['owner' => $user])?->isComplete() ?? false);
+        $out[] = ['id' => 'ai', 'state' => $notReady ? 'error' : 'ok', 'detail' => $notReady ? 'Fournisseur externe non configuré : renseigne-le dans Réglages > Oscar.' : (string) $mode, 'lastOk' => null];
 
         return new JsonResponse($out);
     }

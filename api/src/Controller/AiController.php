@@ -36,7 +36,7 @@ final class AiController extends AbstractController
         }
         $settings = $this->settings($user);
         // L'IA est coupée, ou interdite sur cette boîte (confidentielle, RH) : aucune lecture du mail.
-        if (!$mail->getAccount()->isAiAllowed() || ($mail->getSharedMailbox() !== null && !$mail->getSharedMailbox()->isAiEnabled()) || ($provider = $this->registry->for((string) $settings['aiMode'])) === null || !$settings['aiSuggestTasks'] && !$settings['aiSuggestFollow']) {
+        if (!$mail->getAccount()->isAiAllowed() || ($mail->getSharedMailbox() !== null && !$mail->getSharedMailbox()->isAiEnabled()) || ($provider = $this->registry->for((string) $settings['aiMode'], $user)) === null || !$settings['aiSuggestTasks'] && !$settings['aiSuggestFollow']) {
             return new JsonResponse(self::NONE);
         }
         try {
@@ -76,14 +76,22 @@ final class AiController extends AbstractController
             return new JsonResponse(['title' => 'Mail inconnu'], Response::HTTP_NOT_FOUND);
         }
         $settings = $this->settings($user);
-        $provider = $this->registry->for((string) $settings['aiMode']);
+        $provider = $this->registry->for((string) $settings['aiMode'], $user);
         if ($provider === null || !$mail->getAccount()->isAiAllowed() || ($mail->getSharedMailbox() !== null && !$mail->getSharedMailbox()->isAiEnabled())) {
             return new JsonResponse(['title' => 'Le brouillon par l’IA est désactivé pour cette boîte.'], Response::HTTP_FORBIDDEN);
         }
         $in = json_decode($request->getContent(), true) ?: [];
         $tone = ($in['tone'] ?? 'warm') === 'short' ? 'short' : 'warm';
         $lines = array_values(array_filter(array_map(static fn ($l) => \is_string($l) ? mb_substr(trim($l), 0, 120) : '', (array) ($in['slots'] ?? [])), static fn ($l) => $l !== ''));
-        $body = $provider->draftReply($mail->getFromName() ?: $mail->getFromAddress(), $mail->getSubject(), $user->getDisplayName(), (string) $settings['locale'], $tone, \array_slice($lines, 0, 8));
+        $original = '';
+        if (str_starts_with($provider->name(), 'external')) {
+            try {
+                $original = $this->factory->create($mail->getAccount())->fetchBody($mail->getFolder(), $mail->getUid()) ?? '';
+            } catch (\Throwable) {
+                $original = ''; // sans le texte d'origine, le brouillon reste possible
+            }
+        }
+        $body = $provider->draftReply($mail->getFromName() ?: $mail->getFromAddress(), $mail->getSubject(), $user->getDisplayName(), (string) $settings['locale'], $tone, \array_slice($lines, 0, 8), $original);
         $this->em->persist((new AiCall($provider->name(), 'reply-draft', 'mail '.$mail->getId(), ['chars' => mb_strlen($body), 'slots' => \count($lines)]))->setOwner($user));
         $this->em->flush();
 
@@ -98,7 +106,7 @@ final class AiController extends AbstractController
             return new JsonResponse(['title' => 'Suivi inconnu'], Response::HTTP_NOT_FOUND);
         }
         $settings = $this->settings($user);
-        $provider = $this->registry->for((string) $settings['aiMode']);
+        $provider = $this->registry->for((string) $settings['aiMode'], $user);
         if ($provider === null || !$settings['aiDraftRelance']) {
             return new JsonResponse(['title' => 'Le brouillon par l’IA est désactivé dans Réglages.'], Response::HTTP_FORBIDDEN);
         }

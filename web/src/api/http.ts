@@ -161,6 +161,9 @@ export function createHttpApi(baseUrl: string): Api {
     },
     settings: {
       get: () => req('GET', '/api/settings'),
+      aiConfig: () => req('GET', '/api/ai-config'),
+      saveAiConfig: (c) => req('PUT', '/api/ai-config', c),
+      testAiConfig: () => req('POST', '/api/ai-config/test', {}),
       update: (patch) => req('PUT', '/api/settings', patch),
     },
     system: {

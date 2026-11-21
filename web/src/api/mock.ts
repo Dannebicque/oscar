@@ -97,6 +97,7 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'iut', label: 'IUT', kind: 'caldav', url: 'https://agenda.iut-troyes.fr/dav/', username: 'david', personal: false },
     { id: 'perso', label: 'Perso', kind: 'google', url: '', username: '', personal: true },
   ]
+  let aiCfg: import('./types').AiConfig = { kind: 'openai', baseUrl: '', model: '', hasKey: false, configured: false }
   let serverSettings: ServerSettings = {}
   const findMail = (id: string) => mails.find((x) => x.id === id)
   const replaceMail = (m: Mail) => { mails = mails.map((x) => (x.id === m.id ? m : x)) }
@@ -185,6 +186,9 @@ export function createMockApi(now: Date = new Date()): Api {
     },
     settings: {
       async get() { return clone(serverSettings) },
+      async aiConfig() { return clone(aiCfg) },
+      async saveAiConfig(c) { aiCfg = { kind: c.kind, baseUrl: c.baseUrl.replace(/\/$/, ''), model: c.model, hasKey: c.apiKey === undefined ? aiCfg.hasKey : c.apiKey !== '', configured: !!c.baseUrl && !!c.model }; return clone(aiCfg) },
+      async testAiConfig() { return aiCfg.configured ? { ok: true, message: 'Le service répond. Oscar pourra l’utiliser.' } : { ok: false, message: 'Renseigne d’abord l’adresse et le modèle, puis enregistre.' } },
       async update(patch) { serverSettings = { ...serverSettings, ...patch }; return clone(serverSettings) },
     },
     system: {

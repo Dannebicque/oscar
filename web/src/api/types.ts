@@ -92,7 +92,13 @@ export interface AccountsApi {
 /** Réglages utiles au serveur (relances, récaps, mode d'IA). Thème et densité restent sur l'appareil. */
 export type ServerSettings = Record<string, string | number | boolean>
 
+export interface AiConfig { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; hasKey: boolean; configured: boolean }
+export interface AiConfigInput { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; /** absent : on garde la clé ; chaîne vide : on la retire. */ apiKey?: string }
+
 export interface SettingsApi {
+  aiConfig(): Promise<AiConfig>
+  saveAiConfig(c: AiConfigInput): Promise<AiConfig>
+  testAiConfig(): Promise<{ ok: boolean; message: string }>
   get(): Promise<ServerSettings>
   update(patch: ServerSettings): Promise<ServerSettings>
 }
