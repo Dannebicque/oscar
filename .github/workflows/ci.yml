@@ -24,12 +24,13 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: sodium, pdo_sqlite, pdo_pgsql, intl, ctype, iconv
+          extensions: sodium, pdo_sqlite, pdo_pgsql, intl, ctype, iconv, ldap
           coverage: none
+      # Symfony exige un fichier .env (valeurs par défaut) avant même l'installation : les scripts de Composer vident le cache.
+      - run: cp .env.example .env
       - run: composer install --no-interaction --prefer-dist
       - name: Conteneur et schéma
         run: |
-          cp .env.example .env
           php bin/console lint:container
           DATABASE_URL="postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar?serverVersion=17&charset=utf8" php bin/console doctrine:migrations:migrate -n
           DATABASE_URL="postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar?serverVersion=17&charset=utf8" php bin/console doctrine:schema:validate
@@ -47,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.4', extensions: 'sodium, pdo_sqlite, intl, ctype, iconv', coverage: none }
+        with: { php-version: '8.4', extensions: 'sodium, pdo_sqlite, intl, ctype, iconv, ldap', coverage: none }
+      - run: cp .env.example .env
       - run: composer install --no-interaction --prefer-dist
       - name: Dovecot de test
         working-directory: .
@@ -55,7 +57,6 @@ jobs:
           docker compose -f docker/dev/compose.yaml up -d --wait dovecot
           python3 docker/dovecot/seed.py
           python3 docker/dovecot/smoke.py
-      - run: cp .env.example .env
       - name: Tests d'intégration IMAP (ne doivent pas être ignorés)
         run: php bin/phpunit tests/Mail/DovecotIntegrationTest.php --fail-on-skipped
 
