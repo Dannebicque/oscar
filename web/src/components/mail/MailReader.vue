@@ -25,6 +25,7 @@ import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
 import ActivityNotes from './ActivityNotes.vue'
 import AvailabilityDialog from './AvailabilityDialog.vue'
+import AttachmentsMenu from './AttachmentsMenu.vue'
 import ClaimPanel from './ClaimPanel.vue'
 import SuiviBanner from './SuiviBanner.vue'
 import SuiviPanel from './SuiviPanel.vue'
@@ -188,9 +189,7 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
           <p v-if="bodyLoading" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
           <p v-else-if="bodyFailed" class="error-text" role="alert">{{ t('mail.bodyError') }} <BaseButton :label="t('common.retry')" @click="mails.loadBody(mail.id)" /></p>
           <p v-else-if="mail.paragraphs.length === 0" class="muted">{{ t('mail.bodyEmpty') }}</p>
-          <ul v-if="mail.attachments.length" class="cluster atts" :aria-label="t('mail.attachments')">
-            <li v-for="a in mail.attachments" :key="a.name + a.index"><button type="button" class="chip att" :aria-label="t('mail.download', { name: a.name })" @click="download(a)"><BaseIcon name="paperclip" :size="14" />{{ a.name }} · {{ a.size }}</button></li>
-          </ul>
+          <AttachmentsMenu v-if="mail.attachments.length" :items="mail.attachments" @download="download" />
         </div>
 
         <OscarSays v-if="aiOn && hints.availability && !dismissed.has('avail')" situation="availability" :params="{ who: mail.from.name.split(' ')[0], n: hints.availability.slots.length }" :level="3" suggestion>
@@ -261,8 +260,6 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 .body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
 .summary { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
 .sh { display: flex; align-items: center; gap: var(--space-2); color: var(--c-ai); }
-.atts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.att { cursor: pointer; min-height: var(--target); }
 .moves { border: 0; padding: 0; margin: 0; display: grid; gap: 2px; }
 .moves legend { font-weight: 700; margin-bottom: var(--space-2); }
 .check { display: flex; gap: var(--space-2); align-items: center; min-height: var(--target); }

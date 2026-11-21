@@ -17,6 +17,8 @@ export const useAuthStore = defineStore('auth', () => {
         const me = await api.auth.me()
         session.name = me.displayName
         session.username = me.username
+        session.email = me.email ?? null
+        session.hasPassword = !!me.hasPassword
       } catch { saveToken(null) }
     }
     checked.value = true
@@ -27,12 +29,32 @@ export const useAuthStore = defineStore('auth', () => {
     const me = await api.auth.me()
     session.name = me.displayName
     session.username = me.username
+    session.email = me.email ?? null
+    session.hasPassword = !!me.hasPassword
   }
+  async function login(email: string, password: string) { await adopt(await api.auth.login(email, password)) }
+  async function register(name: string, email: string, password: string) { await adopt(await api.auth.register(name, email, password)) }
   async function loginDev(username: string) { await adopt(await api.auth.devLogin(username)) }
   async function finishCas(code: string) { await adopt(await api.auth.exchange(code)) }
+  /** Exporte les données de l'utilisateur (N-06) : mêmes points d'accès que l'application, aucun secret (mots de passe de messagerie jamais renvoyés). */
+  async function exportData() {
+    const [suivis, tasks, mails, accounts, calendars, settings, notifications] = await Promise.all([
+      api.suivis.list(), api.tasks.list(), api.mails.list(), api.accounts.mail.list(), api.accounts.calendar.list(), api.settings.get(), api.system.notifications(),
+    ])
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), profile: { name: session.name, username: session.username, email: session.email }, settings, accounts: { mail: accounts, calendar: calendars }, suivis, tasks, mailHeaders: mails, notifications }, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'oscar-mes-donnees.json'
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+  async function deleteAccount(secret: { password?: string; confirm?: string }) {
+    await api.auth.deleteAccount(secret)
+    saveToken(null)
+  }
   async function logout() {
     await api.auth.logout()
     saveToken(null)
   }
-  return { checked, authenticated, restore, loginDev, finishCas, logout }
+  return { checked, authenticated, restore, login, register, exportData, deleteAccount, loginDev, finishCas, logout }
 })

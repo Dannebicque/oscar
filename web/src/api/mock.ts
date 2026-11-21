@@ -198,9 +198,20 @@ export function createMockApi(now: Date = new Date()): Api {
       async log() { return clone(log) },
     },
     auth: {
+      async config() { return { password: true, registration: true, cas: true, dev: true } },
+      async login() { return 'mock-token' },
+      async register() { return 'mock-token' },
+      async forgot() { return {} },
+      async reset() { /* rien */ },
+      async probe(p) {
+        const ok = !/fail|erreur/i.test(p.imapHost)
+        return { imap: { ok, message: ok ? 'Réception : connexion réussie.' : 'Réception : connexion impossible. Vérifie l’adresse du serveur, le port, le chiffrement et le mot de passe.' }, smtp: { ok: true, message: 'Envoi : connexion réussie.' } }
+      },
       async devLogin() { return 'mock-token' },
       async exchange() { return 'mock-token' },
-      async me() { return { username: ME.toLowerCase(), displayName: ME } },
+      async me() { return { username: ME.toLowerCase(), displayName: ME, email: 'david@iut-troyes.fr', hasPassword: true } },
+      async changePassword() { /* rien */ },
+      async deleteAccount() { /* rien */ },
       async logout() { /* rien */ },
     },
   }

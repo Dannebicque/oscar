@@ -106,10 +106,25 @@ export interface SystemApi {
   log(): Promise<LogEntry[]>
 }
 
+export interface AuthConfig { password: boolean; registration: boolean; cas: boolean; dev: boolean }
+export interface ProbeInput { imapHost: string; imapPort: number; imapEncryption: string; smtpHost: string; smtpPort: number; smtpEncryption: string; username: string; password: string }
+export interface ProbeResult { imap: { ok: boolean; message: string }; smtp: { ok: boolean; message: string } }
+
 export interface AuthApi {
+  /** Ce que la page de connexion propose (comptes locaux, inscription, CAS, connexion de dev). */
+  config(): Promise<AuthConfig>
+  login(email: string, password: string): Promise<string>
+  register(name: string, email: string, password: string): Promise<string>
+  /** Demande un lien de réinitialisation. Même réponse que l'adresse ait un compte ou non ; `devLink` seulement en développement. */
+  forgot(email: string): Promise<{ devLink?: string }>
+  reset(token: string, password: string): Promise<void>
+  /** Teste les serveurs IMAP et SMTP avant d'enregistrer le compte. */
+  probe(p: ProbeInput): Promise<ProbeResult>
   devLogin(username: string): Promise<string>
   exchange(code: string): Promise<string>
-  me(): Promise<{ username: string; displayName: string }>
+  me(): Promise<{ username: string; displayName: string; email?: string | null; hasPassword?: boolean }>
+  changePassword(current: string, password: string): Promise<void>
+  deleteAccount(secret: { password?: string; confirm?: string }): Promise<void>
   logout(): Promise<void>
 }
 

@@ -181,9 +181,17 @@ export function createHttpApi(baseUrl: string): Api {
       log: () => req<LogEntry[]>('GET', '/api/log'),
     },
     auth: {
+      config: () => req('GET', '/api/auth/config', undefined, { auth: false }),
+      async login(email, password) { return (await req<{ token: string }>('POST', '/api/auth/login', { email, password }, { auth: false })).token },
+      async register(name, email, password) { return (await req<{ token: string }>('POST', '/api/auth/register', { name, email, password }, { auth: false })).token },
+      async forgot(email) { return (await req<{ devLink?: string } | undefined>('POST', '/api/auth/forgot', { email }, { auth: false })) ?? {} },
+      async reset(token, password) { await req('POST', '/api/auth/reset', { token, password }, { auth: false }) },
+      probe: (p) => req('POST', '/api/mail-accounts/probe', p),
       async devLogin(username) { return (await req<{ token: string }>('POST', '/api/auth/dev-login', { username }, { auth: false })).token },
       async exchange(code) { return (await req<{ token: string }>('POST', '/api/auth/token', { code }, { auth: false })).token },
       me: () => req('GET', '/api/me'),
+      async changePassword(current, password) { await req('POST', '/api/me/password', { current, password }) },
+      async deleteAccount(secret) { await req('DELETE', '/api/me', secret) },
       async logout() { await req('POST', '/api/auth/logout', {}).catch(() => undefined) },
     },
   }

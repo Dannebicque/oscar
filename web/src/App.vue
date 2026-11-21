@@ -6,6 +6,6 @@ const route = useRoute()
 </script>
 
 <template>
-  <RouterView v-if="route.meta.public" />
+  <RouterView v-if="route.meta.public || route.meta.standalone" />
   <AppShell v-else />
 </template>

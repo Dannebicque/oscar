@@ -70,7 +70,7 @@ const counters = computed(() => [
 ])
 const demoOptions = computed(() => (['auto', 'busy', 'calm', 'first'] as Mode[]).map((m) => ({ value: m, label: m === 'auto' ? 'Auto' : t(`home.demoStates.${m}`) })))
 const steps = computed(() => (['mail', 'calendar', 'rules', 'ai'] as const).map((k) => ({
-  key: k, to: '/reglages',
+  key: k, to: k === 'mail' ? '/bienvenue' : '/reglages',
   done: mode.value === 'first' ? false : k === 'mail' ? accounts.mail.length > 0 : k === 'calendar' ? accounts.calendar.length > 0 : state.value !== 'first',
 })))
 const doneSteps = computed(() => steps.value.filter((s) => s.done).length)

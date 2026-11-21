@@ -18,6 +18,7 @@ abstract class ApiTestCase extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
+        static::getContainer()->get('cache.app')->clear(); // compteurs d'essais et codes à usage unique repartent de zéro
         $this->client->disableReboot(); // sinon la base en mémoire disparaît entre deux requêtes
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
         $this->em->getConfiguration()->setUseSchemaEditorApi(true);

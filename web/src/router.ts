@@ -9,6 +9,10 @@ export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/connexion', name: 'login', component: () => import('./views/LoginView.vue'), meta: { title: 'login.title', public: true } },
+    { path: '/inscription', name: 'register', component: () => import('./views/RegisterView.vue'), meta: { title: 'auth.registerTitle', public: true } },
+    { path: '/mot-de-passe-oublie', name: 'forgot', component: () => import('./views/ForgotView.vue'), meta: { title: 'auth.forgotTitle', public: true } },
+    { path: '/mot-de-passe/reinitialiser', name: 'reset', component: () => import('./views/ResetView.vue'), meta: { title: 'auth.resetTitle', public: true } },
+    { path: '/bienvenue', name: 'welcome', component: () => import('./views/WelcomeView.vue'), meta: { title: 'wizard.title', standalone: true } },
     { path: '/', name: 'home', component: () => import('./views/HomeView.vue'), meta: { title: 'nav.home' } },
     { path: '/mails/:id?', name: 'mails', component: () => import('./views/MailView.vue'), meta: { title: 'nav.mails', bleed: true }, props: true },
     { path: '/suivis', name: 'suivis', component: () => import('./views/SuivisView.vue'), meta: { title: 'nav.suivis' } },

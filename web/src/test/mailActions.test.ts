@@ -39,13 +39,15 @@ describe('actions sur un mail (F-16)', () => {
     expect((wrapper.find('#body').element as HTMLTextAreaElement).value).toContain('Message transféré')
   })
 
-  it('les pièces jointes sont listées comme des boutons de téléchargement, jamais affichées', async () => {
+  it('les pièces jointes sont dans un menu déroulant de téléchargement, jamais affichées', async () => {
     const first = await mountApp({ template: '<div/>' })
     const store = useMailsStore(first.pinia)
     await store.load()
     const { wrapper } = await mountApp(MailReader, '/mails/m4', { mail: { ...store.byId('m4')! } })
     await flushPromises()
-    expect(wrapper.find('button[aria-label="Télécharger convention.pdf"]').exists()).toBe(true)
+    const trigger = wrapper.find('button[aria-label^="Pièces jointes : 1"]')
+    expect(trigger.exists()).toBe(true)
+    expect(trigger.text()).toContain('1 pièce jointe')
   })
 
   it('« Enregistrer le brouillon » dépose le texte dans Brouillons sans rien envoyer', async () => {

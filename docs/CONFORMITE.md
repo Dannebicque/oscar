@@ -10,7 +10,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
 | Exigences fonctionnelles F (65) | 34 | 24 | 7 |
-| Non fonctionnelles N (12) | 2 | 7 | 3 |
+| Non fonctionnelles N (12) | 2 | 8 | 2 |
 | Interface U (11) | 5 | 4 | 2 |
 
 **MVP (priorité M)** : toutes les exigences M ont une implémentation ; les points qui les rendent 🟡 sont listés plus bas (webmail incomplet, LDAP, notifications bureau, application Tauri non commencée, pas d'image de production).
@@ -28,7 +28,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 ### 4.2 Mail
 | ID | P | État | Remarques |
 |---|---|---|---|
-| F-10 | M | 🟡 | Synchro IMAP incrémentale par UID, multi-comptes, lecture, envoi SMTP ✅. Recherche sur les en-têtes chargés, pas de plein texte serveur. |
+| F-10 | M | 🟡 | Synchro IMAP incrémentale par UID, multi-comptes, lecture, envoi SMTP ✅. Assistant de connexion en quatre étapes (adresse, accès, serveurs devinés d'après le domaine, test des deux serveurs avant d'enregistrer) ✅, garde anti-SSRF en production. Recherche sur les en-têtes chargés, pas de plein texte serveur. |
 | F-11 | M | 🟡 | Suggestion de tâche/événement avec accepter, modifier, ignorer ✅. Fournisseur local à règles ; aucun modèle de langage branché. |
 | F-12 | M | 🟡 | Relance par défaut à 48 h, réglable par utilisateur et par suivi ; heures réelles ou jours ouvrés appliqués au calcul (API et front, testés). Pas encore par compte. |
 | F-13 | S | 🟡 | Brouillon de réponse (ton cordial/court, créneaux cochés), jamais envoyé ✅. Gabarit déterministe, pas de génération par modèle. |
@@ -118,8 +118,8 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | N-02 | 🟡 | Zones live, sans vol de focus ; vérification à l'oreille manquante. |
 | N-03 | 🟡 | Annulation des actions courantes ✅. Capture rapide : champ sur l'accueil ; pas de raccourci global. |
 | N-04 | 🟡 | Identifiants chiffrés (libsodium), clé hors base ✅. HTTPS non contrôlé ici ; trousseau système (bureau) ❌. |
-| N-05 | 🟡 | CAS (ticket validé côté serveur, code à usage unique, liste blanche) testé sur des réponses simulées, **jamais contre le CAS réel** ; sessions révocables ✅ ; TOTP/passkey ❌. |
-| N-06 | ❌ | Pas d'export ni de suppression des données, pas de durées de conservation, pas de registre. Le journal des appels IA ne contient aucun contenu. |
+| N-05 | 🟡 | CAS testé sur des réponses simulées, **jamais contre le CAS réel**. Comptes locaux ✅ : inscription (désactivable, `APP_REGISTRATION`), connexion avec essais limités et message identique que le compte existe ou non, mot de passe oublié (lien à usage unique d'une heure, réponse neutre), changement de mot de passe (autres appareils déconnectés). Sessions révocables ✅ ; TOTP/passkey ❌. |
+| N-06 | 🟡 | Export JSON de mes données et suppression définitive du compte (cascade) ✅, depuis Réglages > Mon compte. Pas de durées de conservation réglables ni de registre des traitements. Le journal des appels IA ne contient aucun contenu. |
 | N-07 | ❌ | Performances non mesurées (100 000 mails). |
 | N-08 | ✅ | Aucun récap ni alerte en double (unicité testée). |
 | N-09 | ❌ | Pas de cache hors ligne. |
@@ -151,7 +151,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Réception | 🟡 | Voir F-16 (corbeille, HTML). |
 | Mes suivis | ✅ | |
 | Tâches | ✅ | Listes + détail comme la maquette. |
-| Réglages | 🟡 | Manquent : champs LDAP, règles de création automatique de suivis, délai par compte, canaux de notification par type. |
+| Réglages | 🟡 | Section « Mon compte » ✅. Manquent : champs LDAP, règles de création automatique de suivis, délai par compte, canaux de notification par type. |
 | Agenda | 🟡 | Grille ✅ ; invitations, bascule par calendrier, panneau « événement sélectionné », échéances de la semaine ❌. |
 | Équipe | 🟡 | Périmètre « Équipe » de la page Suivis ; pas d'écran dédié. |
 | Écrire | 🟡 | Voir F-73. |

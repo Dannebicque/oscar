@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountsPanel from '../components/settings/AccountsPanel.vue'
+import MyAccountPanel from '../components/settings/MyAccountPanel.vue'
 import AppearancePanel from '../components/settings/AppearancePanel.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
@@ -23,7 +24,7 @@ const { s } = useSettingsStore()
 const system = useSystemStore()
 const { say } = useOscar()
 
-const sections = ['accounts', 'relances', 'recap', 'ai', 'look', 'journal'] as const
+const sections = ['myaccount', 'accounts', 'relances', 'recap', 'ai', 'look', 'journal'] as const
 const themeOpts = computed(() => THEMES.map((x) => ({ value: x.id, label: t(`settings.look.themes.${x.id}`), icon: x.icon })))
 const densityOpts = computed(() => DENSITIES.map((d) => ({ value: d, label: t(`settings.look.densities.${d}`) })))
 const langOpts = computed(() => LOCALES.map((l) => ({ value: l, label: l === 'fr' ? 'Français' : 'English' })))
@@ -41,6 +42,11 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
     </nav>
 
     <div class="sections">
+      <section id="set-myaccount" aria-labelledby="h-myaccount">
+        <h2 id="h-myaccount">{{ t('settings.nav.myaccount') }}</h2>
+        <MyAccountPanel />
+      </section>
+
       <section id="set-accounts" aria-labelledby="h-accounts">
         <h2 id="h-accounts">{{ t('settings.nav.accounts') }}</h2>
         <AccountsPanel />

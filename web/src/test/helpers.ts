@@ -17,6 +17,12 @@ export async function mountApp(component: Component, path = '/', props: Record<s
     routes: [
       { path: '/', name: 'home', component: { template: '<div/>' } },
       { path: '/mails/:id?', name: 'mails', component: { template: '<div/>' } },
+      { path: '/connexion', name: 'login', component: { template: '<div/>' } },
+      { path: '/inscription', name: 'register', component: { template: '<div/>' } },
+      { path: '/mot-de-passe-oublie', name: 'forgot', component: { template: '<div/>' } },
+      { path: '/mot-de-passe/reinitialiser', name: 'reset', component: { template: '<div/>' } },
+      { path: '/bienvenue', name: 'welcome', component: { template: '<div/>' } },
+      { path: '/ecrire', name: 'compose', component: { template: '<div/>' } },
       { path: '/:rest(.*)*', component: { template: '<div/>' } },
     ],
   })

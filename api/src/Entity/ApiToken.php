@@ -34,6 +34,7 @@ class ApiToken
 
     public function getId(): string { return $this->id; }
     public function getUser(): User { return $this->user; }
+    public function getTokenHash(): string { return $this->tokenHash; }
     public function getExpiresAt(): \DateTimeImmutable { return $this->expiresAt; }
     public function isExpired(?\DateTimeImmutable $now = null): bool { return $this->expiresAt <= ($now ?? new \DateTimeImmutable()); }
 }

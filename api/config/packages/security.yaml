@@ -1,4 +1,6 @@
 security:
+    password_hashers:
+        App\Entity\User: auto
     providers:
         app_user:
             entity: { class: App\Entity\User, property: username }
@@ -13,6 +15,6 @@ security:
             access_token:
                 token_handler: App\Security\ApiTokenHandler
     access_control:
-        - { path: ^/api/auth/(dev-login|cas/login|cas/callback|token)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/(config|register|login|forgot|reset|dev-login|cas/login|cas/callback|token)$, roles: PUBLIC_ACCESS }
         - { path: ^/api/(docs|$), roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

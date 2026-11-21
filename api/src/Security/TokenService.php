@@ -30,4 +30,25 @@ final class TokenService
             $this->em->flush();
         }
     }
+
+    /** Toutes les sessions d'un utilisateur (changement de mot de passe : on déconnecte partout). */
+    public function revokeAll(User $user): void
+    {
+        foreach ($this->em->getRepository(ApiToken::class)->findBy(['user' => $user]) as $t) {
+            $this->em->remove($t);
+        }
+        $this->em->flush();
+    }
+
+    /** Toutes les sessions sauf celle qui vient de faire le changement (changement de mot de passe depuis Réglages). */
+    public function revokeOthers(User $user, string $keepPlain): void
+    {
+        $keep = ApiToken::hash($keepPlain);
+        foreach ($this->em->getRepository(ApiToken::class)->findBy(['user' => $user]) as $t) {
+            if ($t->getTokenHash() !== $keep) {
+                $this->em->remove($t);
+            }
+        }
+        $this->em->flush();
+    }
 }

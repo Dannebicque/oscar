@@ -34,6 +34,13 @@ services:
         arguments:
             $base64Key: '%env(APP_VAULT_KEY)%'
 
+    App\Controller\PasswordAuthController:
+        arguments:
+            $registration: '%env(APP_REGISTRATION)%'
+            $frontUrl: '%env(FRONT_URL)%'
+            $mailerFrom: '%env(MAILER_FROM)%'
+            $casBaseUrl: '%env(CAS_BASE_URL)%'
+
     App\Mail\OutgoingMailer: '@App\Mail\SymfonyOutgoingMailer'
     App\Calendar\CalendarProvider: '@App\Calendar\CalDavProvider'
     App\Ai\AiProvider: '@App\Ai\HeuristicProvider'

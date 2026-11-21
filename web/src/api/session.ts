@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 const KEY = 'oscar.token'
 
 /** Session de l'utilisateur connecté. Le jeton est opaque, révocable et expire (N-05). */
-export const session = reactive({ name: 'David', username: 'david', token: null as string | null })
+export const session = reactive({ name: 'David', username: 'david', email: null as string | null, hasPassword: false, token: null as string | null })
 
 export function loadToken(): string | null {
   try { return localStorage.getItem(KEY) } catch { return null }
