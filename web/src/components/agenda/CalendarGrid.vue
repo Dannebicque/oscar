@@ -59,6 +59,7 @@ const options = computed(() => ({
   eventTimeFormat: { hour: '2-digit' as const, minute: '2-digit' as const, hour12: false },
   expandRows: true,
   dayMaxEvents: 3,
+  slotEventOverlap: false, // événements simultanés côte à côte, jamais l'un sur l'autre
   selectable: true,
   selectMirror: true,
   eventInteractive: true, // chaque événement devient focalisable au clavier (Entrée pour ouvrir)
@@ -136,7 +137,12 @@ defineExpose({
 .grid-wrap .fc-event:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; z-index: 5; }
 .grid-wrap .ev { display: flex; flex-direction: column; gap: 1px; padding: 2px 4px; overflow: hidden; line-height: 1.25; font-size: var(--fs-sm); }
 .grid-wrap .ev-time { font-weight: 700; font-size: 0.75rem; }
-.grid-wrap .ev-title { font-weight: 800; }
+.grid-wrap .ev-title { font-weight: 800; overflow-wrap: break-word; hyphens: auto; }
+.grid-wrap .fc-event { container-type: inline-size; }
+@container (max-width: 110px) { .ev-meta, .ev-time { display: none !important; } .ev-title { font-size: 0.75rem; } }
+.grid-wrap .fc-timegrid-event-short .ev-meta, .grid-wrap .fc-timegrid-col-events .fc-timegrid-event.fc-event-end .ev-source { display: none; }
+.grid-wrap .fc-timegrid-event .ev-warn { display: inline-flex; background: var(--c-warn-soft); color: var(--c-text); border-radius: 999px; padding: 0 6px; width: fit-content; }
+.grid-wrap .fc-timegrid-event-short .ev-warn { display: inline-flex; }
 .grid-wrap .ev-meta { font-size: 0.75rem; display: inline-flex; align-items: center; gap: 3px; opacity: 0.95; }
 .grid-wrap .ev-warn { color: var(--c-warn); font-weight: 700; }
 :root[data-theme='contrast'] .grid-wrap .fc-event { border: 2px solid currentColor; }

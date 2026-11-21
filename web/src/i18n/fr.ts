@@ -164,6 +164,7 @@ export default {
     attach: 'Joindre un fichier', delays: { h24: '24 heures', h48: '48 heures', d3: '3 jours', d7: '1 semaine' },
   },
   agenda: {
+    filters: 'Agendas affichés : {shown} sur {total}',
     teamToggle: 'Équipe : disponibilités', team: 'Équipe', busyOf: 'Occupé · {who}', prepTask: 'Créer une tâche de préparation', prepDone: 'Tâche de préparation créée', prepTitle: 'Préparer : {title}', prepAdded: 'Tâche ajoutée : « Préparer : {title} ».',
     noSourceHelp: 'Ajoute ton agenda CalDAV ou Google : tes rendez-vous apparaîtront ici et Oscar pourra proposer des créneaux libres.',
     selected: 'Événement sélectionné', selectHint: 'Clique sur un événement pour voir son détail.', dues: 'Échéances de la période', noDues: 'Aucune échéance sur cette période.', dueTask: 'Tâche', dueSuivi: 'Suivi', sidePanel: 'Détail et échéances', legend: 'Une barre bleue : agenda pro ; une barre grise : agenda perso.', noSource: 'Aucun agenda connecté.', addSource: 'Ajouter un agenda',

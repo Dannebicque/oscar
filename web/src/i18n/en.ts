@@ -164,6 +164,7 @@ const en: typeof fr = {
     attach: 'Attach a file', delays: { h24: '24 hours', h48: '48 hours', d3: '3 days', d7: '1 week' },
   },
   agenda: {
+    filters: 'Calendars shown: {shown} of {total}',
     teamToggle: 'Team: availability', team: 'Team', busyOf: 'Busy · {who}', prepTask: 'Create a preparation task', prepDone: 'Preparation task created', prepTitle: 'Prepare: {title}', prepAdded: 'Task added: “Prepare: {title}”.',
     noSourceHelp: 'Add your CalDAV or Google calendar: your meetings will show up here and Oscar can suggest free slots.',
     selected: 'Selected event', selectHint: 'Click an event to see its details.', dues: 'Due this period', noDues: 'Nothing due in this period.', dueTask: 'Task', dueSuivi: 'Follow-up', sidePanel: 'Details and due dates', legend: 'A blue bar: work calendar; a grey bar: personal calendar.', noSource: 'No calendar connected.', addSource: 'Add a calendar',

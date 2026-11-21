@@ -181,4 +181,5 @@ h2 { font-size: var(--fs-md); }
 .capture form { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .capture .input { flex: 1; min-width: 220px; }
 @media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 720px) { .grid { gap: var(--space-3); } }
 </style>

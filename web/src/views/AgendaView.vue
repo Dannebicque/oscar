@@ -71,6 +71,7 @@ const dues = computed(() => {
   return rows.sort((a, b) => a.at.localeCompare(b.at)).slice(0, 8)
 })
 const viewOptions = computed(() => ([['timeGridWeek', 'week'], ['timeGridDay', 'day'], ['dayGridMonth', 'month'], ['listWeek', 'list']] as const).map(([value, k]) => ({ value: value as GridView, label: t(`agenda.${k}`) })))
+const filtersOpen = ref(false)
 const conflicts = computed(() => conflictIds(store.events))
 
 function setView(v: GridView) {
@@ -137,7 +138,10 @@ async function create() {
     </div>
     <div class="layout">
       <div class="main">
-        <ul class="sources" :aria-label="t('agenda.sources')">
+        <button type="button" class="src-toggle btn" :aria-expanded="filtersOpen" aria-controls="agenda-sources" @click="filtersOpen = !filtersOpen">
+          <BaseIcon name="calendar" :size="16" />{{ t('agenda.filters', { shown: store.sources.length - hidden.size, total: store.sources.length }) }}
+        </button>
+        <ul id="agenda-sources" class="sources" :class="{ open: filtersOpen }" :aria-label="t('agenda.sources')">
           <li v-for="s in store.sources" :key="s.id">
             <button type="button" class="src" :class="{ off: hidden.has(s.id), personal: s.personal }" :aria-pressed="!hidden.has(s.id)" @click="toggleSource(s.id)">
               <span class="bar" aria-hidden="true" />
@@ -227,6 +231,8 @@ async function create() {
 .src:not(.personal) .bar { background: var(--c-primary); }
 .src.off { background: var(--c-surface); color: var(--c-text-muted); text-decoration: line-through; }
 .src.off .bar { background: var(--c-border-strong); }
+.src-toggle { display: none; margin-bottom: var(--space-3); }
+@media (max-width: 720px) { .src-toggle { display: inline-flex; } .sources:not(.open) { display: none; } }
 .evacts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .evt { font-size: var(--fs-lg); font-weight: 800; margin: 0; }
 .dues { list-style: none; margin: 0; padding: 0; display: grid; }

@@ -39,4 +39,5 @@ const n = computed(() => agenda.next)
 <style scoped>
 .big { font-size: var(--fs-lg); font-weight: 800; }
 .sub { font-size: var(--fs-sm); }
+@media (max-width: 720px) { .big { font-size: var(--fs-md); } }
 </style>

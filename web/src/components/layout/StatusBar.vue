@@ -75,9 +75,9 @@ async function retry(c: Connection) {
 .conn.error { color: var(--c-danger); font-weight: 700; border-color: var(--c-danger); }
 .conn.error .state { color: var(--c-danger); }
 .conn .ai { color: var(--c-ai); }
-.summary { display: none; align-items: center; gap: 6px; flex: 1; }
+.summary { display: none !important; align-items: center; gap: 6px; flex: 1; }
 .summary.error { color: var(--c-danger); font-weight: 700; }
 .sync { color: var(--c-text-muted); white-space: nowrap; }
 .journal { min-height: var(--target); display: inline-flex; align-items: center; }
-@media (max-width: 720px) { .conns { display: none; } .summary { display: inline-flex; } .sync { display: none; } }
+@media (max-width: 720px) { .conn { padding: 0 var(--space-2); } .conn > span:not(.txt) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .conn .txt { display: none; } .sync { display: none; } }
 </style>

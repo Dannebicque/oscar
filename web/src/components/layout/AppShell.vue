@@ -140,10 +140,10 @@ main.bleed .page { max-width: none; height: 100%; margin: 0; }
   .nav { position: static; height: auto; flex-direction: row; justify-content: space-around; padding: var(--space-1) var(--space-2); border-right: 0; border-top: 1px solid var(--c-border); }
   .rail-brand, .wide { display: none; }
   .link { flex: 1; min-height: var(--target); }
-  .link.center { margin-top: -14px; background: var(--c-primary); color: var(--c-on-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); }
-  .link.center { color: var(--c-on-primary); }
-  .link.center .orb { background: transparent; box-shadow: none; width: auto; height: auto; }
-  .link.center.current { background: var(--c-primary-hover); color: var(--c-on-primary); }
+  .link.current:not(.center) { box-shadow: inset 0 -4px 0 var(--c-primary); }
+  .link.center { margin-top: -14px; background: var(--c-primary-soft); color: var(--c-on-primary-soft); border-radius: var(--radius-lg); border-color: var(--c-primary); box-shadow: var(--shadow-1); }
+  .link.center .orb { background: transparent; box-shadow: none; width: auto; height: auto; color: inherit; }
+  .link.center.current { background: var(--c-primary); color: var(--c-on-primary); }
   main { padding: var(--space-4); }
   main.bleed { padding: 0; }
 }
