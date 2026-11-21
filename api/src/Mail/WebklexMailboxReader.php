@@ -97,10 +97,10 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender
             messageId: (string) $m->getMessageId(),
             inReplyTo: ($v = trim((string) $m->getInReplyTo())) !== '' ? $v : null,
             references: preg_split('/\s+/', trim((string) $m->getReferences()), -1, PREG_SPLIT_NO_EMPTY) ?: [],
-            fromName: (string) ($from->personal ?? ''),
+            fromName: MimeDecoder::decode((string) ($from->personal ?? '')),
             fromAddress: (string) ($from->mail ?? ''),
             to: $to,
-            subject: (string) $m->getSubject(),
+            subject: MimeDecoder::decode((string) $m->getSubject()),
             date: $date instanceof \DateTimeInterface ? \DateTimeImmutable::createFromInterface($date) : new \DateTimeImmutable(),
             autoSubmitted: ReplyDetector::looksAutomatic(
                 self::rawHeader($raw, 'Auto-Submitted'),

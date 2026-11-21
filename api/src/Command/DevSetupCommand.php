@@ -4,6 +4,8 @@ namespace App\Command;
 
 use App\Entity\MailAccount;
 use App\Entity\SharedMailbox;
+use App\Entity\Task;
+use App\Enum\TaskOrigin;
 use App\Entity\User;
 use App\Security\CredentialVault;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,6 +47,21 @@ final class DevSetupCommand extends Command
                     ->setPasswordEncrypted($this->vault->encrypt('oscar-test')));
             }
             $users[$name] = [$user, $role];
+        }
+        // Quelques tâches pour que la to-do ne soit pas vide au premier lancement.
+        $david = $users['david'][0];
+        if ($this->em->getRepository(Task::class)->count(['owner' => $david]) === 0) {
+            $d = static fn (int $n): \DateTimeImmutable => new \DateTimeImmutable("today $n days");
+            foreach ([
+                ['Réserver les salles de soutenance', 2, 7, 'Jury de janvier', ['salles'], TaskOrigin::Manual, false, null],
+                ['Relire la convention de Claire Petit', 1, 0, 'Stages', ['juridique'], TaskOrigin::Mail, false, 'Convention de stage'],
+                ['Confirmer le nombre de participants', 2, 4, 'Jury de janvier', [], TaskOrigin::Ai, true, 'Planning des soutenances'],
+                ['Préparer le support de la réunion pédagogique', 3, -1, 'Pédagogie', ['réunion'], TaskOrigin::Event, false, 'Réunion pédagogique'],
+                ['Commander le papier A2', 4, null, null, [], TaskOrigin::Manual, false, null],
+            ] as [$title, $prio, $due, $project, $tags, $origin, $confirm, $source]) {
+                $this->em->persist((new Task())->setOwner($david)->setTitle($title)->setPriority($prio)->setDueAt($due === null ? null : $d($due))
+                    ->setProject($project)->setTags($tags)->setOrigin($origin)->setToConfirm($confirm)->setSource($source));
+            }
         }
         // L'alias contact@ servi par les quatre comptes de test (F-44, F-67).
         $box = $this->em->getRepository(SharedMailbox::class)->findOneBy(['slug' => 'contact']) ?? new SharedMailbox('contact@iut-troyes.fr', 'Contact', 'contact');

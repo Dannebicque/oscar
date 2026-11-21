@@ -81,11 +81,12 @@ class Mail implements OwnedInterface
     public function getInReplyTo(): ?string { return $this->inReplyTo; }
     /** @return list<string> */
     public function getReferences(): array { return $this->references; }
-    public function getFromName(): string { return $this->fromName; }
+    /** Décodé à la lecture : les mails déjà synchronisés avec un en-tête encodé s'affichent correctement. */
+    public function getFromName(): string { return \App\Mail\MimeDecoder::decode($this->fromName); }
     public function getFromAddress(): string { return $this->fromAddress; }
     /** @return list<string> */
     public function getToAddresses(): array { return $this->toAddresses; }
-    public function getSubject(): string { return $this->subject; }
+    public function getSubject(): string { return \App\Mail\MimeDecoder::decode($this->subject); }
     public function getDate(): \DateTimeImmutable { return $this->date; }
     public function isAutoSubmitted(): bool { return $this->autoSubmitted; }
 }
