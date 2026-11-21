@@ -145,6 +145,7 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
+    template: 'Insérer un modèle', templateNone: 'Choisir un modèle…',
     taskHint: { title: 'Suggéré par l’IA · à vérifier', text: 'Tu demandes une réponse « {quote} ». Veux-tu garder une tâche pour la suivre ?', create: 'Créer une tâche pour le {date}', label: 'Titre de la tâche', done: 'Tâche prévue pour le {date}, créée à l’envoi.', never: 'Rien n’est créé ni envoyé sans ton clic. Les propositions refusées ne sont pas mémorisées.' },
     attached: 'Pièces jointes', removeFile: 'Retirer {name}', attachTooBig: 'Les pièces jointes dépassent 5 Mo. Retire-en une ou envoie un lien.',
     forwarded: '---------- Message transféré ----------\nDe : {who} · {date}',
@@ -294,6 +295,7 @@ export default {
     title: 'Réglages', sections: 'Sections',
     nav: { myaccount: 'Mon compte', accounts: 'Comptes et agendas', relances: 'Relances et suivi', recap: 'Récapitulatifs', ai: 'Oscar, l’assistant IA', look: 'Apparence et accessibilité', journal: 'État des connexions et journal' },
     accounts: {
+      signature: 'Signature', signatureHelp: 'Ajoutée en bas de tes messages. Vide : la signature par défaut.',
       relanceBtn: 'Relances', relanceLabel: 'Relance', inherit: 'Comme dans mes réglages', inheritShort: 'réglage général', bizOn: 'Jours ouvrés', bizOff: 'Heures réelles', relanceTitle: 'Relances du compte « {name} »', relanceHelp: 'Ce compte peut avoir son propre délai. Sans choix, le réglage général s’applique.', relanceSaved: 'Relances du compte « {name} » enregistrées.',
       mailAccounts: 'Comptes de messagerie', addMail: 'Ajouter un compte de messagerie', addCalendar: 'Ajouter un agenda', noMail: 'Aucun compte de messagerie pour l’instant. Ajoute le tien pour que je lise tes mails.',
       noCalendar: 'Aucun agenda connecté.', work: 'Agenda pro', sharedBoxes: 'Boîtes partagées', noShared: 'Tu n’es membre d’aucune boîte partagée.', roleAdmin: 'Administrateur', roleMember: 'Membre',
@@ -311,6 +313,10 @@ export default {
     directory: {
       title: 'Annuaire de l’établissement (LDAP)', on: 'Annuaire connecté', off: 'Annuaire non configuré', help: 'Les suggestions de destinataires viennent de l’annuaire de ton établissement.', helpOff: 'L’administrateur du serveur le branche (LDAP_URL, LDAP_BASE_DN). En attendant, la saisie utilise une courte liste de démonstration.',
       minimum: 'Nom, prénom et e-mail sont toujours affichés. Choisis ce qui s’ajoute pour distinguer deux homonymes.', department: 'Service ou département', departmentHelp: 'Affiché sous le nom, pour distinguer deux homonymes.', phone: 'Téléphone', phoneHelp: 'Affiché dans la liste de suggestions.',
+    },
+    templates: {
+      title: 'Modèles de message', help: 'Des textes à insérer à la rédaction, pour les réponses que tu écris souvent.', none: 'Aucun modèle pour l’instant.', name: 'Nom du modèle', body: 'Texte', vars: 'Variables : {\'{\'}prenom{\'}\'} (prénom du destinataire) et {\'{\'}moi{\'}\'} (ton nom).',
+      add: 'Ajouter le modèle', saved: 'Modèle enregistré.', removed: 'Modèle supprimé.', edit: 'Modifier le modèle {name}', remove: 'Supprimer le modèle {name}',
     },
     rules: {
       title: 'Création automatique de suivis', help: 'Par défaut, Oscar suggère et tu valides. Ces règles créent le suivi tout de suite, sans validation, pour les expéditeurs que tu choisis.',

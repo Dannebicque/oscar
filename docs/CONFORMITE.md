@@ -9,9 +9,9 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 
 | Bloc | ✅ | 🟡 | ❌ |
 |---|---|---|---|
-| Exigences fonctionnelles F (65) | 40 | 21 | 4 |
+| Exigences fonctionnelles F (65) | 41 | 20 | 4 |
 | Non fonctionnelles N (12) | 2 | 9 | 1 |
-| Interface U (11) | 5 | 4 | 2 |
+| Interface U (11) | 6 | 4 | 1 |
 
 **MVP (priorité M)** : toutes les exigences M ont une implémentation ; les points qui les rendent 🟡 sont listés plus bas (webmail incomplet, LDAP, notifications bureau, application Tauri non commencée, pas d'image de production).
 
@@ -37,7 +37,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-16 | M | 🟡 | Dossiers, liste, lecture texte, répondre, répondre à tous, filtres, fil de discussion ✅. Archiver, déplacer (boîte de réception, archives, corbeille), supprimer (= corbeille, jamais définitif) ✅ : déplacement IMAP d'abord, base ensuite, annulation depuis la notification, vérifié contre Dovecot. Transférer ✅ (rédaction pré-remplie, message cité). Pièces jointes ✅ : liste et téléchargement seulement (jamais affichées, type forcé, `nosniff`), envoi jusqu'à 5 Mo, vérifié contre Dovecot et le SMTP de test. Brouillons enregistrés ✅ (dossier Drafts du serveur, rouvrables, remplacés à chaque enregistrement ; texte seul, sans pièces jointes). Manquent : vidage de la corbeille, affichage HTML isolé. |
 | F-17 | C | ✅ | Trois styles (Moderne, Rétro, Néon), cinq palettes + accent libre, quatre modes, trois densités ; WCAG AA vérifié par test sur chaque combinaison. |
 | F-18 | S | 🟡 | Annuaire LDAP écrit (lecture seule, compte de service, attributs configurables par variables d'environnement, saisie échappée contre l'injection de filtre) ; choix service et téléphone par utilisateur ; repli sur la liste de démonstration. **Jamais essayé contre un vrai annuaire** (testé avec un faux client). |
-| F-19 | S | 🟡 | Signature fixe. Pas de signatures par identité ni de modèles de message. |
+| F-19 | S | ✅ | Signature par compte (Réglages > Comptes > Réglages du compte), signature par défaut sinon ; modèles de message (nom, texte, variables `{prenom}` et `{moi}`) à insérer depuis la rédaction, signature conservée en bas. |
 
 ### 4.3 Agenda
 | ID | P | État | Remarques |
@@ -132,10 +132,10 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | ID | P | État | Remarques |
 |---|---|---|---|
 | U-01 | M | ✅ | Barre du bas à cinq boutons (Suivis au centre) sur mobile, rail latéral au bureau avec « Suivis » mis en avant. |
-| U-02 | S | ❌ | Balayage entre vues. |
+| U-02 | S | 🟡 | Balayage horizontal entre les cinq vues principales (écran tactile seulement), toujours doublé par les boutons ; ignoré dans un champ, une fenêtre, l'agenda ou un contenu qui défile. Logique testée ; **geste jamais essayé sur un écran tactile**. |
 | U-03 | M | 🟡 | Un seul code adaptatif ✅ ; PWA : manifeste, icônes (192, 512, maskable), service worker écrits ; installation non essayée. |
 | U-04 | M | 🟡 | Chaque bloc de l'accueil ouvre sa vue ; retour par bouton seulement, pas par geste. |
-| U-05 | M | 🟡 | Alternatives clavier et pointeur simple partout où il y a un geste ; balayage absent donc rien à doubler. |
+| U-05 | M | ✅ | Le seul geste (balayage) est doublé par les boutons de navigation ; actions au clavier et au pointeur simple partout. |
 | U-06 | S | 🟡 | Bloc « Oscar » de la synthèse avec recommandations ✅ ; échange conversationnel ❌ (second temps prévu). |
 | U-07 | M | ✅ | Résumé d'Oscar avec lien vers le récap en tête de l'accueil. |
 | U-08 | M | ✅ | Icône + libellé partout, jamais la couleur seule ; contrastes vérifiés. |
@@ -151,7 +151,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | Réception | 🟡 | Voir F-16 (corbeille, HTML). |
 | Mes suivis | ✅ | |
 | Tâches | ✅ | Listes + détail comme la maquette. |
-| Réglages | ✅ | Mon compte, comptes avec délai de relance, annuaire, règles de suivi, IA externe, apparence. Reste à comparer ligne à ligne à la maquette. |
+| Réglages | ✅ | Mon compte, comptes avec délai de relance et signature, modèles de message, annuaire, règles de suivi, IA externe, apparence. Reste à comparer ligne à ligne à la maquette. |
 | Agenda | ✅ | Grille, bascule par calendrier, panneau « événement sélectionné », échéances, conflits, invitations reçues (réponse depuis le mail). |
 | Équipe | 🟡 | Périmètre « Équipe » de la page Suivis ; pas d'écran dédié. |
 | Écrire | 🟡 | Voir F-73. |

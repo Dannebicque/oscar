@@ -2,7 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { ApiError, api } from '../api'
+import { ApiError, api, session } from '../api'
+import type { MessageTemplate } from '../api/types'
 import OscarMark from '../components/OscarMark.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -43,6 +44,8 @@ const bcc = ref<string[]>([])
 const showCc = ref(false)
 const subject = ref('')
 const body = ref(`\n\n${t('compose.signature')}`)
+/** Signature du compte (F-19), sinon celle par défaut. */
+const signature = () => accounts.mail[0]?.signature?.trim() || t('compose.signature')
 const follow = ref(false)
 const aiPicked = ref(false)
 const delayHours = ref<number>(settings.s.relanceHours)
@@ -55,6 +58,18 @@ const aiBusy = ref(false)
 const aiFailed = ref(false)
 const slotStarts = ref<string[]>(String(route.query.slots ?? '').split(',').filter(Boolean))
 const edited = ref(false)
+const templates = ref<MessageTemplate[]>([])
+const tplChoice = ref('')
+const firstName = computed(() => (who.value && who.value !== '…' ? who.value.split(' ')[0] : ''))
+/** Insère un modèle en tête du message, signature conservée ; {prenom} et {moi} sont remplacés. */
+function insertTemplate(id: string) {
+  const tpl = templates.value.find((x) => x.id === id)
+  tplChoice.value = ''
+  if (!tpl) return
+  const text = tpl.body.replaceAll('{prenom}', firstName.value).replaceAll('{moi}', session.name)
+  body.value = `${text}\n${body.value.replace(/^\n+/, '\n')}`
+  edited.value = true
+}
 /** Suggestion de tâche pendant la rédaction (F-73) : proposée, cochée seulement par l'utilisateur, créée à l'envoi si le message part. */
 const taskHint = ref<{ title: string; dueAt: string; quote: string } | null>(null)
 const taskOn = ref(false)
@@ -98,6 +113,7 @@ const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ va
 onMounted(async () => {
   if (!mails.items.length) await mails.load()
   await accounts.load().catch(() => undefined)
+  templates.value = await api.settings.templates.list().catch(() => [])
   const acc = accounts.mail[0]
   if (acc?.relanceHours) delayHours.value = acc.relanceHours
   const dr = draftId.value ? mails.byId(draftId.value) : undefined
@@ -112,16 +128,17 @@ onMounted(async () => {
   const fwd = route.query.forward ? mails.byId(String(route.query.forward)) : undefined
   if (fwd) {
     subject.value = /^(tr|fwd?)\s*:/i.test(fwd.subject) ? fwd.subject : `Tr : ${fwd.subject}`
-    body.value = `\n\n${t('compose.signature')}\n\n${t('compose.forwarded', { who: fwd.from.name, date: fmt.dateTime(fwd.at) })}\n${fwd.paragraphs.join('\n')}`
+    body.value = `\n\n${signature()}\n\n${t('compose.forwarded', { who: fwd.from.name, date: fmt.dateTime(fwd.at) })}\n${fwd.paragraphs.join('\n')}`
     return
   }
   const o = original.value
   if (o) {
     to.value = [o.from.address]
     subject.value = /^re\s*:/i.test(o.subject) ? o.subject : `Re : ${o.subject}`
-    body.value = `\n\n${t('compose.signature')}`
+    body.value = `\n\n${signature()}`
     if (route.query.ai && settings.s.aiMode !== 'off') { aiDraft.value = true; follow.value = true; aiPicked.value = true; await regenerate() }
   } else {
+    body.value = `\n\n${signature()}`
     // Oscar précoche « Suivre la réponse » quand le message appelle visiblement une réponse : modifiable.
     follow.value = true
     aiPicked.value = true
@@ -236,6 +253,7 @@ async function saveDraft() {
           <BaseButton icon="refresh" :label="t('compose.ai.regenerate')" :disabled="aiBusy" @click="regenerate" />
         </div>
 
+        <SelectField v-if="templates.length" id="tpl-pick" :model-value="tplChoice" :label="t('compose.template')" :options="[{ value: '', label: t('compose.templateNone') }, ...templates.map((x) => ({ value: x.id, label: x.name }))]" @update:model-value="(v: string) => insertTemplate(v)" />
         <TextareaField id="body" v-model="body" :label="t('compose.body')" :rows="12" @input="edited = true" />
         <CheckboxField v-if="original" v-model="quoteOn" :label="t('compose.quote')" />
       </section>

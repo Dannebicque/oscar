@@ -84,7 +84,7 @@ export interface AccountsApi {
   mail: {
     list(): Promise<MailAccount[]>
     create(a: NewMailAccount): Promise<MailAccount>
-    update(id: string, patch: Partial<Pick<MailAccount, 'relanceHours' | 'businessDays' | 'aiAllowed' | 'label'>>): Promise<MailAccount>
+    update(id: string, patch: Partial<Pick<MailAccount, 'relanceHours' | 'businessDays' | 'aiAllowed' | 'label' | 'signature'>>): Promise<MailAccount>
     remove(id: string): Promise<void>
     test(id: string): Promise<{ ok: boolean }>
   }
@@ -99,12 +99,20 @@ export interface AccountsApi {
 /** Réglages utiles au serveur (relances, récaps, mode d'IA). Thème et densité restent sur l'appareil. */
 export type ServerSettings = Record<string, string | number | boolean | Record<string, Record<string, boolean>>>
 
+export interface MessageTemplate { id: string; name: string; body: string }
+
 export interface FollowRule { id: string; kind: 'sender' | 'domain'; value: string; enabled: boolean }
 
 export interface AiConfig { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; hasKey: boolean; configured: boolean }
 export interface AiConfigInput { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; /** absent : on garde la clé ; chaîne vide : on la retire. */ apiKey?: string }
 
 export interface SettingsApi {
+  templates: {
+    list(): Promise<MessageTemplate[]>
+    create(name: string, body: string): Promise<MessageTemplate>
+    update(id: string, name: string, body: string): Promise<MessageTemplate>
+    remove(id: string): Promise<void>
+  }
   followRules: {
     list(): Promise<FollowRule[]>
     create(kind: FollowRule['kind'], value: string): Promise<FollowRule>

@@ -169,6 +169,12 @@ export function createHttpApi(baseUrl: string): Api {
     },
     settings: {
       get: () => req('GET', '/api/settings'),
+      templates: {
+        list: () => req('GET', '/api/templates'),
+        create: (name, body) => req('POST', '/api/templates', { name, body }),
+        update: (id, name, body) => req('PUT', `/api/templates/${encodeURIComponent(id)}`, { name, body }),
+        async remove(id) { await req('DELETE', `/api/templates/${encodeURIComponent(id)}`) },
+      },
       followRules: {
         list: () => req('GET', '/api/follow-rules'),
         create: (kind, value) => req('POST', '/api/follow-rules', { kind, value }),

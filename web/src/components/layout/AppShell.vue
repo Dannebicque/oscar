@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAccountsStore } from '../../stores/accounts'
 import { useAuthStore } from '../../stores/auth'
 import { useSettingsStore } from '../../stores/settings'
+import { useSwipeNav } from '../../composables/useSwipeNav'
 import { useShortcuts } from '../../composables/useShortcuts'
 import { useSystemStore } from '../../stores/system'
 import OfflineBanner from './OfflineBanner.vue'
@@ -28,6 +29,7 @@ const settings = useSettingsStore()
 const accounts = useAccountsStore()
 const router = useRouter()
 useShortcuts()
+useSwipeNav()
 useDesktopNotifications()
 const ui = useUiStore()
 /** Bureau : le raccourci global et le menu de la barre système ouvrent la capture rapide. */

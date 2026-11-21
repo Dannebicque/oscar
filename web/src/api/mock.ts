@@ -98,6 +98,7 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'iut', label: 'IUT', kind: 'caldav', url: 'https://agenda.iut-troyes.fr/dav/', username: 'david', personal: false },
     { id: 'perso', label: 'Perso', kind: 'google', url: '', username: '', personal: true },
   ]
+  const templates: import('./types').MessageTemplate[] = [{ id: 'tpl1', name: 'Accusé de réception', body: 'Bonjour {prenom},\n\nBien reçu, merci. Je reviens vers toi rapidement.' }]
   const rules: import('./types').FollowRule[] = [{ id: 'rule1', kind: 'domain', value: 'univ-reims.fr', enabled: true }]
   let aiCfg: import('./types').AiConfig = { kind: 'openai', baseUrl: '', model: '', hasKey: false, configured: false }
   let serverSettings: ServerSettings = {}
@@ -214,6 +215,17 @@ export function createMockApi(now: Date = new Date()): Api {
     },
     settings: {
       async get() { return clone(serverSettings) },
+      templates: {
+        async list() { return clone(templates) },
+        async create(name, body) {
+          if (!name.trim() || !body.trim()) throw new ApiError(422, !name.trim() ? 'Donne un nom au modèle (80 caractères au plus).' : 'Le texte du modèle est vide ou dépasse 5 000 caractères.', { field: !name.trim() ? 'name' : 'body' })
+          const t = { id: uid('tpl'), name: name.trim(), body }
+          templates.push(t)
+          return clone(t)
+        },
+        async update(id, name, body) { const t = templates.find((x) => x.id === id)!; Object.assign(t, { name: name.trim(), body }); return clone(t) },
+        async remove(id) { const i = templates.findIndex((x) => x.id === id); if (i >= 0) templates.splice(i, 1) },
+      },
       followRules: {
         async list() { return clone(rules) },
         async create(kind, value) {

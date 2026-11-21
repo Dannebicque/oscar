@@ -145,6 +145,7 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
+    template: 'Insert a template', templateNone: 'Pick a template…',
     taskHint: { title: 'Suggested by AI · to check', text: 'You are asking for an answer “{quote}”. Keep a task to follow it?', create: 'Create a task for {date}', label: 'Task title', done: 'Task planned for {date}, created when the message is sent.', never: 'Nothing is created or sent without your click. Declined suggestions are not remembered.' },
     attached: 'Attachments', removeFile: 'Remove {name}', attachTooBig: 'Attachments exceed 5 MB. Remove one or send a link.',
     forwarded: '---------- Forwarded message ----------\nFrom: {who} · {date}',
@@ -294,6 +295,7 @@ const en: typeof fr = {
     title: 'Settings', sections: 'Sections',
     nav: { myaccount: 'My account', accounts: 'Accounts and calendars', relances: 'Reminders and follow-up', recap: 'Recaps', ai: 'Oscar, the AI assistant', look: 'Appearance and accessibility', journal: 'Connection status and log' },
     accounts: {
+      signature: 'Signature', signatureHelp: 'Added at the bottom of your messages. Empty: the default signature.',
       relanceBtn: 'Reminders', relanceLabel: 'Reminder', inherit: 'Same as my settings', inheritShort: 'general setting', bizOn: 'Business days', bizOff: 'Real hours', relanceTitle: 'Reminders for “{name}”', relanceHelp: 'This account can have its own delay. Without a choice, the general setting applies.', relanceSaved: 'Reminders for “{name}” saved.',
       mailAccounts: 'Mail accounts', addMail: 'Add a mail account', addCalendar: 'Add a calendar', noMail: 'No mail account yet. Add yours so I can read your mail.',
       noCalendar: 'No calendar connected.', work: 'Work calendar', sharedBoxes: 'Shared mailboxes', noShared: 'You are not a member of any shared mailbox.', roleAdmin: 'Administrator', roleMember: 'Member',
@@ -311,6 +313,10 @@ const en: typeof fr = {
     directory: {
       title: 'Institution directory (LDAP)', on: 'Directory connected', off: 'Directory not configured', help: 'Recipient suggestions come from your institution’s directory.', helpOff: 'The server administrator connects it (LDAP_URL, LDAP_BASE_DN). Until then, the field uses a short demo list.',
       minimum: 'First name, last name and email are always shown. Pick what to add to tell namesakes apart.', department: 'Department', departmentHelp: 'Shown under the name, to tell namesakes apart.', phone: 'Phone', phoneHelp: 'Shown in the suggestions list.',
+    },
+    templates: {
+      title: 'Message templates', help: 'Texts to insert while writing, for the replies you write often.', none: 'No templates yet.', name: 'Template name', body: 'Text', vars: 'Variables: {\'{\'}prenom{\'}\'} (recipient first name) and {\'{\'}moi{\'}\'} (your name).',
+      add: 'Add the template', saved: 'Template saved.', removed: 'Template removed.', edit: 'Edit template {name}', remove: 'Delete template {name}',
     },
     rules: {
       title: 'Automatic follow-up rules', help: 'By default, Oscar suggests and you confirm. These rules create the follow-up straight away, without confirmation, for the senders you pick.',

@@ -99,6 +99,8 @@ export interface MailAccount {
   smtpEncryption: 'none' | 'ssl' | 'tls'
   username: string
   aiAllowed: boolean
+  /** Signature de ce compte (F-19) ; vide = signature par défaut. */
+  signature?: string | null
   /** Délai de relance propre à ce compte ; null = réglage de l'utilisateur (F-12, F-54). */
   relanceHours?: number | null
   businessDays?: boolean | null

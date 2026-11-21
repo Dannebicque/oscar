@@ -90,3 +90,34 @@ describe('réglages complétés : relance par compte, règles de suivi, canaux, 
     expect(await check(wrapper.element)).toEqual([])
   })
 })
+
+describe('signatures et modèles de message (F-19)', () => {
+  it('on ajoute, modifie et supprime un modèle', async () => {
+    const { default: Panel } = await import('../components/settings/TemplatesPanel.vue')
+    const { wrapper } = await mountApp(Panel, '/reglages')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Accusé de réception')
+    await wrapper.find('#tpl-name').setValue('Relance douce')
+    await wrapper.find('#tpl-body').setValue('Bonjour {prenom}, je reviens vers toi.')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Relance douce')
+    await wrapper.findAll('button[aria-label^="Supprimer le modèle"]')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('Accusé de réception')
+    expect(await check(wrapper.element)).toEqual([])
+  })
+
+  it('à la rédaction : un modèle s’insère en tête avec le prénom du destinataire, la signature reste en bas', async () => {
+    const { default: Compose } = await import('../views/ComposeView.vue')
+    const { addRecipient } = await import('./helpers')
+    const { wrapper } = await mountApp(Compose, '/ecrire')
+    await flushPromises()
+    await addRecipient(wrapper, 'to', 'sophie.laurent@univ-reims.fr')
+    await wrapper.find('#tpl-pick').setValue('tpl1')
+    await flushPromises()
+    const body = (wrapper.find('#body').element as HTMLTextAreaElement).value
+    expect(body.startsWith('Bonjour Sophie,')).toBe(true)
+    expect(body).toContain('--') // la signature reste en bas
+  })
+})

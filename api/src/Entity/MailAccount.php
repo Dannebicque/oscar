@@ -69,6 +69,10 @@ class MailAccount implements OwnedInterface, SyncableAccount
     #[ORM\Column]
     private bool $aiAllowed = true;
 
+    /** Signature de ce compte (F-19), insérée à la rédaction ; vide = signature par défaut. */
+    #[ORM\Column(type: Types::TEXT, nullable: true)] #[Assert\Length(max: 2000)]
+    private ?string $signature = null;
+
     /** Délai de relance propre à ce compte (F-12, F-54) ; null = celui des réglages de l'utilisateur. */
     #[ORM\Column(nullable: true)] #[Assert\Choice(choices: [24, 48, 72, 168])]
     private ?int $relanceHours = null;
@@ -115,6 +119,8 @@ class MailAccount implements OwnedInterface, SyncableAccount
     public function setPassword(?string $v): static { $this->password = $v; return $this; }
     public function isAiAllowed(): bool { return $this->aiAllowed; }
     public function setAiAllowed(bool $v): static { $this->aiAllowed = $v; return $this; }
+    public function getSignature(): ?string { return $this->signature; }
+    public function setSignature(?string $v): static { $this->signature = $v === null || trim($v) === '' ? null : $v; return $this; }
     public function getRelanceHours(): ?int { return $this->relanceHours; }
     public function setRelanceHours(?int $v): static { $this->relanceHours = $v; return $this; }
     public function getBusinessDays(): ?bool { return $this->businessDays; }
