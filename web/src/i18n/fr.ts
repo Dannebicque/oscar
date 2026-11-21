@@ -55,6 +55,7 @@ export default {
     demoStates: { busy: 'Journée chargée', calm: 'Journée calme', first: 'Premier lancement' },
   },
   suivis: {
+    kpiLabel: 'Filtrer par situation', kpi: { todo: 'À traiter', relance: 'Relances dues', late: 'En retard', wait: 'En attente', done: 'Traités' }, kpiClear: 'Tout afficher',
     title: 'Suivis', subtitle: 'Mails, tâches et rendez-vous au même endroit.',
     scopeLabel: 'Périmètre', mine: 'Mes suivis', team: 'Équipe · {address}',
     viewLabel: 'Affichage', priorities: 'Priorités', board: 'Tableau',

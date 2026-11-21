@@ -65,7 +65,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
         v-for="n in MAIN_NAV" :key="n.name" :to="n.to" class="link" :class="{ center: n.name === 'suivis', current: isCurrent(n.name) }"
         :aria-current="isCurrent(n.name) ? 'page' : undefined"
       >
-        <BaseIcon :name="n.icon" :size="22" /><span>{{ t(n.label) }}</span>
+        <span v-if="n.name === 'suivis'" class="orb" aria-hidden="true"><BaseIcon :name="n.icon" :size="20" /></span><BaseIcon v-else :name="n.icon" :size="22" /><span>{{ t(n.label) }}</span>
       </RouterLink>
       <RouterLink to="/alertes" class="link wide spacer" :class="{ current: route.name === 'alerts' }" :aria-current="route.name === 'alerts' ? 'page' : undefined" :aria-label="t('nav.alertsCount', { n: system.unreadCount }, system.unreadCount)">
         <BaseIcon name="bell" :size="22" /><span>{{ t('nav.alerts') }}</span><span v-if="system.unreadCount" class="badge" aria-hidden="true">{{ system.unreadCount }}</span>
@@ -102,6 +102,9 @@ main.bleed .page { max-width: none; height: 100%; margin: 0; }
 .link { position: relative; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: 0.75rem; color: var(--c-text-muted); text-decoration: none; border-radius: var(--radius-md); font-weight: 600; border: var(--bw) solid transparent; }
 .link:hover { background: var(--c-surface-2); }
 .link.current { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; border-color: color-mix(in srgb, var(--c-accent) 40%, transparent); }
+.link.center { color: var(--c-text); font-weight: 800; }
+.orb { width: 36px; height: 36px; border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--glow); }
+.link.center:hover .orb { background: var(--c-primary-hover); }
 .spacer { margin-top: auto; }
 .out { border: 0; background: transparent; font: inherit; font-size: 0.75rem; cursor: pointer; }
 .badge { position: absolute; top: 6px; right: 14px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--c-danger-solid); color: var(--c-on-danger-solid); font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
@@ -119,6 +122,8 @@ main.bleed .page { max-width: none; height: 100%; margin: 0; }
   .rail-brand, .wide { display: none; }
   .link { flex: 1; min-height: var(--target); }
   .link.center { margin-top: -14px; background: var(--c-primary); color: var(--c-on-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); }
+  .link.center { color: var(--c-on-primary); }
+  .link.center .orb { background: transparent; box-shadow: none; width: auto; height: auto; }
   .link.center.current { background: var(--c-primary-hover); color: var(--c-on-primary); }
   main { padding: var(--space-4); }
   main.bleed { padding: 0; }

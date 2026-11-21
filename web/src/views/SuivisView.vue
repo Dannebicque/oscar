@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import NewSuiviDialog from '../components/suivis/NewSuiviDialog.vue'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
 import RelanceDialog from '../components/suivis/RelanceDialog.vue'
+import SuiviKpis, { type KpiId } from '../components/suivis/SuiviKpis.vue'
 import SuiviBoard from '../components/suivis/SuiviBoard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import Callout from '../components/ui/Callout.vue'
@@ -43,6 +44,7 @@ type View = 'priorities' | 'board'
 type KindFilter = 'all' | ItemKind
 const view = ref<View>('priorities')
 const kind = ref<KindFilter>('all')
+const kpi = ref<KpiId | null>(null)
 const showNew = ref(false)
 const showRelances = ref(false)
 const suggestion = ref<'open' | 'done' | 'ignored'>('open')
@@ -52,15 +54,23 @@ const failed = computed(() => store.error || tasks.error || agenda.error)
 
 const all = computed(() => {
   const team = store.scope === 'team'
-  return buildPriorities(store.inScope, team ? [] : tasks.items, team ? [] : agenda.work, now.value)
+  return buildPriorities(store.inScope, team ? [] : tasks.items, team ? [] : agenda.work, now.value, true)
 })
-const counts = computed(() => ({
-  all: all.value.length,
-  mail: all.value.filter((i) => i.kind === 'mail').length,
-  task: all.value.filter((i) => i.kind === 'task').length,
-  rdv: all.value.filter((i) => i.kind === 'rdv').length,
+const open_ = computed(() => all.value.filter((i) => i.status !== 'done'))
+const inKpi = (i: PriorityItem, k: KpiId) =>
+  k === 'done' ? i.status === 'done' : k === 'late' ? i.flag === 'late' : k === 'relance' ? i.flag === 'relanceDue' : k === 'wait' ? i.status === 'waiting' && i.flag !== 'replyReceived' : i.status !== 'done' && !(i.status === 'waiting' && i.flag !== 'replyReceived')
+const kpiCounts = computed<Record<KpiId, number>>(() => ({
+  todo: all.value.filter((i) => inKpi(i, 'todo')).length, relance: all.value.filter((i) => inKpi(i, 'relance')).length, late: all.value.filter((i) => inKpi(i, 'late')).length,
+  wait: all.value.filter((i) => inKpi(i, 'wait')).length, done: all.value.filter((i) => inKpi(i, 'done')).length,
 }))
-const shown = computed(() => (kind.value === 'all' ? all.value : all.value.filter((i) => i.kind === kind.value)))
+const base = computed(() => (kpi.value ? all.value.filter((i) => inKpi(i, kpi.value!)) : open_.value))
+const counts = computed(() => ({
+  all: base.value.length,
+  mail: base.value.filter((i) => i.kind === 'mail').length,
+  task: base.value.filter((i) => i.kind === 'task').length,
+  rdv: base.value.filter((i) => i.kind === 'rdv').length,
+}))
+const shown = computed(() => (kind.value === 'all' ? base.value : base.value.filter((i) => i.kind === kind.value)))
 const kindOptions = computed(() => [
   { value: 'all' as const, label: t('suivis.filterAll'), count: counts.value.all },
   { value: 'mail' as const, label: t('kinds.mail'), count: counts.value.mail },
@@ -75,6 +85,7 @@ const viewOptions = computed(() => [
   { value: 'priorities' as const, label: t('suivis.priorities') },
   { value: 'board' as const, label: t('suivis.board') },
 ])
+watch(() => store.scope, () => { kpi.value = null; kind.value = 'all' })
 const recent = computed(() =>
   store.inScope.flatMap((s) => s.journal.map((j) => ({ ...j, subject: s.subject }))).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 5),
 )
@@ -134,6 +145,7 @@ function suggest(accept: boolean) {
       <SegmentedControl v-model="view" :options="viewOptions" :label="t('suivis.viewLabel')" />
     </div>
 
+    <div class="layout">
     <div class="stack">
       <NextEventCard v-if="store.scope === 'mine'" :now="now" />
 
@@ -149,12 +161,13 @@ function suggest(accept: boolean) {
         </template>
       </OscarSays>
 
+      <SuiviKpis v-model="kpi" :counts="kpiCounts" />
       <p class="muted" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
 
       <template v-if="view === 'priorities'">
         <SegmentedControl v-model="kind" :options="kindOptions" :label="t('suivis.filterKind')" />
         <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
-        <EmptyState v-else-if="all.length === 0" :text="say('calm')" />
+        <EmptyState v-else-if="!kpi && open_.length === 0" :text="say('calm')" />
         <EmptyState v-else-if="shown.length === 0" icon="list" :text="t('suivis.emptyCategory')" />
         <ol v-else class="rows" :aria-label="t('suivis.priorities')">
           <SuiviRow v-for="(i, n) in shown" :key="i.key" :item="i" :rank="n + 1" :extra="teamExtra(i)" @open="open" @done="done" />
@@ -162,12 +175,13 @@ function suggest(accept: boolean) {
       </template>
       <SuiviBoard v-else :items="store.inScope" @open="(s) => openMail(s.mailId)" />
 
-      <section v-if="recent.length" aria-labelledby="act-h">
-        <h2 id="act-h">{{ t('suivis.activity') }}</h2>
-        <ul class="activity">
-          <li v-for="(j, n) in recent" :key="n"><span class="muted">{{ fmt.dateTime(j.at) }}</span> · <strong>{{ j.author }}</strong> · {{ fmt.journal(j) }} · {{ j.subject }}</li>
-        </ul>
-      </section>
+    </div>
+    <aside v-if="recent.length" class="aside" :aria-label="t('suivis.activity')">
+      <h2 id="act-h">{{ t('suivis.activity') }}</h2>
+      <ul class="activity">
+        <li v-for="(j, n) in recent" :key="n"><span class="muted">{{ fmt.dateTime(j.at) }}</span><br /><strong>{{ j.author }}</strong> · {{ fmt.journal(j) }} · {{ j.subject }}</li>
+      </ul>
+    </aside>
     </div>
   </template>
 
@@ -177,7 +191,11 @@ function suggest(accept: boolean) {
 
 <style scoped>
 .toolbar { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
-.stack { display: grid; gap: var(--space-4); }
+.layout { display: grid; gap: var(--space-4); align-items: start; }
+.stack { display: grid; gap: var(--space-4); min-width: 0; }
+.aside { padding: var(--space-4); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
+@media (min-width: 1200px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } .aside { position: sticky; top: 0; } }
 h2 { margin-bottom: var(--space-2); font-size: var(--fs-md); }
-.activity { display: grid; gap: var(--space-2); font-size: var(--fs-sm); }
+.activity { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; font-size: var(--fs-sm); }
+.activity li { padding: var(--space-2) 0; border-top: var(--bw) solid var(--c-border); }
 </style>

@@ -55,6 +55,7 @@ const en: typeof fr = {
     demoStates: { busy: 'Busy day', calm: 'Quiet day', first: 'First launch' },
   },
   suivis: {
+    kpiLabel: 'Filter by situation', kpi: { todo: 'To handle', relance: 'Reminders due', late: 'Late', wait: 'Waiting', done: 'Done' }, kpiClear: 'Show all',
     title: 'Follow-ups', subtitle: 'Mails, tasks and events in one place.',
     scopeLabel: 'Scope', mine: 'My follow-ups', team: 'Team · {address}',
     viewLabel: 'View', priorities: 'Priorities', board: 'Board',

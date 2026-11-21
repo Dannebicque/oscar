@@ -6,6 +6,7 @@ import AiBadge from '../ui/AiBadge.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
 import FlagChip from '../ui/FlagChip.vue'
+import StatusChip from '../ui/StatusChip.vue'
 import ToneChip from '../ui/ToneChip.vue'
 
 const props = defineProps<{ item: PriorityItem; rank?: number; extra?: string; compact?: boolean }>()
@@ -22,6 +23,7 @@ const ICON = { mail: 'mail', task: 'task', rdv: 'calendar' } as const
       <p class="line">
         <ToneChip tone="neutral" :icon="ICON[item.kind]" :label="t(`kinds.${item.kind}`)" />
         <FlagChip v-if="item.flag" :flag="item.flag" />
+        <StatusChip v-if="item.status" :status="item.status" />
         <AiBadge v-if="item.suggestedByAi" />
       </p>
       <h3>{{ item.title }}</h3>
