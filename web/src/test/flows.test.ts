@@ -104,3 +104,16 @@ describe('Écrire (F-73)', () => {
     expect(useSuivisStore().items.length).toBe(0)
   })
 })
+
+describe('fil de conversation (F-50)', () => {
+  it('relie une réponse au message d’origine et à ses voisins, du plus ancien au plus récent', async () => {
+    const { setActivePinia, createPinia } = await import('pinia')
+    setActivePinia(createPinia())
+    const { useMailsStore } = await import('../stores/mails')
+    const s = useMailsStore()
+    const base = { mailbox: 'personal', from: { name: 'A', address: 'a@x.fr' }, to: [], subject: 's', paragraphs: [], unread: false, attachments: [], suivi: null, claim: null, composing: null, notes: [], activity: [], hints: {} } as never
+    const mk = (id: string, messageId: string, parents: string[], at: string, folder: 'inbox' | 'sent') => ({ ...(base as object), id, messageId, parents, at, folder }) as never
+    s.items = [mk('1', '<a>', [], '2026-11-21T09:00:00Z', 'sent'), mk('2', '<b>', ['<a>'], '2026-11-21T10:00:00Z', 'inbox'), mk('3', '<z>', [], '2026-11-21T11:00:00Z', 'inbox')]
+    expect(s.threadOf(s.items[1]).map((m) => m.id)).toEqual(['1', '2'])
+  })
+})

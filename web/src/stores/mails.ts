@@ -22,6 +22,25 @@ export const useMailsStore = defineStore('mails', () => {
   /** Retrouve un mail par son id ou par son Message-ID (c'est ce que stocke un suivi). */
   const find = (ref: string | null | undefined) => (ref ? items.value.find((m) => m.id === ref || m.messageId === ref) : undefined)
   const refOf = (m: Mail) => m.messageId ?? m.id
+  /** Fil de la conversation : tous les messages reliés à celui-ci par Message-ID / In-Reply-To / References, du plus ancien au plus récent (un même Message-ID reçu dans deux boîtes ne compte qu'une fois). */
+  function threadOf(mail: Mail): Mail[] {
+    const ids = new Set<string>([refOf(mail), ...(mail.parents ?? [])])
+    let grew = true
+    while (grew) {
+      grew = false
+      for (const m of items.value) {
+        const mine = [refOf(m), ...(m.parents ?? [])]
+        if (mine.some((x) => ids.has(x)) && !mine.every((x) => ids.has(x))) { mine.forEach((x) => ids.add(x)); grew = true }
+      }
+    }
+    const seen = new Map<string, Mail>()
+    for (const m of items.value) {
+      if (!ids.has(refOf(m)) || m.folder === 'trash' || m.folder === 'drafts') continue
+      const key = refOf(m)
+      if (!seen.has(key) || m.id === mail.id) seen.set(key, m)
+    }
+    return [...seen.values()].sort((a, b) => a.at.localeCompare(b.at))
+  }
   const forSuivi = (suiviId: string) => items.value.find((m) => m.suivi === suiviId)
 
   async function load() {
@@ -138,5 +157,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, forSuivi, load, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

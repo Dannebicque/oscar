@@ -27,6 +27,7 @@ import AvailabilityDialog from './AvailabilityDialog.vue'
 import ClaimPanel from './ClaimPanel.vue'
 import SuiviBanner from './SuiviBanner.vue'
 import SuiviPanel from './SuiviPanel.vue'
+import ThreadMessages from './ThreadMessages.vue'
 
 const props = defineProps<{ mail: Mail; showBack?: boolean }>()
 const emit = defineEmits<{ back: [] }>()
@@ -154,6 +155,8 @@ function sendAvailability() {
         <OscarSays v-if="showSuggestFollow" situation="suggestFollow" :level="3" suggestion>
           <template #actions><BaseButton variant="primary" :label="t('mail.createSuivi')" @click="createSuivi(true)" /><BaseButton :label="t('common.ignore')" @click="ignore('follow')" /></template>
         </OscarSays>
+
+        <ThreadMessages :mail="mail" />
 
         <div class="body">
           <p v-for="(p, i) in mail.paragraphs" :key="i">{{ p }}</p>

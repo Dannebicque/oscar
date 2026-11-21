@@ -85,6 +85,7 @@ const en: typeof fr = {
     teamOwnerNone: 'Nobody has taken it', teamTakenBy: 'Taken by {who}', teamHandledBy: 'Handled by {who}', teamAge: 'For {n} h',
   },
   mail: {
+    thread: { title: 'Conversation', count: '{n} messages', me: 'Me', show: 'Show', hide: 'Hide', earlier: 'Earlier message' },
     expand: 'Expand folders', collapse: 'Collapse',
     title: 'Mail', folders: 'Folders', compose: 'Write', list: 'Message list', reading: 'Reading',
     folder: { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', archive: 'Archive', trash: 'Trash', suivis: 'Follow-ups' },

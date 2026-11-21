@@ -85,6 +85,7 @@ export default {
     teamOwnerNone: 'Personne ne l’a pris', teamTakenBy: 'Pris par {who}', teamHandledBy: 'Traité par {who}', teamAge: 'Depuis {n} h',
   },
   mail: {
+    thread: { title: 'Conversation', count: '{n} messages', me: 'Moi', show: 'Afficher', hide: 'Masquer', earlier: 'Message précédent' },
     expand: 'Développer les dossiers', collapse: 'Réduire',
     title: 'Mails', folders: 'Dossiers', compose: 'Écrire', list: 'Liste des messages', reading: 'Lecture',
     folder: { inbox: 'Boîte de réception', sent: 'Envoyés', drafts: 'Brouillons', archive: 'Archives', trash: 'Corbeille', suivis: 'Suivis' },
