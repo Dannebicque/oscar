@@ -67,6 +67,31 @@ final class AiController extends AbstractController
         return new JsonResponse($out);
     }
 
+    /**
+     * Suggestion pendant la rédaction (F-73) : le texte que l'utilisateur écrit demande-t-il une réponse « avant mardi » ? Une tâche proposée,
+     * à valider : rien n'est créé tant qu'il ne coche pas. Seuls l'objet et le texte écrits sont analysés ; aucun agenda, aucune pièce jointe.
+     */
+    #[Route('/api/ai/compose-hints', methods: ['POST'])]
+    public function composeHints(Request $request, #[CurrentUser] User $user): JsonResponse
+    {
+        $settings = $this->settings($user);
+        $provider = $this->registry->for((string) $settings['aiMode'], $user);
+        if ($provider === null || !$settings['aiSuggestTasks']) {
+            return new JsonResponse(['task' => null]);
+        }
+        $in = json_decode($request->getContent(), true) ?: [];
+        $subject = mb_substr((string) ($in['subject'] ?? ''), 0, 300);
+        $body = mb_substr((string) ($in['body'] ?? ''), 0, 8000);
+        if (mb_strlen(trim($body)) < 15) {
+            return new JsonResponse(['task' => null]);
+        }
+        $a = $provider->analyse($subject, $body, new \DateTimeImmutable('now', new \DateTimeZone((string) $settings['timezone'])), []);
+        $this->em->persist((new AiCall($provider->name(), 'compose-hints', sprintf('rédaction, objet de %d caractères', mb_strlen($subject)), ['task' => $a->task !== null]))->setOwner($user));
+        $this->em->flush();
+
+        return new JsonResponse(['task' => $a->task]);
+    }
+
     /** Brouillon de réponse à un mail : l'utilisateur choisit le ton et les créneaux, relit, puis envoie lui-même. */
     #[Route('/api/mails/{id}/reply-draft', methods: ['POST'])]
     public function replyDraft(string $id, Request $request, #[CurrentUser] User $user): JsonResponse

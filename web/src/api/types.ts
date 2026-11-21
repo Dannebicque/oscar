@@ -55,6 +55,8 @@ export interface MailApi {
   invitation(id: string): Promise<{ invitation: MailInvitation | null; response: InvitationResponse | null }>
   /** Répond à l'invitation (un clic de l'utilisateur) : la réponse part à l'organisateur ; accepté ou peut-être : l'événement entre dans l'agenda choisi. */
   replyInvitation(id: string, p: { response: InvitationResponse; calendarId?: string }): Promise<{ added: boolean }>
+  /** Suggestion de tâche à partir du texte en cours de rédaction (F-73) : à valider, rien n'est créé sans clic. */
+  composeHints(subject: string, body: string): Promise<{ task: { title: string; dueAt: string; quote: string } | null }>
   markRead(id: string): Promise<void>
   /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
   move(id: string, folder: 'inbox' | 'archive' | 'trash'): Promise<void>

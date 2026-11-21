@@ -19,6 +19,7 @@ import { followUpDue, isoDay } from '../domain/dates'
 import { searchDirectory } from '../domain/directory'
 import { useOscar } from '../oscar/useOscar'
 import { useAccountsStore } from '../stores/accounts'
+import { useTasksStore } from '../stores/tasks'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
 import { useUiStore } from '../stores/ui'
@@ -30,6 +31,7 @@ const fmt = useFormat()
 const mails = useMailsStore()
 const settings = useSettingsStore()
 const accounts = useAccountsStore()
+const tasks = useTasksStore()
 const ui = useUiStore()
 const { say } = useOscar()
 
@@ -51,6 +53,21 @@ const aiBusy = ref(false)
 const aiFailed = ref(false)
 const slotStarts = ref<string[]>(String(route.query.slots ?? '').split(',').filter(Boolean))
 const edited = ref(false)
+/** Suggestion de tâche pendant la rédaction (F-73) : proposée, cochée seulement par l'utilisateur, créée à l'envoi si le message part. */
+const taskHint = ref<{ title: string; dueAt: string; quote: string } | null>(null)
+const taskOn = ref(false)
+const taskTitle = ref('')
+let hintTimer: ReturnType<typeof setTimeout> | undefined
+watch([body, subject], () => {
+  clearTimeout(hintTimer)
+  if (settings.s.aiMode === 'off' || !settings.s.aiSuggestTasks) { taskHint.value = null; return }
+  hintTimer = setTimeout(async () => {
+    try {
+      const r = await api.mails.composeHints(subject.value, body.value)
+      if (r.task?.dueAt !== taskHint.value?.dueAt || r.task?.title !== taskHint.value?.title) { taskHint.value = r.task; taskTitle.value = r.task?.title ?? ''; taskOn.value = false }
+    } catch { taskHint.value = null }
+  }, 900)
+})
 const draftId = ref<string | null>(route.query.draft ? String(route.query.draft) : null)
 const MAX_BYTES = 5 * 1024 * 1024
 const files = ref<File[]>([])
@@ -142,6 +159,8 @@ async function send() {
       inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
     })
     if (draftId.value) await mails.moveTo(draftId.value, 'trash').catch(() => undefined)
+    // Le message est parti : seulement maintenant, la tâche cochée est créée (jamais avant, jamais sans clic).
+    if (taskOn.value && taskHint.value && taskTitle.value.trim()) await tasks.add({ title: taskTitle.value.trim(), dueAt: taskHint.value.dueAt, origin: 'ai', source: subject.value.trim() }).catch(() => undefined)
     ui.notify(r.followDueAt ? say('sentFollow', { date: fmt.date(r.followDueAt) }) : t('compose.sent', { to: who.value }))
     router.push({ name: 'mails' })
   } catch (e) {
@@ -224,6 +243,15 @@ async function saveDraft() {
         <p class="hint">{{ t('agenda.freeBusy') }}</p>
       </section>
 
+      <section v-if="taskHint" class="card pad-sm flat taskhint" :aria-label="t('compose.taskHint.title')">
+        <p class="th"><AiBadge /> <strong>{{ t('compose.taskHint.title') }}</strong></p>
+        <p class="hint">{{ t('compose.taskHint.text', { quote: taskHint.quote }) }}</p>
+        <CheckboxField v-model="taskOn" :label="t('compose.taskHint.create', { date: fmt.date(taskHint.dueAt) })" />
+        <TextField v-if="taskOn" id="task-title" v-model="taskTitle" :label="t('compose.taskHint.label')" />
+        <p v-if="taskOn" class="hint" aria-live="polite">{{ t('compose.taskHint.done', { date: fmt.date(taskHint.dueAt) }) }}</p>
+        <p class="hint">{{ t('compose.taskHint.never') }}</p>
+      </section>
+
       <fieldset class="card pad-sm flat follow">
         <legend class="sr-only">{{ t('compose.follow') }}</legend>
         <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
@@ -271,6 +299,8 @@ async function saveDraft() {
 .ah { font-size: var(--fs-md); }
 .flist { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-1); }
 .flist li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); overflow-wrap: anywhere; }
+.taskhint { display: grid; gap: var(--space-2); border-color: var(--c-ai); background: var(--c-ai-soft); color: var(--c-text); }
+.th { display: flex; gap: var(--space-2); align-items: center; margin: 0; color: var(--c-ai); }
 .follow { display: grid; gap: var(--space-3); margin: 0; }
 .check { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

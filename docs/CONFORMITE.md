@@ -97,7 +97,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 | F-70 | M | ✅ | Priorités classées avec raison, tableau, filtres par type et par situation, Mes suivis / Équipe, synthèse d'Oscar, activité récente. |
 | F-71 | M | ✅ | Prochain RDV (en cours ou suivant, ensuite, journée terminée), agenda perso optionnel. |
 | F-72 | M | ✅ | Accueil allégé, trois états dont premier lancement en quatre étapes. |
-| F-73 | M | 🟡 | Destinataires avec annuaire en autocomplétion (LDAP si configuré), Cc/Cci, objet, signature, suivi précoché avec délai du compte, date d'alerte annoncée ✅. Manque la suggestion de tâche/date à valider à l'envoi. |
+| F-73 | M | ✅ | Destinataires avec annuaire (LDAP si configuré), Cc/Cci, objet, signature, suivi précoché avec délai du compte et date d'alerte annoncée, **suggestion de tâche pendant la rédaction** (« avant mardi ») : proposée, cochée par l'utilisateur, créée seulement si le message part. |
 | F-74 | S | 🟡 | Créneaux libres cochables, brouillon modifiable avec ton, rien sans clic ✅. Pose en provisoire dans l'agenda ❌ ; bascule « agenda perso » seulement dans Réglages. |
 
 ### 4.7 Notifications, connexions, journal

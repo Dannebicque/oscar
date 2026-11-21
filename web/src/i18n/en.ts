@@ -145,6 +145,7 @@ const en: typeof fr = {
     draft: { title: 'Reminder draft', ai: 'Suggested by AI', send: 'Send', later: 'Postpone 2 days', stop: 'Stop reminding', close: 'Close' },
   },
   compose: {
+    taskHint: { title: 'Suggested by AI · to check', text: 'You are asking for an answer “{quote}”. Keep a task to follow it?', create: 'Create a task for {date}', label: 'Task title', done: 'Task planned for {date}, created when the message is sent.', never: 'Nothing is created or sent without your click. Declined suggestions are not remembered.' },
     attached: 'Attachments', removeFile: 'Remove {name}', attachTooBig: 'Attachments exceed 5 MB. Remove one or send a link.',
     forwarded: '---------- Forwarded message ----------\nFrom: {who} · {date}',
     replyTo: 'Reply to {who}', backToMail: 'Back to the mail', original: 'Original message', receivedFrom: 'Mail received · {who} · {date}', quote: 'Quote the original message in my reply',

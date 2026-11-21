@@ -133,4 +133,21 @@ final class AiApiTest extends ApiTestCase
         self::assertSame(404, $this->call('GET', '/api/mails/'.$this->mail->getId().'/hints', $other)[0]);
         self::assertSame([], $this->call('GET', '/api/ai-calls', $other)[1]);
     }
+
+    public function testComposeHintsSuggestsATaskFromWhatTheUserWritesAndRespectsTheSettings(): void
+    {
+        $body = 'Bonjour Sophie, peux-tu confirmer le nombre de participants avant mardi ? Merci.';
+        [$st, $r] = $this->call('POST', '/api/ai/compose-hints', $this->token, ['subject' => 'Planning', 'body' => $body]);
+        self::assertSame(200, $st);
+        self::assertStringContainsString('participants', $r['task']['title']);
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $r['task']['dueAt']);
+        [, $short] = $this->call('POST', '/api/ai/compose-hints', $this->token, ['subject' => 'x', 'body' => 'Salut']);
+        self::assertNull($short['task'], 'texte trop court : rien');
+        $this->setting(['aiSuggestTasks' => false]);
+        [, $off] = $this->call('POST', '/api/ai/compose-hints', $this->token, ['subject' => 'Planning', 'body' => $body]);
+        self::assertNull($off['task'], 'suggestions de tâches coupées dans Réglages');
+        $this->setting(['aiSuggestTasks' => true, 'aiMode' => 'off']);
+        [, $none] = $this->call('POST', '/api/ai/compose-hints', $this->token, ['subject' => 'Planning', 'body' => $body]);
+        self::assertNull($none['task'], 'IA coupée : aucune lecture');
+    }
 }

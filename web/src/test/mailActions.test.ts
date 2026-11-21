@@ -2,6 +2,7 @@ import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import MailReader from '../components/mail/MailReader.vue'
 import { useMailsStore } from '../stores/mails'
+import { useTasksStore } from '../stores/tasks'
 import ComposeView from '../views/ComposeView.vue'
 import { mountApp } from './helpers'
 
@@ -88,5 +89,27 @@ describe('invitation d’agenda reçue par mail (F-25)', () => {
     expect(useAgendaStore(pinia).events.length).toBe(before + 1)
     await wrapper.setProps({ mail: s.byId('m9')! })
     expect(wrapper.find('.invite').text()).toContain('Tu as accepté cette invitation')
+  })
+})
+
+describe('suggestion de tâche pendant la rédaction (F-73)', () => {
+  it('propose une tâche, ne crée rien sans clic, et ne la crée qu’à l’envoi si elle est cochée', async () => {
+    const { addRecipient } = await import('./helpers')
+    const { wrapper, pinia } = await mountApp(ComposeView, '/ecrire')
+    await flushPromises()
+    await addRecipient(wrapper, 'to', 'sophie.laurent@univ-reims.fr')
+    await wrapper.find('#subject').setValue('Planning')
+    await wrapper.find('#body').setValue('Bonjour Sophie, peux-tu confirmer le nombre de participants avant mardi ?')
+    await new Promise((r) => setTimeout(r, 1100))
+    await flushPromises()
+    const card = wrapper.find('.taskhint')
+    expect(card.exists()).toBe(true)
+    expect(card.text()).toContain('Suggéré par l’IA')
+    const tasks = useTasksStore(pinia)
+    await tasks.load()
+    const before = tasks.items.length
+    await wrapper.find('form').trigger('submit') // envoi sans cocher : aucune tâche
+    await flushPromises()
+    expect(tasks.items.length).toBe(before)
   })
 })

@@ -112,6 +112,7 @@ export function createHttpApi(baseUrl: string): Api {
       },
       invitation: (id) => req('GET', `/api/mails/${encodeURIComponent(id)}/invitation`),
       replyInvitation: (id, p) => req('POST', `/api/mails/${encodeURIComponent(id)}/invitation/reply`, p),
+      composeHints: (subject, body) => req('POST', '/api/ai/compose-hints', { subject, body }),
       async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')

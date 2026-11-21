@@ -150,6 +150,15 @@ export function createMockApi(now: Date = new Date()): Api {
         }
         return { added }
       },
+      async composeHints(_subject, body) {
+        const m = body.match(/(avant|d['’]ici|pour)\s+(lundi|mardi|mercredi|jeudi|vendredi)/i)
+        if (!m || body.trim().length < 15) return { task: null }
+        const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+        const d = new Date(); d.setHours(0, 0, 0, 0)
+        do d.setDate(d.getDate() + 1); while (d.getDay() !== days.indexOf(m[2].toLowerCase()))
+        const first = body.split(/[.?!\n]/).find((x) => /avant|d['’]ici|pour/i.test(x)) ?? body
+        return { task: { title: first.replace(/^.*?(peux-tu|pourrais-tu|merci de)\s+/i, '').replace(/\s*(avant|d['’]ici|pour)\s+\w+.*$/i, '').trim().replace(/^./, (c) => c.toUpperCase()), dueAt: isoDay(d), quote: m[0] } }
+      },
       async markRead(id) { mails = mails.map((x) => (x.id === id ? { ...x, unread: false } : x)) },
       async claim(mailId, _suiviId, action) {
         const m = findMail(mailId)

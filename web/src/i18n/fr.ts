@@ -145,6 +145,7 @@ export default {
     draft: { title: 'Brouillon de relance', ai: 'Suggéré par l’IA', send: 'Envoyer', later: 'Reporter de 2 jours', stop: 'Ne plus relancer', close: 'Fermer' },
   },
   compose: {
+    taskHint: { title: 'Suggéré par l’IA · à vérifier', text: 'Tu demandes une réponse « {quote} ». Veux-tu garder une tâche pour la suivre ?', create: 'Créer une tâche pour le {date}', label: 'Titre de la tâche', done: 'Tâche prévue pour le {date}, créée à l’envoi.', never: 'Rien n’est créé ni envoyé sans ton clic. Les propositions refusées ne sont pas mémorisées.' },
     attached: 'Pièces jointes', removeFile: 'Retirer {name}', attachTooBig: 'Les pièces jointes dépassent 5 Mo. Retire-en une ou envoie un lien.',
     forwarded: '---------- Message transféré ----------\nDe : {who} · {date}',
     replyTo: 'Répondre à {who}', backToMail: 'Retour au mail', original: 'Message d’origine', receivedFrom: 'Mail reçu · {who} · {date}', quote: 'Citer le message d’origine dans ma réponse',
