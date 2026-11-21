@@ -137,8 +137,13 @@ defineExpose({
 .grid-wrap .fc-event:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; z-index: 5; }
 .grid-wrap .ev { display: flex; flex-direction: column; gap: 1px; padding: 2px 4px; overflow: hidden; line-height: 1.25; font-size: var(--fs-sm); }
 .grid-wrap .ev-time { font-weight: 700; font-size: 0.75rem; }
-.grid-wrap .ev-title { font-weight: 800; overflow-wrap: break-word; hyphens: auto; }
+.grid-wrap .ev-title { font-weight: 800; overflow-wrap: break-word; hyphens: manual; }
 .grid-wrap .fc-event { container-type: inline-size; }
+.grid-wrap .fc-timegrid-event { container-type: size; overflow: hidden; }
+.grid-wrap .fc-timegrid-event .fc-event-main { height: 100%; overflow: hidden; }
+.grid-wrap .fc-timegrid-event .ev { position: relative; height: 100%; }
+.grid-wrap .fc-timegrid-event .ev-warn { position: absolute; bottom: 2px; right: 2px; padding: 0 4px; }
+@container (max-height: 90px) { .ev-meta:not(.ev-warn) { display: none !important; } }
 @container (max-width: 110px) { .ev-meta:not(.ev-warn), .ev-time { display: none !important; } .ev-warn-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ev-title { font-size: 0.75rem; } }
 .grid-wrap .fc-timegrid-event-short .ev-meta, .grid-wrap .fc-timegrid-col-events .fc-timegrid-event.fc-event-end .ev-source { display: none; }
 .grid-wrap .fc-timegrid-event .ev-warn { display: inline-flex; background: var(--c-warn-soft); color: var(--c-text); border-radius: 999px; padding: 0 6px; width: fit-content; }
