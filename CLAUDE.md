@@ -12,7 +12,7 @@ Cahier des charges v2 et maquette cliquable : projet claude.ai « Agenda » (doc
 ## Règles produit (à ne pas casser)
 - Un suivi par fil de conversation. Création : à l'envoi (« Suivre la réponse »), depuis un mail reçu (l'IA suggère, l'utilisateur valide), ou par règle.
 - Une réponse reçue passe le suivi à « à traiter », jamais de clôture automatique.
-- Les relances sont seulement suggérées, jamais envoyées seules ; plafond quotidien.
+- Les relances sont seulement suggérées, jamais envoyées seules ; plafond quotidien. Envoi groupé permis seulement si chaque relance a été relue et cochée une à une, après une confirmation qui nomme les destinataires (règle adaptée du F-63 par le propriétaire).
 - Boîte partagée (alias) : aucun responsable désigné ; états nouveau / pris par X / traité par X, anti-doublon, notes internes.
 - IA : par défaut hébergée par l'université ; fournisseur externe en option dans Réglages. Pour les agendas, l'IA ne lit que libre/occupé. L'IA suggère et prépare, ne décide ni n'envoie.
 
