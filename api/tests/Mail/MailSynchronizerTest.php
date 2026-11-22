@@ -136,4 +136,42 @@ final class MailSynchronizerTest extends KernelTestCase
         $this->sync->sync($this->account, $this->reader([self::header('<r3@x>', 'INBOX', 1)]));
         self::assertCount(0, $this->em->getRepository(Suivi::class)->findBy(['owner' => $this->user]));
     }
+
+    public function testKnownPersonalFoldersAreSyncedInTheBackgroundButUnknownOnesAreNot(): void
+    {
+        $this->em->persist(\App\Entity\Mail::fromHeader($this->account, self::header('<old@x>', 'Projets/Jury', 3)));
+        $this->em->flush();
+        $reader = $this->reader([self::header('<old@x>', 'Projets/Jury', 3), self::header('<new@x>', 'Projets/Jury', 4), self::header('<never@x>', 'Jamais ouvert', 9), self::header('<in@x>', 'INBOX', 1)]);
+
+        $r = $this->sync->sync($this->account, $reader);
+
+        self::assertSame(2, $r['fetched'], 'le nouveau message du dossier connu et celui de la boîte de réception');
+        $folders = array_map(fn ($m) => $m->getFolder().'#'.$m->getUid(), $this->em->getRepository(\App\Entity\Mail::class)->findAll());
+        sort($folders);
+        self::assertSame(['INBOX#1', 'Projets/Jury#3', 'Projets/Jury#4'], $folders);
+        self::assertSame(0, $this->sync->sync($this->account, $reader)['fetched'], 'incrémental : rien de nouveau au passage suivant');
+    }
+
+    public function testAFolderThatDisappearsDoesNotBlockTheRestOfTheSync(): void
+    {
+        $this->em->persist(\App\Entity\Mail::fromHeader($this->account, self::header('<old@x>', 'Supprimé', 3)));
+        $this->em->flush();
+        $reader = new class([self::header('<in@x>', 'INBOX', 1)]) implements MailboxReader {
+            public function __construct(private array $all) {}
+            public function invitation(string $folder, int $uid): ?string { return null; }
+            public function attachments(string $folder, int $uid): array { return []; }
+            public function attachment(string $folder, int $uid, int $index): ?array { return null; }
+            public function fetchBody(string $folder, int $uid): ?string { return null; }
+            public function fetchAfter(string $folder, int $afterUid): array
+            {
+                if ($folder === 'Supprimé') {
+                    throw new \RuntimeException('NO [NONEXISTENT]');
+                }
+
+                return array_values(array_filter($this->all, static fn (MailHeader $h) => $h->folder === $folder && $h->uid > $afterUid));
+            }
+        };
+
+        self::assertSame(1, $this->sync->sync($this->account, $reader)['fetched']);
+    }
 }

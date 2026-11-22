@@ -50,6 +50,18 @@ final class MailSynchronizer
                 ++$fetched;
             }
         }
+        // Dossiers personnels, archives et corbeille déjà connus : leurs nouveaux messages arrivent aussi en tâche de fond.
+        // Un dossier supprimé ou injoignable ne bloque pas le reste de la synchro.
+        foreach ($this->mails->knownFolders($account) as $folder) {
+            try {
+                foreach ($reader->fetchAfter($folder, $this->mails->lastUid($account, $folder)) as $header) {
+                    $this->em->persist(Mail::fromHeader($account, $header));
+                    ++$fetched;
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
         $account->markSynced();
         $this->em->flush();
 

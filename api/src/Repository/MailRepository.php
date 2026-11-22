@@ -24,6 +24,19 @@ class MailRepository extends ServiceEntityRepository
             ->getQuery()->getSingleScalarResult();
     }
 
+    /**
+     * Dossiers que l'utilisateur a ouverts ou où il a rangé des messages (Archive, Corbeille et dossiers personnels) :
+     * la synchro y cherche aussi les nouveaux messages. Jamais un dossier dont rien n'est connu (pas d'import massif par surprise).
+     *
+     * @return list<string>
+     */
+    public function knownFolders(MailAccount $account): array
+    {
+        $rows = $this->createQueryBuilder('m')->select('DISTINCT m.folder AS f')->where('m.account = :a')->setParameter('a', $account->getId())->getQuery()->getArrayResult();
+
+        return array_values(array_filter(array_column($rows, 'f'), static fn (string $f) => !\in_array($f, ['INBOX', 'Sent', 'Drafts'], true)));
+    }
+
     /** @return list<Mail> messages reçus (hors envoyés) de tous les comptes d'un utilisateur */
     public function inbound(User $owner): array
     {
