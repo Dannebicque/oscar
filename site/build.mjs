@@ -62,6 +62,8 @@ function layout(lang, key, body) {
   const here_ = href(lang, key)
   const alt = (l) => abs(prefix(l) + SLUG[key])
   const hasDemo = withDemo
+  // Ressources en chemin relatif : le site s'affiche aussi ouvert depuis un dossier (file://). La 404 reste absolue (servie à n'importe quelle adresse).
+  const rel = key === 'notfound' ? base : '../'.repeat((lang === 'en' ? 1 : 0) + (SLUG[key] ? 1 : 0)) || './'
   return `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -78,9 +80,9 @@ ${key === 'notfound' ? '<meta name="robots" content="noindex">' : `<link rel="ca
 <meta property="og:type" content="website">
 <meta property="og:locale" content="${c.locale}">
 <meta name="color-scheme" content="light dark">
-<link rel="icon" href="${base}assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="${base}assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="${base}assets/site.css">
+<link rel="icon" href="${rel}assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="${rel}assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="${rel}assets/site.css">
 </head>
 <body>
 <a class="skip" href="#main">${esc(c.nav.skip)}</a>
@@ -113,7 +115,7 @@ ${body}
     <p class="muted">${esc(c.footer.copyright)}</p>
   </div>
 </footer>
-<script src="${base}assets/site.js" defer></script>
+<script src="${rel}assets/site.js" defer></script>
 </body>
 </html>
 `
