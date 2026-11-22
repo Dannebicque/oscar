@@ -116,4 +116,54 @@ final class MailMoveApiTest extends ApiTestCase
         $due = new \DateTimeImmutable($r['suivi']['dueAt']);
         self::assertSame($due->format('Y-m-d'), (new \DateTimeImmutable('+24 hours'))->setTime(0, 0)->format('Y-m-d'), 'heures réelles pour ce compte, même si l’utilisateur compte en jours ouvrés');
     }
+
+    public function testADraftKeepsItsAttachmentsBccAndSenderIdentity(): void
+    {
+        FakeReaderFactory::$appended = [];
+        $account = $this->em->getRepository(MailAccount::class)->findAll()[0];
+        $identity = new \App\Entity\Identity($account->getOwner(), $account, 'Direction des études', 'etudes@x.fr', 'secretariat@x.fr');
+        $this->em->persist($identity);
+        $this->em->flush();
+        $file = ['name' => 'convention.pdf', 'type' => 'application/pdf', 'content' => base64_encode('%PDF-1.4 contenu de test')];
+
+        [$st] = $this->call('POST', '/api/mails/draft', $this->token, ['accountId' => $account->getId(), 'identityId' => $identity->getId(), 'to' => ['a@x.fr'], 'bcc' => ['b@x.fr'], 'subject' => 'Avec pièce jointe', 'body' => 'Voir la convention', 'attachments' => [$file]]);
+        self::assertSame(201, $st);
+        $raw = FakeReaderFactory::$appended[0][1];
+        self::assertStringContainsString('multipart/mixed', $raw);
+        self::assertStringContainsString('convention.pdf', $raw);
+        self::assertStringContainsString('Bcc: b@x.fr', $raw);
+        self::assertStringContainsString('etudes@x.fr', $raw);
+        self::assertStringContainsString('Reply-To: secretariat@x.fr', $raw);
+        self::assertSame('Drafts', FakeReaderFactory::$appended[0][0]);
+        self::assertCount(0, static::getContainer()->get(\App\Tests\Support\FakeOutgoingMailer::class)->sent, 'rien n’est envoyé');
+    }
+
+    public function testADraftWithoutAttachmentsStaysPlainAndTooBigOrForeignIdentityIsRefused(): void
+    {
+        FakeReaderFactory::$appended = [];
+        $account = $this->em->getRepository(MailAccount::class)->findAll()[0];
+        self::assertSame(201, $this->call('POST', '/api/mails/draft', $this->token, ['accountId' => $account->getId(), 'subject' => 'Simple', 'body' => 'x'])[0]);
+        self::assertStringNotContainsString('multipart', FakeReaderFactory::$appended[0][1]);
+
+        $account->setAttachmentLimitMb(1);
+        $this->em->flush();
+        $big = ['name' => 'gros.bin', 'type' => 'x', 'content' => base64_encode(str_repeat('a', 1_300_000))];
+        [$st, $e] = $this->call('POST', '/api/mails/draft', $this->token, ['accountId' => $account->getId(), 'subject' => 'Gros', 'body' => 'x', 'attachments' => [$big]]);
+        self::assertSame([413, 1], [$st, $e['limitMb']]);
+        self::assertCount(1, FakeReaderFactory::$appended, 'rien n’est déposé sur le serveur');
+        self::assertSame(422, $this->call('POST', '/api/mails/draft', $this->token, ['accountId' => $account->getId(), 'identityId' => '0190a000-0000-7000-8000-000000000000', 'subject' => 'x', 'body' => 'x'])[0]);
+    }
+
+    public function testReopeningADraftReturnsItsCopies(): void
+    {
+        FakeReaderFactory::$draftRecipients = ['cc' => ['c@x.fr'], 'bcc' => ['b@x.fr']];
+        $account = $this->em->getRepository(MailAccount::class)->findAll()[0];
+        $draft = Mail::fromHeader($account, new MailHeader('<d@x>', null, [], 'David', 'd@x.fr', ['a@x.fr'], 'Brouillon', new \DateTimeImmutable('2026-11-19 09:00:00'), false, 5, 'Drafts'));
+        $this->em->persist($draft);
+        $this->em->flush();
+        [$st, $r] = $this->call('GET', '/api/mails/'.$draft->getId().'/body', $this->token);
+        self::assertSame([200, ['c@x.fr'], ['b@x.fr']], [$st, $r['cc'], $r['bcc']]);
+        [, $inbox] = $this->call('GET', '/api/mails/'.$this->mail->getId().'/body', $this->token);
+        self::assertArrayNotHasKey('cc', $inbox, 'seuls les brouillons renvoient leurs copies');
+    }
 }

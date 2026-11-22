@@ -104,6 +104,13 @@ export function createHttpApi(baseUrl: string): Api {
         const r = await req<{ attachments: { name: string; size: number }[] }>('GET', `/api/mails/${encodeURIComponent(id)}/attachments`)
         return r.attachments.map((a, index) => ({ name: a.name, size: humanSize(a.size), index }))
       },
+      async draftFields(id) { const r = await req<{ cc?: string[]; bcc?: string[] }>('GET', `/api/mails/${encodeURIComponent(id)}/body`); return { cc: r.cc ?? [], bcc: r.bcc ?? [] } },
+      async attachmentFile(id, a) {
+        const res = await fetch(`${root}/api/mails/${encodeURIComponent(id)}/attachments/${a.index ?? 0}`, { headers: { Authorization: `Bearer ${session.token}` } })
+        if (!res.ok) throw new ApiError(res.status, 'download')
+        const blob = await res.blob()
+        return new File([blob], a.name, { type: blob.type || 'application/octet-stream' })
+      },
       async download(id, a) {
         const res = await fetch(`${root}/api/mails/${encodeURIComponent(id)}/attachments/${a.index ?? 0}`, { headers: { Authorization: `Bearer ${session.token}` } })
         if (!res.ok) throw new ApiError(res.status, 'download')
@@ -179,7 +186,10 @@ export function createHttpApi(baseUrl: string): Api {
         create: (a) => req<CalendarAccount>('POST', '/api/calendar-accounts', { kind: 'caldav', ...a }),
         remove: async (id) => { await req('DELETE', `/api/calendar-accounts/${encodeURIComponent(id)}`) },
       },
-      shared: { list: () => req('GET', '/api/shared-mailboxes') },
+      shared: {
+        list: () => req('GET', '/api/shared-mailboxes'),
+        updateSender: (id, p) => req('PATCH', `/api/shared-mailboxes/${encodeURIComponent(id)}`, p, { merge: true }),
+      },
       identities: {
         list: () => req('GET', '/api/identities'),
         create: (i) => req('POST', '/api/identities', i),

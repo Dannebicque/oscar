@@ -19,6 +19,13 @@ class SharedMailbox
     #[ORM\Column(type: Types::GUID)]
     private string $id;
 
+    /** Nom affiché quand un membre répond « De : contact@ » ; vide = le nom de la boîte. */
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $senderName = null;
+    /** Signature de l'équipe, insérée à la rédaction d'une réponse depuis la boîte (texte brut). */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $signature = null;
+
     /** @var Collection<int, SharedMailboxMember> */
     #[ORM\OneToMany(mappedBy: 'mailbox', targetEntity: SharedMailboxMember::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $members;
@@ -43,6 +50,10 @@ class SharedMailbox
     public function getAddress(): string { return $this->address; }
     public function getName(): string { return $this->name; }
     public function getSlug(): string { return $this->slug; }
+    public function getSenderName(): ?string { return $this->senderName; }
+    public function setSenderName(?string $v): static { $this->senderName = $v === null || trim($v) === '' ? null : trim($v); return $this; }
+    public function getSignature(): ?string { return $this->signature; }
+    public function setSignature(?string $v): static { $this->signature = $v === null || trim($v) === '' ? null : $v; return $this; }
     public function isAutoFollow(): bool { return $this->autoFollow; }
     public function setAutoFollow(bool $v): static { $this->autoFollow = $v; return $this; }
     public function isAiEnabled(): bool { return $this->aiEnabled; }

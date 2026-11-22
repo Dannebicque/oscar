@@ -5,6 +5,7 @@ import AttachmentDropzone from '../components/mail/AttachmentDropzone.vue'
 import { addFiles, limitBytes, MAX_FILES, sizeLabel } from '../domain/attachments'
 import { useAccountsStore } from '../stores/accounts'
 import ComposeView from '../views/ComposeView.vue'
+import { useMailsStore } from '../stores/mails'
 import { addRecipient, mountApp } from './helpers'
 
 afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = '' })
@@ -103,5 +104,32 @@ describe('dans l’éditeur', () => {
     await flushPromises()
     await vi.waitFor(() => expect(send).toHaveBeenCalled())
     expect(send.mock.calls[0][0].attachments?.[0]).toMatchObject({ name: 'note.txt', type: 'text/plain' })
+  })
+
+  it('un brouillon garde ses pièces jointes, ses copies et son identité, et les retrouve à la reprise', async () => {
+    const { wrapper, pinia } = await mountApp(ComposeView, '/ecrire')
+    await flushPromises()
+    const ev = new Event('drop', { bubbles: true, cancelable: true }) as Event & { dataTransfer: unknown }
+    ev.dataTransfer = { types: ['Files'], files: [new File(['contenu du brouillon'], 'convention.pdf', { type: 'application/pdf' })] }
+    document.dispatchEvent(ev)
+    await flushPromises()
+    await addRecipient(wrapper, 'to', 'Marc <marc@x.fr>')
+    await wrapper.find('#subject').setValue('Brouillon avec pièce jointe')
+    await wrapper.find('#from').setValue('id2')
+    const save = vi.spyOn(api.mails, 'saveDraft')
+    await [...wrapper.findAll('button')].find((b) => b.text().includes('Enregistrer le brouillon'))!.trigger('click')
+    await flushPromises()
+    await vi.waitFor(() => expect(save).toHaveBeenCalled())
+    expect(save.mock.calls[0][0]).toMatchObject({ identityId: 'id2', subject: 'Brouillon avec pièce jointe' })
+    expect(save.mock.calls[0][0].attachments?.[0]).toMatchObject({ name: 'convention.pdf', type: 'application/pdf' })
+    await flushPromises()
+    const draft = useMailsStore(pinia).items.find((m) => m.folder === 'drafts' && m.subject === 'Brouillon avec pièce jointe')!
+    expect(draft).toBeDefined()
+    document.body.innerHTML = ''
+
+    // reprise du brouillon : mêmes données (API simulée conservée)
+    const reopened = await mountApp(ComposeView, `/ecrire?draft=${draft.id}`, {}, { keepApi: true })
+    await flushPromises()
+    expect(reopened.wrapper.text()).toContain('convention.pdf')
   })
 })

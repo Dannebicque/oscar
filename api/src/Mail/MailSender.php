@@ -24,6 +24,7 @@ final class MailSender
         private readonly OutgoingMailer $mailer,
         private readonly MailboxReaderFactory $factory,
         private readonly LoggerInterface $logger,
+        private readonly IdentityResolver $identities,
     ) {
     }
 
@@ -31,21 +32,21 @@ final class MailSender
     public function send(User $user, MailAccount $account, SendMailRequest $r, ?Mail $replyTo = null, ?\DateTimeImmutable $now = null): array
     {
         $now ??= new \DateTimeImmutable();
-        $identity = $this->identity($user, $account, $r);
+        $identity = $this->identities->resolve($user, $account, $r->identityId);
         $email = (new Email())
-            ->from($identity !== null ? new Address($identity->getAddress(), $identity->getName()) : new Address($account->getAddress(), $user->getDisplayName()))
+            ->from($identity !== null ? new Address($identity->address, $identity->name) : new Address($account->getAddress(), $user->getDisplayName()))
             ->to(...array_map(static fn (string $a) => new Address($a), $r->to))
             ->subject($r->subject)
             ->text($r->body)
             ->date($now);
         // Signature HTML : le message part en texte ET en HTML ; la signature HTML remplace son équivalent texte dans le corps.
         // Si l'utilisateur a retouché ou retiré la signature, il n'y a pas de partie HTML : on n'ajoute rien qu'il n'ait voulu.
-        if ($identity?->getSignatureHtml() !== null && $identity->getSignature() !== null && ($pos = mb_strrpos($r->body, $identity->getSignature())) !== false) {
+        if ($identity?->signatureHtml !== null && $identity->signature !== null && ($pos = mb_strrpos($r->body, $identity->signature)) !== false) {
             $esc = static fn (string $t): string => nl2br(htmlspecialchars($t, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8'));
-            $email->html('<div>'.$esc(mb_substr($r->body, 0, $pos)).'</div><div>'.$identity->getSignatureHtml().'</div><div>'.$esc(mb_substr($r->body, $pos + mb_strlen($identity->getSignature()))).'</div>');
+            $email->html('<div>'.$esc(mb_substr($r->body, 0, $pos)).'</div><div>'.$identity->signatureHtml.'</div><div>'.$esc(mb_substr($r->body, $pos + mb_strlen($identity->signature))).'</div>');
         }
-        if ($identity?->getReplyTo() !== null) {
-            $email->replyTo(new Address($identity->getReplyTo()));
+        if ($identity?->replyTo !== null) {
+            $email->replyTo(new Address($identity->replyTo));
         }
         if ($r->cc !== []) {
             $email->cc(...array_map(static fn (string $a) => new Address($a), $r->cc));
@@ -90,20 +91,6 @@ final class MailSender
         }
 
         return ['messageId' => $messageId, 'suivi' => $suivi, 'savedToSent' => $saved];
-    }
-
-    /** @throws \InvalidArgumentException si l'identité n'existe pas, n'est pas à l'utilisateur ou n'est pas celle de ce compte */
-    private function identity(User $user, MailAccount $account, SendMailRequest $r): ?\App\Entity\Identity
-    {
-        if ($r->identityId === null || $r->identityId === '') {
-            return null;
-        }
-        $i = $this->em->find(\App\Entity\Identity::class, $r->identityId);
-        if ($i === null || $i->getOwner()->getId() !== $user->getId() || $i->getAccount()->getId() !== $account->getId()) {
-            throw new \InvalidArgumentException('Identité inconnue.');
-        }
-
-        return $i;
     }
 
     /** Réponse envoyée depuis une boîte partagée : journal de la demande et information des autres membres (F-68). */

@@ -61,7 +61,11 @@ export interface MailApi {
   /** Télécharge une pièce jointe (jamais affichée dans l'application). */
   download(id: string, a: Attachment): Promise<void>
   /** Dépose un brouillon dans le dossier Drafts du serveur (rien n'est envoyé) ; `replaces` : l'ancien brouillon part à la corbeille. */
-  saveDraft(p: Omit<SendPayload, 'attachments' | 'followHours' | 'followSuggestedByAi'> & { replaces?: string }): Promise<void>
+  saveDraft(p: Omit<SendPayload, 'followHours' | 'followSuggestedByAi'> & { replaces?: string }): Promise<void>
+  /** Copies (Cc, Cci) d'un brouillon : la liste des mails ne les garde pas. */
+  draftFields(id: string): Promise<{ cc: string[]; bcc: string[] }>
+  /** Une pièce jointe sous forme de fichier, pour la remettre dans l'éditeur (reprise d'un brouillon). */
+  attachmentFile(id: string, a: Attachment): Promise<File>
   /** Invitation d'agenda jointe au mail (F-25) et réponse déjà donnée. Lire ne change rien. */
   invitation(id: string): Promise<{ invitation: MailInvitation | null; response: InvitationResponse | null }>
   /** Répond à l'invitation (un clic de l'utilisateur) : la réponse part à l'organisateur ; accepté ou peut-être : l'événement entre dans l'agenda choisi. */
@@ -115,7 +119,11 @@ export interface AccountsApi {
     create(a: NewCalendarAccount): Promise<CalendarAccount>
     remove(id: string): Promise<void>
   }
-  shared: { list(): Promise<SharedMailboxInfo[]> }
+  shared: {
+    list(): Promise<SharedMailboxInfo[]>
+    /** Nom et signature de l'équipe pour les réponses « De : contact@ » (administrateur de la boîte). */
+    updateSender(id: string, p: { senderName: string | null; signature: string | null }): Promise<SharedMailboxInfo>
+  }
   /** Identités d'expéditeur et signatures. La principale de chaque compte existe d'office. */
   identities: {
     list(): Promise<Identity[]>

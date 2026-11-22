@@ -60,6 +60,19 @@ final class SharedMailboxController extends AbstractController
         $in = $r->toArray();
         isset($in['autoFollow']) && \is_bool($in['autoFollow']) && $box->setAutoFollow($in['autoFollow']);
         isset($in['aiEnabled']) && \is_bool($in['aiEnabled']) && $box->setAiEnabled($in['aiEnabled']);
+        // Identité d'envoi de l'équipe (réponses « De : contact@ ») : réservée aux administrateurs, comme le reste de la boîte.
+        if (\array_key_exists('senderName', $in)) {
+            if (!\is_string($in['senderName']) && $in['senderName'] !== null || mb_strlen((string) $in['senderName']) > 100 || preg_match('/[\r\n<>"]/', (string) $in['senderName'])) {
+                return new JsonResponse(['title' => 'Donne un nom de 100 caractères au plus, sans < > ni guillemets.', 'field' => 'senderName'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            $box->setSenderName($in['senderName']);
+        }
+        if (\array_key_exists('signature', $in)) {
+            if (!\is_string($in['signature']) && $in['signature'] !== null || mb_strlen((string) $in['signature']) > 2000) {
+                return new JsonResponse(['title' => 'La signature ne doit pas dépasser 2 000 caractères.', 'field' => 'signature'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            $box->setSignature($in['signature']);
+        }
         $this->em->flush();
 
         return new JsonResponse($this->view($box, $user));
@@ -128,6 +141,7 @@ final class SharedMailboxController extends AbstractController
     {
         return [
             'id' => $b->getId(), 'slug' => $b->getSlug(), 'address' => $b->getAddress(), 'name' => $b->getName(),
+            'senderName' => $b->getSenderName(), 'signature' => $b->getSignature(), 'identityId' => 'shared:'.$b->getId(),
             'role' => $b->memberOf($me)?->getRole(), 'autoFollow' => $b->isAutoFollow(), 'aiEnabled' => $b->isAiEnabled(),
             'members' => array_map(static fn (SharedMailboxMember $m) => ['username' => $m->getUser()->getUsername(), 'displayName' => $m->getUser()->getDisplayName(), 'role' => $m->getRole()], $b->getMembers()->toArray()),
         ];

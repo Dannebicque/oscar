@@ -12,6 +12,8 @@
 >
     <php>
         <ini name="display_errors" value="1" />
+        <!-- Les tests de pièces jointes manipulent plusieurs Mo en base64 : 128 Mo par défaut ne suffit pas toujours. -->
+        <ini name="memory_limit" value="512M" />
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />
         <!-- Dans le fichier, pas dans .env.test (non versionné) : la CI n'a que .env.example. -->

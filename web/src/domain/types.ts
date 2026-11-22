@@ -137,6 +137,10 @@ export interface SharedMailboxInfo {
   name: string
   role: 'member' | 'admin'
   aiEnabled: boolean
+  /** Identité d'envoi de l'équipe (« De : contact@ ») : nom affiché et signature réglés par un administrateur. */
+  senderName?: string | null
+  signature?: string | null
+  identityId?: string
   members: { username: string; displayName: string; role: 'member' | 'admin' }[]
 }
 
@@ -237,6 +241,8 @@ export interface Identity {
   isDefault: boolean
   /** Identité principale du compte : son adresse, non supprimable. */
   primary: boolean
+  /** Identité d'une boîte partagée (lecture seule ici, réglée par un administrateur de la boîte). */
+  shared?: boolean
 }
 export type IdentityInput = Pick<Identity, 'name' | 'address' | 'replyTo' | 'signature'> & { signatureHtml?: string | null; accountId?: string }
 

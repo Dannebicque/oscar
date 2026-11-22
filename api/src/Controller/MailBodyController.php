@@ -20,13 +20,19 @@ final class MailBodyController extends AbstractController
         if ($mail === null || $mail->getOwner()?->getId() !== $security->getUser()?->getId()) {
             return new JsonResponse(['title' => 'Mail inconnu'], Response::HTTP_NOT_FOUND);
         }
+        $extra = [];
         try {
-            $text = $factory->create($mail->getAccount())->fetchBody($mail->getFolder(), $mail->getUid());
+            $reader = $factory->create($mail->getAccount());
+            $text = $reader->fetchBody($mail->getFolder(), $mail->getUid());
+            // Un brouillon reprend aussi ses copies (Cc, Cci) : la liste des mails ne les garde pas.
+            if ($mail->getFolder() === 'Drafts') {
+                $extra = $reader->draftRecipients('Drafts', $mail->getUid());
+            }
         } catch (\Throwable) {
             return new JsonResponse(['title' => 'Le serveur de messagerie ne répond pas. Réessaie dans un instant.'], Response::HTTP_BAD_GATEWAY);
         }
         $paragraphs = $text === null ? [] : array_values(array_filter(array_map('trim', preg_split('/\R{2,}/', $text) ?: [])));
 
-        return new JsonResponse(['paragraphs' => $paragraphs]);
+        return new JsonResponse(['paragraphs' => $paragraphs] + $extra);
     }
 }

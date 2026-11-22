@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { api } from '../api'
 import type { CalendarAccount, Identity, IdentityInput, MailAccount, NewCalendarAccount, NewMailAccount, SharedMailboxInfo } from '../domain/types'
 
@@ -25,14 +25,30 @@ export const useAccountsStore = defineStore('accounts', () => {
   async function addCalendar(a: NewCalendarAccount) { calendar.value = [...calendar.value, await api.accounts.calendar.create(a)] }
   async function removeCalendar(id: string) { await api.accounts.calendar.remove(id); calendar.value = calendar.value.filter((a) => a.id !== id) }
 
-  /** Identité d'expéditeur par défaut, sinon la première. */
+  /** Identité d'expéditeur par défaut (toujours une identité personnelle), sinon la première. */
   const defaultIdentity = () => identities.value.find((i) => i.isDefault) ?? identities.value[0]
-  const identityOf = (id: string | null | undefined) => identities.value.find((i) => i.id === id)
+  /**
+   * Tout ce dont on peut écrire : les identités personnelles, puis celles des boîtes partagées dont on est membre (« De : contact@ »).
+   * Une boîte partagée s'envoie avec le premier compte de messagerie de l'utilisateur.
+   */
+  const senders = computed<Identity[]>(() => [
+    ...identities.value,
+    ...shared.value.filter((b) => b.identityId && mail.value[0]).map((b): Identity => ({
+      id: b.identityId!, accountId: mail.value[0].id, name: b.senderName || b.name, address: b.address, replyTo: null, signature: b.signature ?? null,
+      signatureHtml: null, isDefault: false, primary: false, shared: true,
+    })),
+  ])
+  const identityOf = (id: string | null | undefined) => senders.value.find((i) => i.id === id)
+  const sharedSenderOf = (slug: string) => senders.value.find((i) => i.shared && shared.value.find((b) => b.identityId === i.id)?.slug === slug)
+  async function updateSharedSender(id: string, p: { senderName: string | null; signature: string | null }) {
+    const b = await api.accounts.shared.updateSender(id, p)
+    shared.value = shared.value.map((x) => (x.id === id ? { ...x, ...b } : x))
+  }
   const reloadIdentities = async () => { identities.value = await api.accounts.identities.list() }
   async function addIdentity(i: IdentityInput & { accountId: string }) { const n = await api.accounts.identities.create(i); await reloadIdentities(); return n }
   async function saveIdentity(id: string, i: IdentityInput) { const n = await api.accounts.identities.update(id, i); await reloadIdentities(); return n }
   async function makeDefaultIdentity(id: string) { await api.accounts.identities.setDefault(id); await reloadIdentities() }
   async function removeIdentity(id: string) { await api.accounts.identities.remove(id); await reloadIdentities() }
 
-  return { identities, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
+  return { identities, senders, sharedSenderOf, updateSharedSender, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
 })

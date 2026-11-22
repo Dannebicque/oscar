@@ -16,7 +16,7 @@ describe('identités et signatures (F-19)', () => {
     await useAccountsStore(pinia).load()
     await flushPromises()
     const items = wrapper.findAll('.item')
-    expect(items).toHaveLength(2)
+    expect(items).toHaveLength(3) // deux identités personnelles + l'identité d'équipe de la boîte partagée
     expect(items[0].text()).toContain('Par défaut')
     expect(items[0].text()).toContain('Adresse du compte')
     expect(items[0].text()).not.toContain('Supprimer')
@@ -116,5 +116,39 @@ describe('signature en HTML', () => {
     expect(made.signatureHtml).not.toContain('script')
     expect(made.signature).toContain('Marc D.')
     void wrapper
+  })
+})
+
+describe('identité d’une boîte partagée', () => {
+  it('répondre à un mail de contact@ choisit « De : contact@ » avec la signature de l’équipe', async () => {
+    const { wrapper } = await mountApp(ComposeView, '/ecrire?reply=c1')
+    await flushPromises()
+    const select = wrapper.find('#from')
+    expect((select.element as HTMLSelectElement).value).toBe('shared:sm1')
+    expect(select.text()).toContain('Équipe Contact IUT <contact@iut-troyes.fr> · boîte partagée')
+    expect((wrapper.find('#body').element as HTMLTextAreaElement).value).toContain('L’équipe contact')
+    const send = vi.spyOn(api.mails, 'send')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    await vi.waitFor(() => expect(send).toHaveBeenCalled())
+    expect(send.mock.calls[0][0]).toMatchObject({ identityId: 'shared:sm1', accountId: 'acc1' })
+  })
+
+  it('un mail personnel reste sur l’identité personnelle ; l’identité d’équipe reste choisissable', async () => {
+    const { wrapper } = await mountApp(ComposeView, '/ecrire?reply=m1')
+    await flushPromises()
+    expect((wrapper.find('#from').element as HTMLSelectElement).value).toBe('id1')
+    expect(wrapper.findAll('#from option').map((o) => o.attributes('value'))).toContain('shared:sm1')
+  })
+
+  it('un administrateur règle le nom et la signature de l’équipe', async () => {
+    const { pinia } = await mountApp(IdentitiesPanel, '/reglages')
+    const accounts = useAccountsStore(pinia)
+    await accounts.load()
+    await flushPromises()
+    await accounts.updateSharedSender('sm1', { senderName: 'Accueil IUT', signature: '-- \nAccueil' })
+    expect(accounts.senders.find((i) => i.shared)).toMatchObject({ name: 'Accueil IUT', address: 'contact@iut-troyes.fr' })
+    await accounts.updateSharedSender('sm1', { senderName: null, signature: null })
+    expect(accounts.senders.find((i) => i.shared)!.name).toBe('Contact')
   })
 })

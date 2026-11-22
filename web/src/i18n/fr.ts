@@ -279,6 +279,8 @@ export default {
     signature: 'Signature', signatureHint: 'Texte brut, ajouté en bas de tes messages. Commence par « -- » sur une ligne seule pour le séparateur habituel.', preview: 'Aperçu',
     saved: 'Identité « {name} » enregistrée.', defaulted: '« {name} » est maintenant ton identité par défaut.', removed: 'Identité « {name} » supprimée.',
     deleteTitle: 'Supprimer « {name} » ?', deleteText: 'Seule l’identité est supprimée, pas le compte ni les mails. Les prochains messages partiront de ton identité par défaut.',
+    sharedTag: 'boîte partagée', teamTitle: 'Boîtes partagées', teamHelp: 'Quand tu réponds à un mail d’une boîte partagée, le message part « De : » l’adresse de la boîte, avec le nom et la signature de l’équipe. Seul un administrateur de la boîte les règle.',
+    adminOnly: 'Réglé par un administrateur', teamEdit: 'Identité d’équipe de {address}', teamNameHint: 'Ce que voit le destinataire, par exemple « Équipe Contact IUT ». Vide : le nom de la boîte.', teamSignatureHint: 'Texte brut, ajouté en bas des réponses de toute l’équipe.',
     from: 'De',
   },
   attach: {

@@ -12,7 +12,7 @@ class MailboxReaderFactory
     {
     }
 
-    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover&MailboxFolders
+    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover&MailboxFolders&MailboxDraftReader
     {
         return new WebklexMailboxReader($a->getImapHost(), $a->getImapPort(), $a->getUsername(), $this->vault->decrypt($a->getPasswordEncrypted()), $a->getImapEncryption(), $a->getImapEncryption() !== 'none');
     }

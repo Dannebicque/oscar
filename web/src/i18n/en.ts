@@ -279,6 +279,8 @@ const en: typeof fr = {
     signature: 'Signature', signatureHint: 'Plain text, added at the bottom of your messages. Start with “--” on its own line for the usual separator.', preview: 'Preview',
     saved: 'Identity “{name}” saved.', defaulted: '“{name}” is now your default identity.', removed: 'Identity “{name}” deleted.',
     deleteTitle: 'Delete “{name}”?', deleteText: 'Only the identity is deleted, not the account or the mails. Your next messages will go out from your default identity.',
+    sharedTag: 'shared mailbox', teamTitle: 'Shared mailboxes', teamHelp: 'When you reply to a mail from a shared mailbox, the message goes out “From:” the mailbox address, with the team’s name and signature. Only a mailbox administrator sets them.',
+    adminOnly: 'Set by an administrator', teamEdit: 'Team identity of {address}', teamNameHint: 'What the recipient sees, for example “Contact team”. Empty: the mailbox name.', teamSignatureHint: 'Plain text, added at the bottom of the whole team’s replies.',
     from: 'From',
   },
   attach: {

@@ -19,17 +19,16 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class SendMailController extends AbstractController
 {
     #[Route('/api/mails/send', methods: ['POST'])]
-    public function __invoke(#[MapRequestPayload] SendMailRequest $r, #[CurrentUser] User $user, EntityManagerInterface $em, MailSender $sender): JsonResponse
+    public function __invoke(#[MapRequestPayload] SendMailRequest $r, #[CurrentUser] User $user, EntityManagerInterface $em, MailSender $sender, \App\Mail\IdentityResolver $resolver): JsonResponse
     {
         $account = $em->find(MailAccount::class, $r->accountId);
         if ($account === null || $account->getOwner()?->getId() !== $user->getId()) {
             return new JsonResponse(['title' => 'Compte de messagerie inconnu.'], Response::HTTP_NOT_FOUND);
         }
-        if ($r->identityId !== null && $r->identityId !== '') {
-            $identity = $em->find(\App\Entity\Identity::class, $r->identityId);
-            if ($identity === null || $identity->getOwner()->getId() !== $user->getId() || $identity->getAccount()->getId() !== $account->getId()) {
-                return new JsonResponse(['title' => 'Cette identité d’expéditeur n’existe pas pour ce compte.', 'field' => 'identityId'], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        try {
+            $resolver->resolve($user, $account, $r->identityId);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['title' => 'Cette identité d’expéditeur n’existe pas pour ce compte.', 'field' => 'identityId'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $total = array_sum(array_map(static fn ($a) => (int) (\strlen((string) ($a['content'] ?? '')) * 0.75), $r->attachments));
         if ($total > $account->attachmentLimitBytes()) {

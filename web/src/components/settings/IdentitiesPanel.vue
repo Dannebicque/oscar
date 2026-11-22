@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError, api } from '../../api'
-import type { Identity } from '../../domain/types'
+import type { Identity, SharedMailboxInfo } from '../../domain/types'
 import { useAccountsStore } from '../../stores/accounts'
 import { useUiStore } from '../../stores/ui'
 import BaseButton from '../ui/BaseButton.vue'
@@ -56,6 +56,32 @@ function chooseFormat(v: 'text' | 'html') {
 const errors = ref<Record<string, string>>({})
 const busy = ref(false)
 const toDelete = ref<Identity | null>(null)
+
+/** Identité d'équipe d'une boîte partagée : réglée par un administrateur de la boîte, utilisée par tous ses membres. */
+const teamEdit = ref<SharedMailboxInfo | null>(null)
+const team = reactive({ senderName: '', signature: '' })
+const teamErrors = ref<Record<string, string>>({})
+function openTeam(b: SharedMailboxInfo) {
+  Object.assign(team, { senderName: b.senderName ?? '', signature: b.signature ?? '' })
+  teamErrors.value = {}
+  teamEdit.value = b
+}
+async function saveTeam() {
+  const b = teamEdit.value
+  if (!b) return
+  teamErrors.value = {}
+  busy.value = true
+  try {
+    await accounts.updateSharedSender(b.id, { senderName: team.senderName.trim() || null, signature: team.signature.trim() ? team.signature : null })
+    ui.notify(t('identities.saved', { name: team.senderName.trim() || b.name }))
+    teamEdit.value = null
+  } catch (e) {
+    if (e instanceof ApiError && (e.data as { field?: string }).field) teamErrors.value = { [(e.data as { field: string }).field]: e.message }
+    else ui.notify(e instanceof Error && e.message ? e.message : t('common.actionFailed'), { tone: 'error' })
+  } finally {
+    busy.value = false
+  }
+}
 
 const accountOptions = computed(() => accounts.mail.map((a) => ({ value: a.id, label: a.label })))
 const accountLabel = (id: string) => accounts.mail.find((a) => a.id === id)?.label ?? ''
@@ -137,6 +163,37 @@ async function remove() {
       </li>
     </ul>
   </BaseCard>
+
+  <BaseCard v-if="accounts.shared.length" class="stack" aria-labelledby="team-h">
+    <h3 id="team-h">{{ t('identities.teamTitle') }}</h3>
+    <p class="muted">{{ t('identities.teamHelp') }}</p>
+    <ul class="list">
+      <li v-for="b in accounts.shared" :key="b.id" class="item">
+        <div class="info">
+          <strong>{{ b.senderName || b.name }}</strong> <span class="addr">&lt;{{ b.address }}&gt;</span>
+          <span class="chips"><ToneChip tone="info" icon="users" :label="t('identities.sharedTag')" /></span>
+          <span class="muted line">{{ b.signature ? firstLines(b.signature) : t('identities.noSignature') }}</span>
+        </div>
+        <div class="acts">
+          <BaseButton v-if="b.role === 'admin'" icon="edit" :label="t('identities.edit')" @click="openTeam(b)" />
+          <span v-else class="muted line">{{ t('identities.adminOnly') }}</span>
+        </div>
+      </li>
+    </ul>
+  </BaseCard>
+
+  <BaseDialog :open="teamEdit !== null" :title="t('identities.teamEdit', { address: teamEdit?.address ?? '' })" @close="teamEdit = null">
+    <form id="team-form" class="stack" novalidate @submit.prevent="saveTeam">
+      <TextField id="team-name" v-model="team.senderName" :label="t('identities.name')" :hint="t('identities.teamNameHint')" :error="teamErrors.senderName" />
+      <TextareaField id="team-sig" v-model="team.signature" :label="t('identities.signatureText')" :rows="5" :hint="t('identities.teamSignatureHint')" :error="teamErrors.signature" />
+      <div v-if="team.signature.trim()" class="preview"><strong>{{ t('identities.preview') }}</strong><pre>{{ team.signature }}</pre></div>
+      <p class="hint">{{ t('identities.addressHint') }}</p>
+    </form>
+    <template #footer>
+      <BaseButton variant="primary" type="submit" form="team-form" :disabled="busy" :label="t('common.save')" />
+      <BaseButton :label="t('common.cancel')" @click="teamEdit = null" />
+    </template>
+  </BaseDialog>
 
   <BaseDialog :open="editing !== null" :title="t(isNew ? 'identities.newTitle' : 'identities.editTitle')" @close="editing = null">
     <form id="identity-form" class="stack" novalidate @submit.prevent="save">

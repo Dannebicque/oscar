@@ -55,7 +55,7 @@ const identity = computed(() => accounts.identityOf(identityId.value) ?? account
 /** La signature de l'identité choisie, sinon celle du compte, sinon celle d'Oscar. */
 const signatureOf = (id: { signature: string | null; accountId: string } | undefined) => id?.signature?.trim() || accounts.mail.find((a) => a.id === id?.accountId)?.signature?.trim() || t('compose.signature')
 const signature = () => signatureOf(identity.value)
-const identityOptions = computed(() => accounts.identities.map((i) => ({ value: i.id, label: `${i.name} <${i.address}>` })))
+const identityOptions = computed(() => accounts.senders.map((i) => ({ value: i.id, label: `${i.name} <${i.address}>${i.shared ? ` · ${t('identities.sharedTag')}` : ''}` })))
 /** En changeant d'identité, la signature suit, sauf si l'utilisateur l'a retouchée à la main. */
 watch(identityId, (next, prev) => {
   const from = accounts.identityOf(prev)
@@ -124,8 +124,10 @@ onMounted(async () => {
   if (acc?.relanceHours) delayHours.value = acc.relanceHours
   // Identité d'envoi : celle à laquelle le mail reçu était adressé (un alias), sinon l'identité par défaut.
   const orig = route.query.reply ? mails.byId(String(route.query.reply)) : undefined
+  // Une réponse à un mail de la boîte partagée part « De : contact@ » (l'identité de l'équipe) ; sinon, l'alias auquel le mail était adressé.
+  const fromTeam = orig && orig.mailbox !== 'personal' ? accounts.sharedSenderOf(orig.mailbox) : undefined
   const addressed = orig ? accounts.identities.find((i) => orig.to.some((x) => x.address.toLowerCase() === i.address.toLowerCase())) : undefined
-  identityId.value = (addressed ?? accounts.defaultIdentity())?.id ?? ''
+  identityId.value = (fromTeam ?? addressed ?? accounts.defaultIdentity())?.id ?? ''
   // Envoi annulé (ou parti en échec) : on reprend le message exactement où il était.
   const back = route.query.restore ? outgoing.takeRestore() : null
   if (back) {
@@ -148,6 +150,14 @@ onMounted(async () => {
     await mails.loadBody(dr.id)
     body.value = mails.byId(dr.id)?.paragraphs.join('\n\n') ?? ''
     follow.value = false
+    // Ce que la liste ne garde pas : copies, pièces jointes, identité d'envoi (retrouvée par l'adresse « De »).
+    const sender = accounts.senders.find((i) => i.address.toLowerCase() === dr.from.address.toLowerCase())
+    if (sender) identityId.value = sender.id
+    const [extra, list] = await Promise.all([api.mails.draftFields(dr.id).catch(() => ({ cc: [], bcc: [] })), mails.loadAttachments(dr.id).then(() => mails.byId(dr.id)?.attachments ?? []).catch(() => [])])
+    cc.value = extra.cc; bcc.value = extra.bcc
+    showCc.value = extra.cc.length > 0 || extra.bcc.length > 0
+    files.value = (await Promise.all(list.map((a) => api.mails.attachmentFile(dr.id, a).catch(() => null)))).filter((f): f is File => f !== null)
+    quoteOn.value = false
     return
   }
   const fwd = route.query.forward ? mails.byId(String(route.query.forward)) : undefined
@@ -309,10 +319,9 @@ async function schedule() {
 }
 async function saveDraft() {
   try {
-    await mails.saveDraft({
-      to: to.value, cc: cc.value, bcc: bcc.value, subject: subject.value.trim(), body: body.value,
-      inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined, replaces: draftId.value ?? undefined,
-    })
+    // Le brouillon garde tout : copies, pièces jointes et identité d'envoi (rien n'est envoyé ni suivi).
+    const { followHours: _h, followSuggestedByAi: _a, ...rest } = await buildPayload()
+    await mails.saveDraft({ ...rest, body: body.value, replaces: draftId.value ?? undefined })
     // Le brouillon enregistré remplace l'ancien : on repart du plus récent de la boîte « Brouillons ».
     draftId.value = mails.inFolder('personal', 'drafts').value.find((m) => m.subject === subject.value.trim())?.id ?? null
     ui.notify(t('compose.draftSaved'), { tone: 'info' })
@@ -335,7 +344,7 @@ async function saveDraft() {
       </article>
 
       <section class="card compose-card stack" :aria-label="t('compose.title')">
-        <SelectField v-if="accounts.identities.length > 1" id="from" v-model="identityId" :label="t('identities.from')" :options="identityOptions" />
+        <SelectField v-if="accounts.senders.length > 1" id="from" v-model="identityId" :label="t('identities.from')" :options="identityOptions" />
         <div class="field">
           <label for="to">{{ t('compose.to') }}</label>
           <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />

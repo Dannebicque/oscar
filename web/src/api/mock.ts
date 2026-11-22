@@ -55,6 +55,12 @@ export function createMockApi(now: Date = new Date()): Api {
     { path: 'Projets/Jury de janvier', name: 'Jury de janvier', delimiter: '/', system: false, count: 0 },
     { path: 'Scolarité', name: 'Scolarité', delimiter: '/', system: false, count: 0 },
   ]
+  const drafts = new Map<string, { cc: string[]; bcc: string[]; files: { name: string; type: string; content: string }[] }>()
+  let sharedSender: { senderName: string | null; signature: string | null } = { senderName: 'Équipe Contact IUT', signature: '-- \nL’équipe contact\nIUT de Troyes' }
+  const sharedInfo = () => ({
+    id: 'sm1', slug: SHARED.id, address: SHARED.address, name: 'Contact', role: 'admin' as const, aiEnabled: false, identityId: 'shared:sm1', ...sharedSender,
+    members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })),
+  })
   let scheduledMails: { row: ScheduledMail; payload: SendPayload }[] = []
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
@@ -195,8 +201,17 @@ export function createMockApi(now: Date = new Date()): Api {
         scheduledMails = scheduledMails.filter((y) => y !== x)
         return x.payload
       },
+      async draftFields(id) { const d = drafts.get(id); return { cc: d?.cc ?? [], bcc: d?.bcc ?? [] } },
+      async attachmentFile(id, a) {
+        const c = drafts.get(id)?.files.find((f) => f.name === a.name)
+        if (!c) throw new ApiError(404, 'download')
+        return new File([Uint8Array.from(atob(c.content), (ch) => ch.charCodeAt(0))], c.name, { type: c.type })
+      },
       async saveDraft(p) {
-        mails = [...mails.filter((x) => x.id !== p.replaces), m(`d${Date.now()}`, { folder: 'drafts', from: { name: ME, address: 'david@iut-troyes.fr' }, to: p.to.map((a) => ({ name: a, address: a })), subject: p.subject, at: new Date().toISOString(), paragraphs: p.body.split(/\n{2,}/).filter(Boolean) })]
+        const draftId = `d${Date.now()}`
+        drafts.delete(p.replaces ?? '')
+        drafts.set(draftId, { cc: p.cc, bcc: p.bcc, files: p.attachments ?? [] })
+        mails = [...mails.filter((x) => x.id !== p.replaces), m(draftId, { attachments: (p.attachments ?? []).map((a, index) => ({ name: a.name, size: `${Math.max(1, Math.round((a.content.length * 0.75) / 1024))} Ko`, index })), folder: 'drafts', from: { name: ME, address: 'david@iut-troyes.fr' }, to: p.to.map((a) => ({ name: a, address: a })), subject: p.subject, at: new Date().toISOString(), paragraphs: p.body.split(/\n{2,}/).filter(Boolean) })]
       },
       async invitation(id) { const m = findMail(id); return { invitation: clone(m?.invitation ?? null), response: m?.invitationResponse ?? null } },
       async replyInvitation(id, p) {
@@ -285,7 +300,10 @@ export function createMockApi(now: Date = new Date()): Api {
         async create(a) { const { password: _p, ...rest } = a; const n = { ...rest, kind: 'caldav' as const, id: uid('cal') }; calendarAccounts.push(n); return clone(n) },
         async remove(id) { const i = calendarAccounts.findIndex((a) => a.id === id); if (i >= 0) calendarAccounts.splice(i, 1) },
       },
-      shared: { async list() { return [{ id: 'sm1', slug: SHARED.id, address: SHARED.address, name: 'Contact', role: 'admin' as const, aiEnabled: false, members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })) }] } },
+      shared: {
+        async list() { return [sharedInfo()] },
+        async updateSender(_id, p) { sharedSender = { senderName: p.senderName?.trim() || null, signature: p.signature?.trim() ? p.signature : null }; return sharedInfo() },
+      },
     },
     directory: {
       async status() { return { configured: false } },

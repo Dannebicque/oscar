@@ -4,6 +4,7 @@ namespace App\Tests\Support;
 
 use App\Entity\MailAccount;
 use App\Mail\MailboxAppender;
+use App\Mail\MailboxDraftReader;
 use App\Mail\MailboxFolders;
 use App\Mail\MailboxMover;
 use App\Mail\MailboxReader;
@@ -20,6 +21,8 @@ final class FakeReaderFactory extends MailboxReaderFactory
     public static array $moved = [];
     public static bool $moveFails = false;
     public static ?string $ics = null;
+    /** @var array{cc: list<string>, bcc: list<string>} servis par draftRecipients */
+    public static array $draftRecipients = ['cc' => [], 'bcc' => []];
     /** @var list<string> dossiers personnels simulés (chemins avec « / ») */
     public static array $folders = [];
     /** @var array<string, int> messages que le serveur garde par dossier */
@@ -34,13 +37,13 @@ final class FakeReaderFactory extends MailboxReaderFactory
         parent::__construct($vault);
     }
 
-    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover&MailboxFolders
+    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover&MailboxFolders&MailboxDraftReader
     {
         if ($a->getImapPort() === 1) {
             throw new \RuntimeException('connexion refusée (port 1, simulé)');
         }
 
-        return new class implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders {
+        return new class implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders, MailboxDraftReader {
             public function move(string $folder, int $uid, string $messageId, string $target): ?int
             {
                 if (FakeReaderFactory::$moveFails) {
@@ -50,6 +53,7 @@ final class FakeReaderFactory extends MailboxReaderFactory
 
                 return 500 + $uid;
             }
+            public function draftRecipients(string $folder, int $uid): array { return FakeReaderFactory::$draftRecipients; }
             public function folders(): array
             {
                 $base = array_map(static fn (string $p) => ['path' => $p, 'name' => $p, 'delimiter' => '/'], ['INBOX', 'Sent', 'Drafts', 'Trash', 'Archive']);

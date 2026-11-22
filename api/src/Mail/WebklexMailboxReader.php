@@ -6,7 +6,7 @@ use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Message;
 
 /** Lecture IMAP via webklex/php-imap (PHP pur, sans l'extension imap retirée du noyau). */
-final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders
+final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders, MailboxDraftReader
 {
     private ?\Webklex\PHPIMAP\Client $client = null;
 
@@ -146,6 +146,24 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
     private function message(string $folder, int $uid): ?Message
     {
         return $this->client()->getFolderByPath($folder)?->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(true)->get()->first();
+    }
+
+    public function draftRecipients(string $folder, int $uid): array
+    {
+        $m = $this->client()->getFolderByPath($folder)?->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(false)->get()->first();
+        $list = static function ($attr): array {
+            $out = [];
+            foreach ($attr?->all() ?? [] as $a) {
+                $address = strtolower(trim((string) ($a->mail ?? '')));
+                if ($address !== '' && filter_var($address, \FILTER_VALIDATE_EMAIL)) {
+                    $out[] = $address;
+                }
+            }
+
+            return array_values(array_unique($out));
+        };
+
+        return ['cc' => $m === null ? [] : $list($m->getCc()), 'bcc' => $m === null ? [] : $list($m->getBcc())];
     }
 
     public function fetchBody(string $folder, int $uid): ?string
