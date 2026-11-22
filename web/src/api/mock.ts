@@ -30,6 +30,13 @@ export function createMockApi(now: Date = new Date()): Api {
     base('s3', { subject: 'Salle B104 pour le jury', contact: 'Scolarité', direction: 'toHandle', status: 'inProgress', dueAt: day(-3), mailId: 'm3', reason: 'Échéance dépassée depuis 3 jours.', journal: [entry(96, ME, 'created')] }),
     base('s4', { subject: 'Convention de stage', contact: 'Claire Petit', status: 'waiting', dueAt: day(6), relanceAt: day(3), mailId: 'm4', journal: [entry(20, ME, 'created')] }),
     base('s5', { subject: 'Matériel de TP', contact: 'Service achats', status: 'done', dueAt: day(-8), journal: [entry(200, ME, 'created'), entry(150, ME, 'closed')] }),
+    // Historique pour le bilan : des demandes déjà traitées, avec le délai de réponse de chacun (jamais affichées comme à faire).
+    base('h1', { subject: 'Convention 2025 : signature', contact: 'Claire Petit', status: 'done', dueAt: day(-30), relanceCount: 1, journal: [entry(24 * 40, ME, 'sent'), entry(24 * 38, 'Claire Petit', 'replyReceived'), entry(24 * 37, ME, 'closed')] }),
+    base('h2', { subject: 'Réservation de la salle B12', contact: 'Scolarité', status: 'done', dueAt: day(-20), journal: [entry(24 * 25, ME, 'sent'), entry(24 * 25 - 5, 'Scolarité', 'replyReceived'), entry(24 * 24, ME, 'closed')] }),
+    base('h3', { subject: 'Devis des affiches : version 1', contact: 'Marc Dubois', status: 'done', dueAt: day(-45), relanceCount: 2, journal: [entry(24 * 60, ME, 'sent'), entry(24 * 54, 'Marc Dubois', 'replyReceived'), entry(24 * 53, ME, 'closed')] }),
+    base('h4', { subject: 'Programme des soutenances', contact: 'Sophie Laurent', status: 'done', dueAt: day(-10), journal: [entry(24 * 14, ME, 'sent'), entry(24 * 14 - 3, 'Sophie Laurent', 'replyReceived'), entry(24 * 13, ME, 'closed')] }),
+    base('h5', { subject: 'Question sur le stage', contact: 'Service achats', status: 'waiting', dueAt: day(-5), relanceCount: 1, relanceAt: day(1), journal: [entry(24 * 12, ME, 'sent')] }),
+    base('h6', { subject: 'Relance facture TP', contact: 'Service achats', status: 'waiting', dueAt: day(-2), journal: [entry(24 * 9, ME, 'sent')] }),
     base('s6', { subject: 'Question d’inscription', contact: 'Camille Roux', direction: 'toHandle', status: 'inProgress', mailbox: 'contact', responsible: null, dueAt: day(1), mailId: 'c1', journal: [entry(5, 'Claire', 'take')] }),
     base('s7', { subject: 'Demande de visite de l’IUT', contact: 'Lycée Camus', direction: 'toHandle', status: 'new', mailbox: 'contact', responsible: null, dueAt: day(4), mailId: 'c2', suggestedByAi: true, reason: 'Arrivé sur contact@ depuis 28 h, personne ne l’a pris.' }),
   ]

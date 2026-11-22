@@ -6,6 +6,7 @@ import NewSuiviDialog from '../components/suivis/NewSuiviDialog.vue'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
 import RelanceDialog from '../components/suivis/RelanceDialog.vue'
 import SuiviKpis, { type KpiId } from '../components/suivis/SuiviKpis.vue'
+import SuiviHealth from '../components/suivis/SuiviHealth.vue'
 import SuiviBoard from '../components/suivis/SuiviBoard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import Callout from '../components/ui/Callout.vue'
@@ -40,7 +41,7 @@ const { say } = useOscar()
 const accounts = useAccountsStore()
 const now = useNow()
 
-type View = 'priorities' | 'board'
+type View = 'priorities' | 'board' | 'health'
 type KindFilter = 'all' | ItemKind
 const view = ref<View>('priorities')
 const kind = ref<KindFilter>('all')
@@ -82,10 +83,12 @@ const scopeOptions = computed(() => [
   ...(accounts.shared.length ? [{ value: 'team' as Scope, label: t('suivis.team', { address: accounts.shared[0].address.split('@')[0] + '@' }) }] : []),
 ])
 const viewOptions = computed(() => [
-  { value: 'priorities' as const, label: t('suivis.priorities') },
-  { value: 'board' as const, label: t('suivis.board') },
+  { value: 'priorities' as View, label: t('suivis.priorities') },
+  { value: 'board' as View, label: t('suivis.board') },
+  // Le bilan porte sur mes demandes ; la boîte partagée n'a pas de responsable à qui l'attribuer.
+  ...(store.scope === 'mine' ? [{ value: 'health' as View, label: t('suivis.health') }] : []),
 ])
-watch(() => store.scope, () => { kpi.value = null; kind.value = 'all' })
+watch(() => store.scope, () => { kpi.value = null; kind.value = 'all'; if (view.value === 'health') view.value = 'priorities' })
 const rdvAhead = computed(() => all.value.filter((i) => i.kind === 'rdv' && i.flag === 'dueToday').length)
 const teamNew = computed(() => mails.items.filter((m) => m.claim?.state === 'new').length)
 /** Synthèse d'Oscar (maquette) : comptes locaux, aucun contenu de mail ne la nourrit. */
@@ -157,6 +160,8 @@ function suggest(accept: boolean) {
 
     <div class="layout">
     <div class="stack">
+      <SuiviHealth v-if="view === 'health'" @list="view = 'priorities'" />
+      <template v-else>
       <NextEventCard v-if="store.scope === 'mine'" :now="now" />
 
       <Callout :level="2" v-if="store.scope === 'mine' && store.relances.length" tone="warn" icon="clock" :title="t('suivis.relancesTitle', { n: store.relances.length }, store.relances.length)">
@@ -181,9 +186,9 @@ function suggest(accept: boolean) {
         </ol>
       </template>
       <SuiviBoard v-else :items="store.inScope" @open="(s) => openMail(s.mailId)" />
-
+      </template>
     </div>
-    <aside v-if="recent.length || groupOpen" class="aside" :aria-label="t('suivis.activity')">
+    <aside v-if="view !== 'health' && (recent.length || groupOpen)" class="aside" :aria-label="t('suivis.activity')">
       <h2 id="act-h">{{ t('suivis.activity') }}</h2>
       <ul v-if="recent.length" class="activity">
         <li v-for="(j, n) in recent" :key="n"><span class="muted">{{ fmt.dateTime(j.at) }}</span><br /><strong>{{ j.author }}</strong> · {{ fmt.journal(j) }} · {{ j.subject }}</li>
