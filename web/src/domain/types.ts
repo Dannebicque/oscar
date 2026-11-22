@@ -221,7 +221,7 @@ export interface CalEvent {
   attendees?: { name: string; address: string }[]
 }
 
-export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed'
+export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed' | 'meetingSoon'
 export interface AppNotification {
   id: string
   kind: NotificationKind

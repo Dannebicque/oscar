@@ -55,7 +55,7 @@ describe('réglages complétés : relance par compte, règles de suivi, canaux, 
   it('un canal par type de notification, écrit dans les réglages et lu avec ses valeurs par défaut (F-75)', async () => {
     const { wrapper, pinia } = await mountApp(NotificationChannels, '/alertes')
     const boxes = () => wrapper.findAll('input[type="checkbox"]')
-    expect(boxes()).toHaveLength(12)
+    expect(boxes()).toHaveLength(15)
     const email = wrapper.find('input[aria-label="Réponse reçue : E-mail"]')
     expect((email.element as HTMLInputElement).checked).toBe(false)
     await email.setValue(true)

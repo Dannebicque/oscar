@@ -207,9 +207,10 @@ const en: typeof fr = {
       replyReceived: '{who} replied to “{subject}”.',
       relanceDue: 'Reminder due: “{subject}” ({who}). | {n} reminders to send.',
       invitation: 'Invitation: {title}.', connectionFailed: '{account}: reconnection needed.',
+      meetingSoon: '“{title}” starts in {minutes} min. | “{title}” starts in {minutes} min. 1 recent exchange with {who} in Oscar. | “{title}” starts in {minutes} min. {n} recent exchanges with {who} in Oscar.',
       scheduledFailed: 'Not sent: “{subject}” could not be sent. Reopen it under Scheduled.',
       takenOver: '{who} took over “{subject}”.', memberReplied: '{who} replied to “{subject}”.',
-    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { scheduledFailed: 'Scheduled send failed', replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
+    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { meetingSoon: 'Meeting soon', scheduledFailed: 'Scheduled send failed', replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
   journal: {
     log: 'Log',
     messages: {
@@ -382,6 +383,7 @@ const en: typeof fr = {
       never: 'A rule only creates a “to handle” follow-up. Nothing is sent, nothing is closed, and automatic messages (out-of-office, newsletters) are ignored.',
     },
     confirmDelete: 'Confirm before trashing', confirmDeleteHelp: 'A window asks you to confirm before moving mail to trash. The message stays recoverable and an Undo button follows every move.',
+    meeting: { legend: 'Reminder before a meeting', off: 'No reminder', minutes: '{n} minutes before', help: 'A notification at the chosen time, with the number of recent mail exchanges with the participants. Computed locally: the AI receives nothing from your calendar.' },
     undoSend: { legend: 'Undo send', off: 'Send right away', seconds: '{n} seconds', help: 'After you click “Send”, the message waits this long before it leaves: you can undo it. Nothing leaves without your click.' },
     relances: {
       delay: 'Delay before a reminder', delayHelp: 'Default for the account david{\'@\'}iut-troyes.fr', h24: '24 hours', h48: '48 hours', h72: '3 days', h168: '1 week',

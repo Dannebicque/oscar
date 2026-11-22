@@ -6,11 +6,11 @@ import BaseCard from '../ui/BaseCard.vue'
 /** Comment être prévenu (F-75) : un canal par type d'événement. Défauts : application et bureau ; l'e-mail pour une connexion en échec persistante. */
 const { t } = useI18n()
 const settings = useSettingsStore()
-const TYPES = ['replyReceived', 'relanceDue', 'invitation', 'connectionFailed'] as const
+const TYPES = ['replyReceived', 'relanceDue', 'invitation', 'meetingSoon', 'connectionFailed'] as const
 const CHANNELS = ['app', 'desktop', 'email'] as const
 const DEFAULTS: Record<string, Record<string, boolean>> = {
   replyReceived: { app: true, desktop: true, email: false }, relanceDue: { app: true, desktop: true, email: false },
-  invitation: { app: true, desktop: true, email: false }, connectionFailed: { app: true, desktop: true, email: true },
+  invitation: { app: true, desktop: true, email: false }, meetingSoon: { app: true, desktop: true, email: false }, connectionFailed: { app: true, desktop: true, email: true },
 }
 const on = (type: string, ch: string) => settings.s.notifyChannels[type]?.[ch] ?? DEFAULTS[type][ch]
 function set(type: string, ch: string, v: boolean) {

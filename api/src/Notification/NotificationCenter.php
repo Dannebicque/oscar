@@ -19,7 +19,7 @@ use Symfony\Component\Mime\Email;
  */
 final class NotificationCenter
 {
-    public const TYPES = ['replyReceived', 'relanceDue', 'invitation', 'connectionFailed'];
+    public const TYPES = ['replyReceived', 'relanceDue', 'invitation', 'connectionFailed', 'meetingSoon'];
     public const CHANNELS = ['app', 'desktop', 'email'];
     /** Par défaut : dans l'application et sur le bureau ; l'e-mail seulement pour une connexion en échec persistante. */
     public const DEFAULTS = [
@@ -27,6 +27,7 @@ final class NotificationCenter
         'relanceDue' => ['app' => true, 'desktop' => true, 'email' => false],
         'invitation' => ['app' => true, 'desktop' => true, 'email' => false],
         'connectionFailed' => ['app' => true, 'desktop' => true, 'email' => true],
+        'meetingSoon' => ['app' => true, 'desktop' => true, 'email' => false],
     ];
 
     public function __construct(
@@ -105,6 +106,9 @@ final class NotificationCenter
             'relanceDue' => (int) ($p['n'] ?? 1) > 1
                 ? ($l === 'en' ? ['Reminders due', (int) $p['n'].' reminders are ready to review. Nothing is sent without your click.'] : ['Relances dues', (int) $p['n'].' relances sont prêtes à relire. Rien ne part sans ton clic.'])
                 : ($l === 'en' ? ['Reminder due', "$who has not replied to “$subject”. A draft is ready, nothing is sent without your click."] : ['Relance due', "$who n’a pas répondu à « $subject ». Un brouillon est prêt, rien ne part sans ton clic."]),
+            'meetingSoon' => $l === 'en'
+                ? ['Meeting soon', '“'.(string) ($p['title'] ?? '').'” starts in '.(int) ($p['minutes'] ?? 0).' min.'.((int) ($p['n'] ?? 0) > 0 ? ' '.(int) $p['n'].' recent exchange(s) with '.(string) ($p['who'] ?? '').' are in Oscar.' : '')]
+                : ['Rendez-vous imminent', '« '.(string) ($p['title'] ?? '').' » commence dans '.(int) ($p['minutes'] ?? 0).' min.'.((int) ($p['n'] ?? 0) > 0 ? ' '.(int) $p['n'].' échange(s) récent(s) avec '.(string) ($p['who'] ?? '').' dans Oscar.' : '')],
             'connectionFailed' => $l === 'en' ? ['Connection problem', 'Oscar cannot reach “'.(string) ($p['account'] ?? '').'”. Check the account in Settings.'] : ['Connexion en échec', 'Oscar n’arrive pas à joindre « '.(string) ($p['account'] ?? '').' ». Vérifie le compte dans Réglages.'],
             default => $l === 'en' ? ['Notification', 'Open Oscar to see what is waiting.'] : ['Notification', 'Ouvre Oscar pour voir ce qui t’attend.'],
         };

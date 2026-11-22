@@ -207,9 +207,10 @@ export default {
       replyReceived: '{who} a répondu à « {subject} ».',
       relanceDue: 'Relance due : « {subject} » ({who}). | {n} relances à faire.',
       invitation: 'Invitation : {title}.', connectionFailed: '{account} : reconnexion nécessaire.',
+      meetingSoon: '« {title} » commence dans {minutes} min. | « {title} » commence dans {minutes} min. 1 échange récent avec {who} dans Oscar. | « {title} » commence dans {minutes} min. {n} échanges récents avec {who} dans Oscar.',
       scheduledFailed: 'Pas parti : « {subject} » n’a pas pu être envoyé. Rouvre-le dans Programmés.',
       takenOver: '{who} a repris « {subject} ».', memberReplied: '{who} a répondu à « {subject} ».',
-    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { scheduledFailed: 'Envoi programmé en échec', replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
+    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { meetingSoon: 'Rendez-vous imminent', scheduledFailed: 'Envoi programmé en échec', replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
   journal: {
     log: 'Journal',
     messages: {
@@ -382,6 +383,7 @@ export default {
       never: 'Une règle ne crée qu’un suivi « à traiter ». Rien n’est envoyé, rien n’est clos, et les messages automatiques (absence, newsletters) sont ignorés.',
     },
     confirmDelete: 'Confirmer avant la corbeille', confirmDeleteHelp: 'Une fenêtre te demande confirmation avant de mettre des mails à la corbeille. Le message reste récupérable et un bouton Annuler suit chaque déplacement.',
+    meeting: { legend: 'Rappel avant un rendez-vous', off: 'Pas de rappel', minutes: '{n} minutes avant', help: 'Une notification à l’heure choisie, avec le nombre d’échanges de mails récents avec les participants. Calcul local : l’IA ne reçoit rien de ton agenda.' },
     undoSend: { legend: 'Annuler l’envoi', off: 'Envoyer tout de suite', seconds: '{n} secondes', help: 'Après ton clic sur « Envoyer », le message attend ce délai avant de partir : tu peux l’annuler. Rien ne part sans ton clic.' },
     relances: {
       delay: 'Délai avant relance', delayHelp: 'Par défaut, pour le compte david{\'@\'}iut-troyes.fr', h24: '24 heures', h48: '48 heures', h72: '3 jours', h168: '1 semaine',

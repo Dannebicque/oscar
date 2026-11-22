@@ -37,6 +37,8 @@ export interface Settings {
   dirShowPhone: boolean
   /** Ton d'Oscar : léger (pointe d'humour) ou sobre. L'humour disparaît toujours dans une erreur. */
   oscarTone: 'light' | 'neutral'
+  /** Rappel avant un rendez-vous, en minutes (0 = pas de rappel). */
+  meetingLeadMinutes: 0 | 5 | 10 | 15 | 30
   /** Demander confirmation avant de mettre des mails à la corbeille. */
   confirmDelete: boolean
   /** Délai d'annulation de l'envoi, en secondes (0 = envoi immédiat) (F-73). */
@@ -46,7 +48,7 @@ export interface Settings {
 }
 
 export const DEFAULTS: Settings = {
-  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, confirmDelete: true, undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
+  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, confirmDelete: true, meetingLeadMinutes: 15, undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
   recapMorning: '08:00', recapEvening: '17:30', recapEmail: true, recapHome: true, includePersonalCalendar: false,
   shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true, notifyChannels: {}, dirShowDepartment: true, dirShowPhone: false,
 }
@@ -55,7 +57,7 @@ const KEY = 'oscar.settings'
 
 /** Réglages que le serveur applique (relances, récaps, mode d'IA). Les autres restent sur l'appareil. */
 export const SERVER_KEYS = [
-  'relanceHours', 'businessDays', 'dailyCap', 'recapMorning', 'recapEvening', 'recapEmail', 'recapHome', 'includePersonalCalendar',
+  'relanceHours', 'businessDays', 'dailyCap', 'meetingLeadMinutes', 'recapMorning', 'recapEvening', 'recapEmail', 'recapHome', 'includePersonalCalendar',
   'shareBusy', 'aiMode', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'notifyChannels', 'dirShowDepartment', 'dirShowPhone', 'locale',
 ] as const
 
@@ -77,6 +79,7 @@ export function parseSettings(raw: string | null): Settings {
     if (!DENSITIES.includes(out.density)) out.density = DEFAULTS.density
     if (out.locale !== 'fr' && out.locale !== 'en') out.locale = DEFAULTS.locale
     if (!['university', 'external', 'off'].includes(out.aiMode)) out.aiMode = DEFAULTS.aiMode
+    if (![0, 5, 10, 15, 30].includes(out.meetingLeadMinutes)) out.meetingLeadMinutes = DEFAULTS.meetingLeadMinutes
     if (![0, 5, 10, 20, 30].includes(out.undoSendSeconds)) out.undoSendSeconds = DEFAULTS.undoSendSeconds
     if (!['light', 'neutral'].includes(out.oscarTone)) out.oscarTone = DEFAULTS.oscarTone
   } catch {

@@ -13,7 +13,7 @@ class UserSettings
     public const DEFAULTS = [
         'relanceHours' => 48, 'businessDays' => true, 'dailyCap' => 5, 'recapMorning' => '08:00', 'recapEvening' => '17:30',
         'recapEmail' => true, 'recapHome' => true, 'includePersonalCalendar' => false, 'shareBusy' => false,
-        'aiMode' => 'university', 'timezone' => 'Europe/Paris', 'locale' => 'fr', 'aiSuggestFollow' => true, 'aiSuggestTasks' => true, 'aiDraftRelance' => true,
+        'meetingLeadMinutes' => 15, 'aiMode' => 'university', 'timezone' => 'Europe/Paris', 'locale' => 'fr', 'aiSuggestFollow' => true, 'aiSuggestTasks' => true, 'aiDraftRelance' => true,
         // Canaux par type de notification (F-75) : voir NotificationCenter::DEFAULTS.
         'notifyChannels' => [],
         // Annuaire (F-18) : champs affichés sous le nom, en plus de nom, prénom et e-mail.

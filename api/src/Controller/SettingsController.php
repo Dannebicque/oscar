@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class SettingsController extends AbstractController
 {
     private const RULES = [
-        'relanceHours' => [24, 48, 72, 168], 'dailyCap' => [3, 5, 10], 'aiMode' => ['university', 'external', 'off'], 'locale' => ['fr', 'en'],
+        'relanceHours' => [24, 48, 72, 168], 'dailyCap' => [3, 5, 10], 'meetingLeadMinutes' => [0, 5, 10, 15, 30], 'aiMode' => ['university', 'external', 'off'], 'locale' => ['fr', 'en'],
     ];
     private const BOOLS = ['businessDays', 'recapEmail', 'recapHome', 'includePersonalCalendar', 'shareBusy', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'dirShowDepartment', 'dirShowPhone'];
     private const TIMES = ['recapMorning', 'recapEvening'];
