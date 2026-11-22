@@ -8,7 +8,7 @@ import { useUiStore } from './stores/ui'
 
 /** Chaque route : clé de titre i18n. Les vues sont chargées à la demande. */
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/installation', name: 'setup', component: () => import('./views/SetupView.vue'), meta: { title: 'setup.title', public: true } },
     { path: '/connexion', name: 'login', component: () => import('./views/LoginView.vue'), meta: { title: 'login.title', public: true } },

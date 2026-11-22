@@ -5,7 +5,8 @@
 import { isDesktop } from '../desktop/bridge'
 
 export function registerServiceWorker() {
-  if (!import.meta.env.PROD || isDesktop() || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+  // La démo publique (VITE_DEMO) n'installe pas de service worker : elle vit sous un sous-chemin du site de présentation.
+  if (!import.meta.env.PROD || import.meta.env.VITE_DEMO === 'true' || isDesktop() || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
   window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js').catch(() => undefined) })
 }
 

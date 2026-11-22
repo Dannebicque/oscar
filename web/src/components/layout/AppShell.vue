@@ -8,6 +8,7 @@ import { useSettingsStore } from '../../stores/settings'
 import { useSwipeNav } from '../../composables/useSwipeNav'
 import { useShortcuts } from '../../composables/useShortcuts'
 import { useSystemStore } from '../../stores/system'
+import DemoBanner from './DemoBanner.vue'
 import OfflineBanner from './OfflineBanner.vue'
 import UndoSendBar from './UndoSendBar.vue'
 import QuickCaptureDialog from './QuickCaptureDialog.vue'
@@ -55,6 +56,8 @@ async function signOut() {
   router.replace({ name: 'login' })
 }
 
+const isDemo = import.meta.env.VITE_DEMO === 'true'
+
 /** aria-current sur la rubrique active, y compris pour les sous-routes (/mails/:id). */
 const isCurrent = (name: string) => route.name === name || (name === 'mails' && route.name === 'compose')
 </script>
@@ -62,6 +65,7 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
 <template>
   <a class="skip" href="#main">{{ t('app.skip') }}</a>
   <a class="skip" href="#nav">{{ t('app.skipNav') }}</a>
+  <DemoBanner v-if="isDemo" />
   <div class="shell">
     <header class="topbar">
       <RouterLink to="/" class="brand" :aria-label="t('app.name')"><span class="logo"><OscarMark /></span><span class="word">oscar</span></RouterLink>

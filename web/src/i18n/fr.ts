@@ -335,6 +335,7 @@ export default {
     actions: { 'config_changed': 'Réglages modifiés', 'user_invited': 'Invitation envoyée', 'user_disabled': 'Compte désactivé', 'user_enabled': 'Compte réactivé', 'user_deleted': 'Compte supprimé', 'user_admin': 'Droit d’administration modifié', 'user_resetLink': 'Lien de mot de passe envoyé', 'setup_done': 'Installation terminée' },
     keys: { instanceName: 'nom', registration: 'inscriptions', supportEmail: 'adresse d’aide', legalUrl: 'mentions légales', privacyUrl: 'confidentialité', defaultAttachmentMb: 'pièces jointes', aiExternalAllowed: 'IA externe', setupDone: 'installation' },
   },
+  demo: { banner: 'Démo : données fictives, rien n’est envoyé.', install: 'Installer Oscar' },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
     kept: 'Ton message est conservé : rouvre-le et réessaie.',

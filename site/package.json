@@ -1,0 +1,2 @@
+{ "name": "oscar-site", "private": true, "type": "module",
+  "scripts": { "build": "node build.mjs", "build:prod": "node build.mjs --prod", "build:fast": "node build.mjs --no-demo", "preview": "cd dist && python3 -m http.server 4173" } }

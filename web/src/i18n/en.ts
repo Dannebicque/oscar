@@ -335,6 +335,7 @@ const en: typeof fr = {
     actions: { 'config_changed': 'Settings changed', 'user_invited': 'Invitation sent', 'user_disabled': 'Account disabled', 'user_enabled': 'Account re-enabled', 'user_deleted': 'Account deleted', 'user_admin': 'Administration right changed', 'user_resetLink': 'Password link sent', 'setup_done': 'Setup finished' },
     keys: { instanceName: 'name', registration: 'sign-ups', supportEmail: 'help address', legalUrl: 'legal notice', privacyUrl: 'privacy', defaultAttachmentMb: 'attachments', aiExternalAllowed: 'external AI', setupDone: 'setup' },
   },
+  demo: { banner: 'Demo: made-up data, nothing is sent.', install: 'Install Oscar' },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
     kept: 'Your message is kept: reopen it and try again.',
