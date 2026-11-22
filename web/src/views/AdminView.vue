@@ -5,7 +5,11 @@ import { ApiError, api } from '../api'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import Callout from '../components/ui/Callout.vue'
+import AdminAudit from '../components/admin/AdminAudit.vue'
+import AdminHealth from '../components/admin/AdminHealth.vue'
+import AdminUsers from '../components/admin/AdminUsers.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
+import SegmentedControl from '../components/ui/SegmentedControl.vue'
 import RadioGroup from '../components/ui/RadioGroup.vue'
 import SwitchField from '../components/ui/SwitchField.vue'
 import TextField from '../components/ui/TextField.vue'
@@ -20,6 +24,9 @@ import { useUiStore } from '../stores/ui'
 const { t } = useI18n()
 const ui = useUiStore()
 const instance = useInstanceStore()
+type Tab = 'settings' | 'users' | 'health' | 'audit'
+const tab = ref<Tab>('settings')
+const tabs = computed(() => (['settings', 'users', 'health', 'audit'] as Tab[]).map((v) => ({ value: v, label: t(`admin.tabs.${v}`) })))
 const loaded = ref(false)
 const busy = ref(false)
 const errors = ref<Record<string, string>>({})
@@ -61,7 +68,11 @@ async function save() {
   <PageHeader :title="t('admin.title')" :subtitle="t('admin.subtitle')" />
   <Callout tone="info" icon="lock" :level="2" :title="t('admin.promiseTitle')"><p>{{ t('admin.promise') }}</p></Callout>
 
-  <form v-if="loaded" class="admin" novalidate @submit.prevent="save">
+  <div class="tabs"><SegmentedControl v-model="tab" :options="tabs" :label="t('admin.tabsLabel')" /></div>
+  <AdminUsers v-if="tab === 'users'" class="admin" />
+  <AdminHealth v-else-if="tab === 'health'" class="admin" />
+  <AdminAudit v-else-if="tab === 'audit'" class="admin" />
+  <form v-else-if="loaded" class="admin" novalidate @submit.prevent="save">
     <BaseCard class="stack" aria-labelledby="adm-id">
       <h2 id="adm-id">{{ t('admin.identity') }}</h2>
       <TextField id="a-name" v-model="form.instanceName" :label="t('setup.instanceName')" :hint="t('admin.nameHint')" :error="errors.instanceName" required />
@@ -87,6 +98,7 @@ async function save() {
 </template>
 
 <style scoped>
-.admin { display: grid; gap: var(--space-4); max-width: 720px; margin-top: var(--space-4); }
+.tabs { margin-top: var(--space-4); }
+.admin { display: grid; gap: var(--space-4); max-width: 820px; margin-top: var(--space-4); }
 h2 { font-size: var(--fs-md); margin: 0; }
 </style>

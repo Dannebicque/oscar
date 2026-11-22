@@ -300,3 +300,26 @@ export interface InstanceConfig {
   aiExternalAllowed: boolean
   setupDone: boolean
 }
+
+/** Un compte vu par l'administrateur : jamais de contenu, pas même le nombre de mails ou de tâches. */
+export interface AdminUser {
+  id: string
+  name: string
+  email: string | null
+  username: string
+  admin: boolean
+  disabled: boolean
+  /** Compte local (mot de passe) ; sinon connexion par l'établissement. */
+  local: boolean
+  createdAt: string
+  lastLoginAt: string | null
+  mailAccounts: number
+}
+export interface HealthCheck { id: string; status: 'ok' | 'warn' | 'error'; data: Record<string, number | string | null> }
+export interface HealthReport {
+  version: string
+  php: string
+  checks: HealthCheck[]
+  counts: { users: number; disabled: number; admins: number; mailAccounts: number; activeLast30Days: number }
+}
+export interface AuditEntry { id: string; at: string; actor: string; action: string; target: string | null; details: Record<string, unknown> }

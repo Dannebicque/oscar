@@ -16,7 +16,7 @@ final class CheckRelancesHandler
     public function __invoke(CheckRelancesMessage $m): void
     {
         $now = new \DateTimeImmutable();
-        foreach ($this->em->getRepository(User::class)->findAll() as $user) {
+        foreach ($this->em->getRepository(User::class)->findBy(['disabled' => false]) as $user) {
             $this->notifier->notify($user, $now);
         }
     }

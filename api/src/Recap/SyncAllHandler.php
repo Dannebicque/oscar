@@ -16,7 +16,7 @@ final class SyncAllHandler
 
     public function __invoke(SyncAllMessage $m): void
     {
-        foreach ($this->em->getRepository(User::class)->findAll() as $user) {
+        foreach ($this->em->getRepository(User::class)->findBy(['disabled' => false]) as $user) {
             $this->sync->syncUser($user);
             $this->em->clear(); // un utilisateur après l'autre : mémoire stable sur de grosses boîtes (N-07)
         }

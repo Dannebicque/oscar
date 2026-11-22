@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class InstanceController extends AbstractController
 {
-    public function __construct(private readonly InstanceConfig $config, private readonly EntityManagerInterface $em)
+    public function __construct(private readonly InstanceConfig $config, private readonly EntityManagerInterface $em, private readonly \App\Instance\AuditLog $audit)
     {
     }
 
@@ -41,14 +41,22 @@ final class InstanceController extends AbstractController
     }
 
     #[Route('/api/admin/config', methods: ['PUT', 'PATCH'])]
-    public function adminUpdate(Request $r): JsonResponse
+    public function adminUpdate(Request $r, #[\Symfony\Component\Security\Http\Attribute\CurrentUser] User $admin): JsonResponse
     {
+        $before = $this->config->all();
         $errors = $this->config->apply($r->toArray());
         if ($errors !== []) {
             return new JsonResponse(['title' => 'Certains réglages ne sont pas valides.', 'fields' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        return new JsonResponse($this->config->all());
+        $after = $this->config->all();
+        $changed = array_keys(array_filter($after, static fn ($v, $k) => ($before[$k] ?? null) !== $v, \ARRAY_FILTER_USE_BOTH));
+        if ($changed !== []) {
+            // Les noms des réglages changés, pas leurs valeurs : le journal n'a pas à garder d'adresses ni de textes.
+            $this->audit->record($admin, 'config.changed', null, ['keys' => $changed]);
+        }
+
+        return new JsonResponse($after);
     }
 
     private function setupNeeded(): bool

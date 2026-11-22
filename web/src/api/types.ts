@@ -1,5 +1,5 @@
 import type {
-  InstanceConfig, InstanceInfo, Identity, IdentityInput, FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
+  AdminUser, AuditEntry, HealthReport, InstanceConfig, InstanceInfo, Identity, IdentityInput, FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
   MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
 } from '../domain/types'
 
@@ -227,6 +227,18 @@ export interface InstanceApi {
   /** Administrateur seulement. */
   config(): Promise<InstanceConfig>
   updateConfig(patch: Partial<InstanceConfig>): Promise<InstanceConfig>
+  /** Comptes (administrateur seulement) : jamais de contenu. */
+  users(): Promise<AdminUser[]>
+  /** Crée un compte local ; le lien pour choisir un mot de passe part par e-mail à l'invité, jamais à l'administrateur. */
+  invite(name: string, email: string): Promise<{ emailSent: boolean }>
+  setDisabled(id: string, disabled: boolean): Promise<void>
+  /** Envoie à l'utilisateur seul un lien de réinitialisation (comptes locaux). */
+  resetLink(id: string): Promise<{ emailSent: boolean }>
+  setAdmin(id: string, admin: boolean): Promise<void>
+  /** Suppression définitive du compte et de ses données ; `confirm` = l'adresse du compte. */
+  deleteUser(id: string, confirm: string): Promise<void>
+  health(): Promise<HealthReport>
+  audit(): Promise<AuditEntry[]>
 }
 
 export interface Api {

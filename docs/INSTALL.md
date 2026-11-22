@@ -45,7 +45,14 @@ docker compose -f compose.prod.yaml logs app | grep -A2 "code d’installation"
 
 Ouvre l'adresse de ton instance : l'assistant s'ouvre tout seul tant qu'aucun administrateur n'existe. Il demande le code, crée le compte **administrateur de l'instance**, puis règle le nom, l'ouverture des inscriptions et une adresse d'aide. Le code sert une seule fois ; cinq essais ratés bloquent l'assistant pendant une heure.
 
-L'administrateur règle ensuite tout depuis **Administration** (menu de gauche) : nom, liens légaux, inscriptions, taille maximale des pièces jointes par défaut, autorisation de l'IA externe. Il gère l'outil, **jamais le contenu** : aucun mail, agenda ni tâche d'un utilisateur n'est lisible depuis cette page.
+L'administrateur règle ensuite tout depuis **Administration** (menu de gauche), en quatre onglets :
+
+- **Réglages** : nom, liens légaux, inscriptions, taille maximale des pièces jointes par défaut, autorisation de l'IA externe.
+- **Comptes** : qui existe et dans quel état ; inviter quelqu'un (un e-mail lui permet de choisir son mot de passe), désactiver ou réactiver, envoyer un lien de mot de passe, donner ou retirer l'administration, supprimer un compte et ses données (RGPD, en recopiant l'adresse pour confirmer). Le dernier administrateur ne peut être ni désactivé, ni supprimé, ni rétrogradé.
+- **Santé** : base de données, tâches de fond (le worker bat chaque minute), synchronisation des messageries, mails programmés en échec, espace disque, serveur de courriel, https, mode de fonctionnement, code d'installation oublié.
+- **Journal** : qui a changé quoi (noms des réglages, jamais leurs valeurs).
+
+Il gère l'outil, **jamais le contenu** : aucun mail, agenda ni tâche d'un utilisateur n'est lisible depuis ces pages, pas même leur nombre. Les liens de mot de passe partent **par e-mail à la personne seulement** : l'administrateur ne peut donc jamais prendre la main sur un compte. Un compte désactivé est déconnecté partout tout de suite, et ses synchronisations s'arrêtent ; rien n'est supprimé.
 
 Sans interface (installation automatisée, dépannage) :
 
@@ -101,6 +108,5 @@ docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
 ## Ce qui reste à faire avant un vrai usage
 
 - Essayer l'image sur un serveur public (HTTPS réel avec un nom de domaine), pas seulement en local.
-- Écran Administration : il ne contient pour l'instant que les réglages globaux ; la liste des utilisateurs, l'état de santé et le journal d'audit sont à venir.
 - Essayer le CAS de l'établissement et le LDAP réels.
 - Journaux centralisés et supervision (le journal d'erreurs d'Oscar est dans l'application, pas dans un outil externe).

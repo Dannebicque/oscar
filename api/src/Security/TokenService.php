@@ -15,6 +15,9 @@ final class TokenService
     /** @return string jeton en clair, montré une seule fois */
     public function issue(User $user, string $label = 'web'): string
     {
+        if ($user->isDisabled()) {
+            throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('Ce compte est désactivé. Contacte l’administrateur de ton instance.');
+        }
         $plain = bin2hex(random_bytes(32));
         $this->em->persist(new ApiToken(ApiToken::hash($plain), $this->em->getReference(User::class, $user->getId()), new \DateTimeImmutable("+{$this->ttlSeconds} seconds"), $label));
         $this->em->flush();

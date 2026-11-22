@@ -21,6 +21,10 @@ final class ApiTokenHandler implements AccessTokenHandlerInterface
             throw new BadCredentialsException('Session expirée ou révoquée.');
         }
 
+        if ($token->getUser()->isDisabled()) {
+            throw new BadCredentialsException('Compte désactivé.');
+        }
+
         return new UserBadge($token->getUser()->getUserIdentifier());
     }
 }

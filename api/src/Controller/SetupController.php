@@ -30,6 +30,7 @@ final class SetupController extends AbstractController
         private readonly TokenService $tokens,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly CacheItemPoolInterface $cache,
+        private readonly \App\Instance\AuditLog $audit,
     ) {
     }
 
@@ -77,6 +78,7 @@ final class SetupController extends AbstractController
         $this->em->persist($user);
         $this->em->flush();
         $this->token->discard();
+        $this->audit->record($user, 'setup.done');
 
         return new JsonResponse(['token' => $this->tokens->issue($user, 'setup')], Response::HTTP_CREATED);
     }

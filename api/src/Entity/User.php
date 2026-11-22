@@ -27,6 +27,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => false])]
     private bool $instanceAdmin = false;
 
+    /** Compte désactivé par un administrateur : plus de connexion ni de synchronisation ; rien n'est supprimé. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $disabled = false;
+
     public function __construct(
         /** Identifiant CAS (uid) : unique, stable. */
         #[ORM\Column(length: 120, unique: true)] private string $username,
@@ -47,6 +51,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUserIdentifier(): string { return $this->username; }
     public function getPassword(): ?string { return $this->passwordHash; }
     public function setPasswordHash(?string $h): static { $this->passwordHash = $h; return $this; }
+    public function isDisabled(): bool { return $this->disabled; }
+    public function setDisabled(bool $v): static { $this->disabled = $v; return $this; }
+    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function isInstanceAdmin(): bool { return $this->instanceAdmin; }
     public function setInstanceAdmin(bool $v): static { $this->instanceAdmin = $v; return $this; }
     public function getRoles(): array { return $this->instanceAdmin ? ['ROLE_USER', 'ROLE_ADMIN'] : ['ROLE_USER']; }

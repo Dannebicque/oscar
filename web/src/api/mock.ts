@@ -3,7 +3,7 @@ import { handle as claimHandle, release as claimRelease, reopen as claimReopen, 
 import { sanitizeSignature, signatureText } from '../domain/signatureHtml'
 import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSettings } from './types'
 import type {
-  InstanceConfig, Identity,
+  AdminUser, HealthReport, InstanceConfig, Identity,
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
 } from '../domain/types'
 
@@ -62,6 +62,15 @@ export function createMockApi(now: Date = new Date()): Api {
     members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })),
   })
   let instanceConfig: InstanceConfig = { instanceName: 'Oscar', registration: 'open', supportEmail: '', legalUrl: '', privacyUrl: '', defaultAttachmentMb: 10, aiExternalAllowed: true, setupDone: true }
+  let adminUsers: AdminUser[] = [
+    { id: 'u1', name: 'David Annebicque', email: 'david@iut-troyes.fr', username: 'david', admin: true, disabled: false, local: false, createdAt: now.toISOString(), lastLoginAt: hoursAgo(1), mailAccounts: 1 },
+    { id: 'u2', name: 'Claire Roux', email: 'claire@iut-troyes.fr', username: 'claire', admin: false, disabled: false, local: false, createdAt: now.toISOString(), lastLoginAt: hoursAgo(30), mailAccounts: 1 },
+    { id: 'u3', name: 'Marc Dubois', email: 'marc@iut-troyes.fr', username: 'marc', admin: false, disabled: true, local: true, createdAt: now.toISOString(), lastLoginAt: hoursAgo(24 * 40), mailAccounts: 2 },
+  ]
+  const auditLog = [
+    { id: 'a1', at: hoursAgo(2), actor: 'David Annebicque <david@iut-troyes.fr>', action: 'config.changed', target: null, details: { keys: ['instanceName'] } },
+    { id: 'a2', at: hoursAgo(26), actor: 'David Annebicque <david@iut-troyes.fr>', action: 'user.disabled', target: 'marc@iut-troyes.fr', details: {} },
+  ]
   let scheduledMails: { row: ScheduledMail; payload: SendPayload }[] = []
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
@@ -311,6 +320,30 @@ export function createMockApi(now: Date = new Date()): Api {
       async setup() { return 'jeton-demo' },
       async config() { return clone(instanceConfig) },
       async updateConfig(patch) { instanceConfig = { ...instanceConfig, ...patch }; return clone(instanceConfig) },
+      async users() { return clone(adminUsers) },
+      async invite(name, email) {
+        if (adminUsers.some((u) => u.email === email)) throw new ApiError(409, 'Un compte existe déjà avec cette adresse.', { field: 'email' })
+        adminUsers = [...adminUsers, { id: uid('u'), name, email, username: email, admin: false, disabled: false, local: true, createdAt: now.toISOString(), lastLoginAt: null, mailAccounts: 0 }]
+        return { emailSent: true }
+      },
+      async setDisabled(id, disabled) { adminUsers = adminUsers.map((u) => (u.id === id ? { ...u, disabled } : u)) },
+      async resetLink() { return { emailSent: true } },
+      async setAdmin(id, admin) { adminUsers = adminUsers.map((u) => (u.id === id ? { ...u, admin } : u)) },
+      async deleteUser(id, confirm) {
+        const u = adminUsers.find((x) => x.id === id)
+        if (!u || (u.email ?? u.username).toLowerCase() !== confirm.trim().toLowerCase()) throw new ApiError(422, 'Recopie l’adresse du compte pour confirmer : rien n’a été supprimé.', { field: 'confirm' })
+        adminUsers = adminUsers.filter((x) => x.id !== id)
+      },
+      async health(): Promise<HealthReport> {
+        return {
+          version: 'démo', php: '8.4', counts: { users: adminUsers.length, disabled: adminUsers.filter((u) => u.disabled).length, admins: adminUsers.filter((u) => u.admin).length, mailAccounts: 3, activeLast30Days: 3 },
+          checks: [
+            { id: 'database', status: 'ok' as const, data: { ms: 3 } }, { id: 'worker', status: 'ok' as const, data: { ageSeconds: 24 } }, { id: 'sync', status: 'warn' as const, data: { accounts: 3, failing: 1, stale: 0 } },
+            { id: 'disk', status: 'ok' as const, data: { freePercent: 64, freeGb: 120 } }, { id: 'mailer', status: 'warn' as const, data: {} }, { id: 'https', status: 'ok' as const, data: {} },
+          ],
+        }
+      },
+      async audit() { return clone(auditLog) },
     },
     directory: {
       async status() { return { configured: false } },

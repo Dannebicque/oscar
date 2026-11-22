@@ -16,7 +16,7 @@ final class CheckRecapsHandler
     public function __invoke(CheckRecapsMessage $m): void
     {
         $now = new \DateTimeImmutable();
-        foreach ($this->em->getRepository(User::class)->findAll() as $user) {
+        foreach ($this->em->getRepository(User::class)->findBy(['disabled' => false]) as $user) {
             $this->recaps->dispatchDue($user, $now);
         }
     }
