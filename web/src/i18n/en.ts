@@ -251,6 +251,8 @@ const en: typeof fr = {
     count: 'No reminder to send | 1 reminder to review | {n} reminders to review', cap: 'daily cap: {n}',
     later: 'no other | 1 other is due, it will come tomorrow | {n} others are due, they will come tomorrow',
     meta: 'Reminder no. {k} · due today | Reminder no. {k} · due yesterday | Reminder no. {k} · due {n} days ago',
+    grouped: '1 reminder | {n} reminders grouped in a single message', split: 'One message per subject', groupSubject: 'Several points awaiting your reply',
+    groupDraft: 'Hello {first},\n\nI am following up on several points that are still pending:\n{list}\n\nCould you reply when you have a moment?\n\nThanks in advance,\n{me}',
     ready: 'Reviewed, ready to go', sent: 'Reminder sent', queued: 'Queued: goes out when the network is back', snoozed: 'Postponed by 2 days', stopped: 'Will not be reminded again',
     sendReady: 'No reminder ready | Send the reviewed reminder | Send the {n} reviewed reminders',
     confirmTitle: 'Send this reminder to', confirmText: 'Each message goes out as you reviewed it, as a reply in its thread. You can still go back.',

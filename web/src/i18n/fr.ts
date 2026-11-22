@@ -251,6 +251,8 @@ export default {
     count: 'Aucune relance à faire | 1 relance à relire | {n} relances à relire', cap: 'plafond du jour : {n}',
     later: 'aucune autre | 1 autre est due, elle viendra demain | {n} autres sont dues, elles viendront demain',
     meta: 'Relance n°{k} · échéance du jour | Relance n°{k} · prévue hier | Relance n°{k} · prévue il y a {n} jours',
+    grouped: '1 relance | {n} relances regroupées en un seul message', split: 'Un message par sujet', groupSubject: 'Plusieurs points en attente de ta réponse',
+    groupDraft: 'Bonjour {first},\n\nJe reviens vers vous sur plusieurs points restés en attente :\n{list}\n\nPourriez-vous me répondre quand vous aurez un moment ?\n\nMerci d’avance,\n{me}',
     ready: 'Relue, prête à partir', sent: 'Relance envoyée', queued: 'En file : part au retour du réseau', snoozed: 'Reportée de 2 jours', stopped: 'Ne sera plus relancée',
     sendReady: 'Aucune relance prête | Envoyer la relance relue | Envoyer les {n} relances relues',
     confirmTitle: 'Envoyer cette relance à', confirmText: 'Chaque message part tel que tu l’as relu, en réponse dans son fil. Tu peux encore revenir en arrière.',
