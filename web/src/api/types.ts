@@ -1,5 +1,5 @@
 import type {
-  Identity, IdentityInput, FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
+  InstanceConfig, InstanceInfo, Identity, IdentityInput, FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
   MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
 } from '../domain/types'
 
@@ -199,7 +199,7 @@ export interface AuthApi {
   probe(p: ProbeInput): Promise<ProbeResult>
   devLogin(username: string): Promise<string>
   exchange(code: string): Promise<string>
-  me(): Promise<{ username: string; displayName: string; email?: string | null; hasPassword?: boolean }>
+  me(): Promise<{ username: string; displayName: string; email?: string | null; hasPassword?: boolean; admin?: boolean }>
   changePassword(current: string, password: string): Promise<void>
   deleteAccount(secret: { password?: string; confirm?: string }): Promise<void>
   logout(): Promise<void>
@@ -211,7 +211,26 @@ export interface DirectoryApi {
   search(q: string): Promise<{ name: string; address: string; detail?: string | null }[]>
 }
 
+export interface SetupPayload {
+  code: string
+  name: string
+  email: string
+  password: string
+  config: { instanceName: string; registration: 'open' | 'closed'; supportEmail: string }
+}
+
+export interface InstanceApi {
+  /** Public : de quoi afficher l'écran de connexion et savoir si l'assistant d'installation doit s'ouvrir. */
+  info(): Promise<InstanceInfo>
+  /** Assistant de premier lancement : crée l'administrateur (code d'installation exigé). Renvoie un jeton de session. */
+  setup(p: SetupPayload): Promise<string>
+  /** Administrateur seulement. */
+  config(): Promise<InstanceConfig>
+  updateConfig(patch: Partial<InstanceConfig>): Promise<InstanceConfig>
+}
+
 export interface Api {
+  instance: InstanceApi
   directory: DirectoryApi
   suivis: SuivisApi
   mails: MailApi

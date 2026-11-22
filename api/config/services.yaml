@@ -36,7 +36,6 @@ services:
 
     App\Controller\PasswordAuthController:
         arguments:
-            $registration: '%env(APP_REGISTRATION)%'
             $frontUrl: '%env(FRONT_URL)%'
             $mailerFrom: '%env(MAILER_FROM)%'
             $casBaseUrl: '%env(CAS_BASE_URL)%'

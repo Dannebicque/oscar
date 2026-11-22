@@ -13,7 +13,7 @@ export default {
     signOutShort: 'Quitter',
     signOut: 'Se déconnecter',
     label: 'Navigation principale', home: 'Accueil', mails: 'Mails', suivis: 'Suivis', agenda: 'Agenda', tasks: 'Tâches',
-    alerts: 'Alertes', settings: 'Réglages', alertsCount: 'Alertes, {n} non lue | Alertes, {n} non lue | Alertes, {n} non lues',
+    alerts: 'Alertes', settings: 'Réglages', admin: 'Admin', alertsCount: 'Alertes, {n} non lue | Alertes, {n} non lue | Alertes, {n} non lues',
     compose: 'Écrire',
   },
   status: {
@@ -287,6 +287,23 @@ export default {
     title: 'Pièces jointes', drag: 'Glisse tes fichiers ici', dropNow: 'Dépose pour joindre', browse: 'Parcourir…', limit: 'Jusqu’à {max} au total (limite de ton compte), {n} fichiers au plus.',
     usage: '{used} sur {max}', count: 'Aucun fichier | 1 fichier | {n} fichiers', added: '1 fichier ajouté. | {n} fichiers ajoutés.', removed: '{name} retiré.',
     tooBig: '« {name} » dépasse la limite : il reste {left} sur {max}. Retire un fichier ou envoie un lien.', tooMany: '« {name} » n’est pas joint : {n} fichiers au plus.', empty: '« {name} » est vide : il n’est pas joint.',
+  },
+  setup: {
+    title: 'Installation', subtitle: 'Quelques minutes pour mettre ton instance en route.', stepsLabel: 'Étapes de l’installation', step1: 'Code', step2: 'Administrateur', step3: 'Réglages',
+    codeHelp: 'Pour que personne d’autre ne prenne la main sur ton instance, l’assistant demande le code d’installation. Il s’affiche dans les journaux du serveur au premier démarrage :',
+    code: 'Code d’installation', codeRequired: 'Saisis le code affiché dans les journaux du serveur.', next: 'Continuer', back: 'Retour', finish: 'Terminer l’installation',
+    adminHelp: 'Ce compte administre l’instance : réglages globaux, jamais le contenu des utilisateurs.', emailInvalid: 'Cette adresse n’a pas l’air valide.', again: 'Répète le mot de passe', passwordsDiffer: 'Les deux mots de passe ne sont pas les mêmes.',
+    configHelp: 'Trois réglages de base. Tu pourras tout modifier ensuite dans Administration.', instanceName: 'Nom de l’instance', instanceNameHint: 'Affiché sur la page de connexion et dans le titre des pages.',
+    registrationLegend: 'Création de comptes', registration: { closed: 'Fermée : je crée ou j’invite les comptes', open: 'Ouverte : chacun peut créer un compte' },
+    registrationHint: 'Fermée convient à un établissement avec connexion institutionnelle (CAS). Tu peux changer cela à tout moment.', supportEmail: 'Adresse d’aide (facultative)', supportHint: 'Montrée aux utilisateurs qui ont un souci.',
+    promise: 'L’administrateur gère l’outil : il ne lit jamais les mails, les agendas ni les tâches des utilisateurs.',
+  },
+  admin: {
+    title: 'Administration', subtitle: 'Les réglages de toute l’instance.', saved: 'Réglages enregistrés.', promiseTitle: 'Ce que l’administrateur ne voit pas',
+    promise: 'Cette page règle l’outil, pas son contenu : aucun mail, aucun agenda, aucune tâche d’un utilisateur n’est lisible ici.',
+    identity: 'Identité', nameHint: 'Affiché sur la page de connexion et dans le titre des pages.', legalUrl: 'Mentions légales (adresse)', privacyUrl: 'Politique de confidentialité (adresse)', urlHint: 'Adresse en https://, ou vide.',
+    access: 'Accès', limits: 'Limites et IA', defaultMb: 'Pièces jointes : taille maximale par défaut (Mo)', defaultMbHint: 'Chaque compte de messagerie peut fixer la sienne. De 1 à 25.',
+    aiExternal: 'Autoriser l’IA externe', aiExternalHelp: 'Désactivé : personne ne peut envoyer ses mails à un service d’IA externe, seule l’IA de l’établissement reste disponible.',
   },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',

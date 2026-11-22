@@ -15,6 +15,8 @@ if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
     fi
     sleep 2
   done
+  # Première installation : le code à saisir dans l'assistant s'affiche dans les journaux (rien à faire une fois l'instance installée).
+  php bin/console app:setup:token || true
 fi
 
 exec "$@"

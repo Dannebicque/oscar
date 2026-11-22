@@ -97,7 +97,7 @@ final class AuthController extends AbstractController
     #[Route('/api/me', methods: ['GET'])]
     public function me(#[CurrentUser] User $user): JsonResponse
     {
-        return new JsonResponse(['id' => $user->getId(), 'username' => $user->getUsername(), 'displayName' => $user->getDisplayName(), 'email' => $user->getEmail(), 'hasPassword' => $user->getPassword() !== null]);
+        return new JsonResponse(['id' => $user->getId(), 'username' => $user->getUsername(), 'displayName' => $user->getDisplayName(), 'email' => $user->getEmail(), 'hasPassword' => $user->getPassword() !== null, 'admin' => $user->isInstanceAdmin()]);
     }
 
     #[Route('/api/auth/logout', methods: ['POST'])]

@@ -25,6 +25,7 @@ final class AiConfigController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly CredentialVault $vault,
         private readonly AiProviderRegistry $registry,
+        private readonly \App\Instance\InstanceConfig $instance,
         #[Autowire('%kernel.environment%')] private readonly string $env,
     ) {
     }
@@ -43,6 +44,9 @@ final class AiConfigController extends AbstractController
     #[Route('/api/ai-config', methods: ['PUT'])]
     public function update(Request $r, #[CurrentUser] User $user): JsonResponse
     {
+        if (!$this->instance->aiExternalAllowed()) {
+            return new JsonResponse(['title' => 'L’administrateur de cette instance n’autorise pas l’IA externe : tes données restent chez ton établissement.'], Response::HTTP_FORBIDDEN);
+        }
         $in = $r->toArray();
         $kind = (string) ($in['kind'] ?? '');
         $url = trim((string) ($in['baseUrl'] ?? ''));

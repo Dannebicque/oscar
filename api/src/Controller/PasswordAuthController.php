@@ -34,7 +34,7 @@ final class PasswordAuthController extends AbstractController
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
         #[Autowire('%kernel.environment%')] private readonly string $env,
-        private readonly string $registration,
+        private readonly \App\Instance\InstanceConfig $instance,
         private readonly string $frontUrl,
         private readonly string $mailerFrom,
         private readonly string $casBaseUrl,
@@ -47,8 +47,8 @@ final class PasswordAuthController extends AbstractController
     {
         return new JsonResponse([
             'password' => true,
-            'registration' => $this->registration === 'open',
-            'cas' => !str_contains($this->casBaseUrl, 'example.org'),
+            'registration' => $this->instance->registrationOpen(), 'name' => $this->instance->name(),
+            'cas' => trim($this->casBaseUrl) !== '' && !str_contains($this->casBaseUrl, 'example.org'),
             'dev' => \in_array($this->env, ['dev', 'test'], true),
         ]);
     }
@@ -56,7 +56,7 @@ final class PasswordAuthController extends AbstractController
     #[Route('/api/auth/register', methods: ['POST'])]
     public function register(Request $r): JsonResponse
     {
-        if ($this->registration !== 'open') {
+        if (!$this->instance->registrationOpen()) {
             return new JsonResponse(['title' => 'Les inscriptions sont fermées. Connecte-toi avec le compte de ton établissement.'], Response::HTTP_FORBIDDEN);
         }
         $in = $r->toArray();

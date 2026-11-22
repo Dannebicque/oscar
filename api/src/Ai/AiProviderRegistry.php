@@ -16,6 +16,7 @@ final class AiProviderRegistry
         private readonly EntityManagerInterface $em,
         private readonly CredentialVault $vault,
         private readonly HttpClientInterface $http,
+        private readonly \App\Instance\InstanceConfig $instance,
     ) {
     }
 
@@ -24,7 +25,8 @@ final class AiProviderRegistry
     {
         return match ($mode) {
             'university' => $this->university,
-            'external' => $user === null ? null : $this->external($user),
+            // L'administrateur peut interdire l'IA externe (données sensibles) : on retombe alors sur l'IA de l'établissement.
+            'external' => $user === null ? null : ($this->instance->aiExternalAllowed() ? $this->external($user) : $this->university),
             default => null,
         };
     }

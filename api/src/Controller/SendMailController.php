@@ -19,7 +19,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class SendMailController extends AbstractController
 {
     #[Route('/api/mails/send', methods: ['POST'])]
-    public function __invoke(#[MapRequestPayload] SendMailRequest $r, #[CurrentUser] User $user, EntityManagerInterface $em, MailSender $sender, \App\Mail\IdentityResolver $resolver): JsonResponse
+    public function __invoke(#[MapRequestPayload] SendMailRequest $r, #[CurrentUser] User $user, EntityManagerInterface $em, MailSender $sender, \App\Mail\IdentityResolver $resolver, \App\Instance\InstanceConfig $instance): JsonResponse
     {
         $account = $em->find(MailAccount::class, $r->accountId);
         if ($account === null || $account->getOwner()?->getId() !== $user->getId()) {
@@ -31,8 +31,8 @@ final class SendMailController extends AbstractController
             return new JsonResponse(['title' => 'Cette identité d’expéditeur n’existe pas pour ce compte.', 'field' => 'identityId'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $total = array_sum(array_map(static fn ($a) => (int) (\strlen((string) ($a['content'] ?? '')) * 0.75), $r->attachments));
-        if ($total > $account->attachmentLimitBytes()) {
-            return new JsonResponse(['title' => sprintf('Les pièces jointes dépassent %d Mo, la limite de ce compte. Retire-en une ou envoie un lien.', $account->attachmentLimitBytes() / 1048576), 'limitMb' => (int) ($account->attachmentLimitBytes() / 1048576)], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+        if ($total > $account->attachmentLimitBytes($instance->defaultAttachmentMb())) {
+            return new JsonResponse(['title' => sprintf('Les pièces jointes dépassent %d Mo, la limite de ce compte. Retire-en une ou envoie un lien.', $account->attachmentLimitBytes($instance->defaultAttachmentMb()) / 1048576), 'limitMb' => (int) ($account->attachmentLimitBytes($instance->defaultAttachmentMb()) / 1048576)], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
         }
         $reply = null;
         if ($r->inReplyToMailId !== null) {

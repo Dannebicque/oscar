@@ -42,6 +42,8 @@ final class DevSetupCommand extends Command
         $users = [];
         foreach (['david' => 'admin', 'claire' => 'member', 'marc' => 'member', 'lea' => 'member'] as $name => $role) {
             $user = $this->em->getRepository(User::class)->findOneBy(['username' => $name]) ?? new User($name, ucfirst($name), $name.'@iut-troyes.fr');
+            // En développement, david administre l'instance : l'assistant d'installation ne s'ouvre pas devant les comptes de test.
+            $user->setInstanceAdmin($name === 'david');
             $this->em->persist($user);
             if ($this->em->getRepository(MailAccount::class)->count(['owner' => $user]) === 0) {
                 $this->em->persist((new MailAccount())->setOwner($user)->setLabel($name.'@iut-troyes.fr (test)')->setAddress($name.'@iut-troyes.fr')

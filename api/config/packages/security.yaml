@@ -16,5 +16,7 @@ security:
                 token_handler: App\Security\ApiTokenHandler
     access_control:
         - { path: ^/api/auth/(config|register|login|forgot|reset|dev-login|cas/login|cas/callback|token)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/(instance|setup)$, roles: PUBLIC_ACCESS }
         - { path: ^/api/(docs|$), roles: PUBLIC_ACCESS }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

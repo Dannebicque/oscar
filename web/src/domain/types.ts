@@ -277,3 +277,26 @@ export interface LogEntry {
   message: string
   action: string
 }
+
+/** Ce que l'instance rend public : nom affiché, inscriptions, liens légaux, et si l'assistant d'installation doit s'ouvrir. */
+export interface InstanceInfo {
+  name: string
+  registration: boolean
+  supportEmail: string
+  legalUrl: string
+  privacyUrl: string
+  aiExternalAllowed: boolean
+  defaultAttachmentMb: number
+  setupNeeded: boolean
+}
+/** Réglages globaux modifiables par l'administrateur de l'instance. */
+export interface InstanceConfig {
+  instanceName: string
+  registration: 'open' | 'closed'
+  supportEmail: string
+  legalUrl: string
+  privacyUrl: string
+  defaultAttachmentMb: number
+  aiExternalAllowed: boolean
+  setupDone: boolean
+}

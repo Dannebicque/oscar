@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import OscarMark from '../OscarMark.vue'
+import { useInstanceStore } from '../../stores/instance'
 import BaseIcon from '../ui/BaseIcon.vue'
 
 /**
@@ -9,13 +10,14 @@ import BaseIcon from '../ui/BaseIcon.vue'
  */
 defineProps<{ title: string; subtitle?: string }>()
 const { t } = useI18n()
+const instance = useInstanceStore()
 const POINTS = [{ icon: 'follow', key: 'follow' }, { icon: 'mail', key: 'mail' }, { icon: 'calendar', key: 'agenda' }] as const
 </script>
 
 <template>
   <div class="auth">
     <aside class="brand" aria-hidden="false">
-      <p class="mark"><span class="logo"><OscarMark /></span><span class="word">oscar</span></p>
+      <p class="mark"><span class="logo"><OscarMark /></span><span class="word">{{ instance.name.toLowerCase() }}</span></p>
       <div class="pitch">
         <p class="tagline">{{ t('app.tagline') }}</p>
         <ul>
@@ -26,7 +28,7 @@ const POINTS = [{ icon: 'follow', key: 'follow' }, { icon: 'mail', key: 'mail' }
     </aside>
     <main id="main" class="formside">
       <div class="form-wrap">
-        <p class="mark small"><span class="logo"><OscarMark /></span><span class="word">oscar</span></p>
+        <p class="mark small"><span class="logo"><OscarMark /></span><span class="word">{{ instance.name.toLowerCase() }}</span></p>
         <h1>{{ title }}</h1>
         <p v-if="subtitle" class="muted lead">{{ subtitle }}</p>
         <slot />

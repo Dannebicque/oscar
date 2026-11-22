@@ -28,7 +28,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class SaveDraftController extends AbstractController
 {
     #[Route('/api/mails/draft', methods: ['POST'])]
-    public function __invoke(Request $request, #[CurrentUser] User $user, EntityManagerInterface $em, MailboxReaderFactory $factory, MailSynchronizer $sync, \Psr\Log\LoggerInterface $logger, \App\Mail\IdentityResolver $resolver): JsonResponse
+    public function __invoke(Request $request, #[CurrentUser] User $user, EntityManagerInterface $em, MailboxReaderFactory $factory, MailSynchronizer $sync, \Psr\Log\LoggerInterface $logger, \App\Mail\IdentityResolver $resolver, \App\Instance\InstanceConfig $instance): JsonResponse
     {
         $in = json_decode($request->getContent(), true) ?: [];
         $account = $em->find(MailAccount::class, (string) ($in['accountId'] ?? ''));
@@ -52,8 +52,8 @@ final class SaveDraftController extends AbstractController
             $total += \strlen($raw);
             $files[] = [$raw, mb_substr((string) ($a['name'] ?? 'pièce-jointe'), 0, 150)];
         }
-        if ($total > $account->attachmentLimitBytes()) {
-            return new JsonResponse(['title' => sprintf('Les pièces jointes dépassent %d Mo, la limite de ce compte. Retire-en une ou envoie un lien.', $account->attachmentLimitBytes() / 1048576), 'limitMb' => (int) ($account->attachmentLimitBytes() / 1048576)], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+        if ($total > $account->attachmentLimitBytes($instance->defaultAttachmentMb())) {
+            return new JsonResponse(['title' => sprintf('Les pièces jointes dépassent %d Mo, la limite de ce compte. Retire-en une ou envoie un lien.', $account->attachmentLimitBytes($instance->defaultAttachmentMb()) / 1048576), 'limitMb' => (int) ($account->attachmentLimitBytes($instance->defaultAttachmentMb()) / 1048576)], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
         }
         $headers = new Headers();
         $headers->addMailboxListHeader('From', [$identity !== null ? new Address($identity->address, $identity->name) : new Address($account->getAddress(), $user->getDisplayName())]);

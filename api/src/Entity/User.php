@@ -23,6 +23,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $passwordHash = null;
 
+    /** Administrateur de l'instance : règle la configuration globale. Il ne lit jamais les mails ni les agendas des utilisateurs. */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $instanceAdmin = false;
+
     public function __construct(
         /** Identifiant CAS (uid) : unique, stable. */
         #[ORM\Column(length: 120, unique: true)] private string $username,
@@ -43,5 +47,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUserIdentifier(): string { return $this->username; }
     public function getPassword(): ?string { return $this->passwordHash; }
     public function setPasswordHash(?string $h): static { $this->passwordHash = $h; return $this; }
-    public function getRoles(): array { return ['ROLE_USER']; }
+    public function isInstanceAdmin(): bool { return $this->instanceAdmin; }
+    public function setInstanceAdmin(bool $v): static { $this->instanceAdmin = $v; return $this; }
+    public function getRoles(): array { return $this->instanceAdmin ? ['ROLE_USER', 'ROLE_ADMIN'] : ['ROLE_USER']; }
 }

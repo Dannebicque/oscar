@@ -199,6 +199,12 @@ export function createHttpApi(baseUrl: string): Api {
         preview: (html) => req('POST', '/api/identities/preview', { html }),
       },
     },
+    instance: {
+      info: () => req('GET', '/api/instance', undefined, { auth: false }),
+      async setup(p) { return (await req<{ token: string }>('POST', '/api/setup', p, { auth: false })).token },
+      config: () => req('GET', '/api/admin/config'),
+      updateConfig: (patch) => req('PATCH', '/api/admin/config', patch),
+    },
     directory: {
       status: () => req('GET', '/api/directory/status'),
       search: (q) => req('GET', `/api/directory?q=${encodeURIComponent(q)}`),

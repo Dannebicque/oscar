@@ -20,6 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
         session.username = me.username
         session.email = me.email ?? null
         session.hasPassword = !!me.hasPassword
+        session.admin = !!me.admin
       } catch (e) {
         // Seul un 401 ferme la session : une panne passagère (502, réseau) ne doit pas déconnecter.
         if (e instanceof ApiError && e.status === 401) saveToken(null)
@@ -35,6 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
     session.username = me.username
     session.email = me.email ?? null
     session.hasPassword = !!me.hasPassword
+    session.admin = !!me.admin
   }
   async function login(email: string, password: string) { await adopt(await api.auth.login(email, password)) }
   async function register(name: string, email: string, password: string) { await adopt(await api.auth.register(name, email, password)) }
@@ -60,5 +62,5 @@ export const useAuthStore = defineStore('auth', () => {
     await api.auth.logout()
     saveToken(null)
   }
-  return { checked, authenticated, restore, login, register, exportData, deleteAccount, loginDev, finishCas, logout }
+  return { adopt, checked, authenticated, restore, login, register, exportData, deleteAccount, loginDev, finishCas, logout }
 })

@@ -15,7 +15,7 @@ const en: typeof fr = {
     signOutShort: 'Sign out',
     signOut: 'Sign out',
     label: 'Main navigation', home: 'Home', mails: 'Mail', suivis: 'Follow-ups', agenda: 'Calendar', tasks: 'Tasks',
-    alerts: 'Alerts', settings: 'Settings', alertsCount: 'Alerts, {n} unread | Alerts, {n} unread | Alerts, {n} unread',
+    alerts: 'Alerts', settings: 'Settings', admin: 'Admin', alertsCount: 'Alerts, {n} unread | Alerts, {n} unread | Alerts, {n} unread',
     compose: 'Write',
   },
   status: {
@@ -287,6 +287,23 @@ const en: typeof fr = {
     title: 'Attachments', drag: 'Drag your files here', dropNow: 'Drop to attach', browse: 'Browse…', limit: 'Up to {max} in total (your account’s limit), {n} files at most.',
     usage: '{used} of {max}', count: 'No file | 1 file | {n} files', added: '1 file added. | {n} files added.', removed: '{name} removed.',
     tooBig: '“{name}” is over the limit: {left} left of {max}. Remove a file or send a link.', tooMany: '“{name}” is not attached: {n} files at most.', empty: '“{name}” is empty: it is not attached.',
+  },
+  setup: {
+    title: 'Setup', subtitle: 'A few minutes to get your instance running.', stepsLabel: 'Setup steps', step1: 'Code', step2: 'Administrator', step3: 'Settings',
+    codeHelp: 'So that nobody else takes over your instance, the wizard asks for the setup code. It is shown in the server logs at first start:',
+    code: 'Setup code', codeRequired: 'Enter the code shown in the server logs.', next: 'Continue', back: 'Back', finish: 'Finish setup',
+    adminHelp: 'This account administers the instance: global settings, never users’ content.', emailInvalid: 'This address does not look valid.', again: 'Repeat the password', passwordsDiffer: 'The two passwords differ.',
+    configHelp: 'Three basic settings. You can change everything later under Administration.', instanceName: 'Instance name', instanceNameHint: 'Shown on the sign-in page and in page titles.',
+    registrationLegend: 'Account creation', registration: { closed: 'Closed: I create or invite the accounts', open: 'Open: anyone can create an account' },
+    registrationHint: 'Closed suits an institution with single sign-on (CAS). You can change this at any time.', supportEmail: 'Help address (optional)', supportHint: 'Shown to users who run into trouble.',
+    promise: 'The administrator manages the tool: they never read users’ mail, calendars or tasks.',
+  },
+  admin: {
+    title: 'Administration', subtitle: 'Settings for the whole instance.', saved: 'Settings saved.', promiseTitle: 'What the administrator cannot see',
+    promise: 'This page sets up the tool, not its content: no mail, calendar or task of a user is readable here.',
+    identity: 'Identity', nameHint: 'Shown on the sign-in page and in page titles.', legalUrl: 'Legal notice (address)', privacyUrl: 'Privacy policy (address)', urlHint: 'An https:// address, or empty.',
+    access: 'Access', limits: 'Limits and AI', defaultMb: 'Attachments: default maximum size (MB)', defaultMbHint: 'Each mail account can set its own. From 1 to 25.',
+    aiExternal: 'Allow external AI', aiExternalHelp: 'Off: nobody can send their mail to an external AI service, only the institution’s AI stays available.',
   },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',

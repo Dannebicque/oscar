@@ -3,7 +3,7 @@ import { handle as claimHandle, release as claimRelease, reopen as claimReopen, 
 import { sanitizeSignature, signatureText } from '../domain/signatureHtml'
 import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSettings } from './types'
 import type {
-  Identity,
+  InstanceConfig, Identity,
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
 } from '../domain/types'
 
@@ -61,6 +61,7 @@ export function createMockApi(now: Date = new Date()): Api {
     id: 'sm1', slug: SHARED.id, address: SHARED.address, name: 'Contact', role: 'admin' as const, aiEnabled: false, identityId: 'shared:sm1', ...sharedSender,
     members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })),
   })
+  let instanceConfig: InstanceConfig = { instanceName: 'Oscar', registration: 'open', supportEmail: '', legalUrl: '', privacyUrl: '', defaultAttachmentMb: 10, aiExternalAllowed: true, setupDone: true }
   let scheduledMails: { row: ScheduledMail; payload: SendPayload }[] = []
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
@@ -304,6 +305,12 @@ export function createMockApi(now: Date = new Date()): Api {
         async list() { return [sharedInfo()] },
         async updateSender(_id, p) { sharedSender = { senderName: p.senderName?.trim() || null, signature: p.signature?.trim() ? p.signature : null }; return sharedInfo() },
       },
+    },
+    instance: {
+      async info() { return { name: 'Oscar', registration: true, supportEmail: '', legalUrl: '', privacyUrl: '', aiExternalAllowed: true, defaultAttachmentMb: 10, setupNeeded: false } },
+      async setup() { return 'jeton-demo' },
+      async config() { return clone(instanceConfig) },
+      async updateConfig(patch) { instanceConfig = { ...instanceConfig, ...patch }; return clone(instanceConfig) },
     },
     directory: {
       async status() { return { configured: false } },

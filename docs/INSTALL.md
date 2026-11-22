@@ -2,7 +2,7 @@
 
 Oscar se déploie avec Docker Compose : une base PostgreSQL, l'application (HTTPS, API, front) et un worker (synchronisation des boîtes et agendas, récaps, relances).
 
-> **État** : le fichier Compose est validé (`docker compose config`), mais l'image n'a **pas encore été construite ni essayée** de bout en bout (pas d'espace disque Docker là où elle a été écrite). Compte sur un premier passage de corrections. Voir « Vérifier l'installation ».
+> **État** : l'image a été construite et essayée de bout en bout (base, application, worker, assistant d'installation, connexion, administration) sur un Docker local. Pas encore essayée sur un serveur public avec HTTPS réel, CAS ni LDAP réels : voir « Ce qui reste à faire avant un vrai usage ».
 
 ## Prérequis
 
@@ -35,12 +35,32 @@ docker compose -f compose.prod.yaml logs -f app
 
 Les migrations s'appliquent au démarrage du service `app`. Ouvre `https://<ton domaine>`.
 
+## Premier lancement : l'assistant d'installation
+
+Au premier démarrage, le service `app` affiche un **code d'installation** dans ses journaux :
+
+```bash
+docker compose -f compose.prod.yaml logs app | grep -A2 "code d’installation"
+```
+
+Ouvre l'adresse de ton instance : l'assistant s'ouvre tout seul tant qu'aucun administrateur n'existe. Il demande le code, crée le compte **administrateur de l'instance**, puis règle le nom, l'ouverture des inscriptions et une adresse d'aide. Le code sert une seule fois ; cinq essais ratés bloquent l'assistant pendant une heure.
+
+L'administrateur règle ensuite tout depuis **Administration** (menu de gauche) : nom, liens légaux, inscriptions, taille maximale des pièces jointes par défaut, autorisation de l'IA externe. Il gère l'outil, **jamais le contenu** : aucun mail, agenda ni tâche d'un utilisateur n'est lisible depuis cette page.
+
+Sans interface (installation automatisée, dépannage) :
+
+```bash
+docker compose -f compose.prod.yaml exec app php bin/console app:admin:create ada@exemple.fr --name="Ada"
+```
+
+Elle crée l'administrateur, ou promeut un compte existant. `SETUP_TOKEN=…` dans `.env.prod` impose un code d'installation choisi à l'avance.
+
 ## Connexion des utilisateurs
 
 | Besoin | Réglage |
 |---|---|
 | Connexion par le CAS de l'établissement | `CAS_BASE_URL` (le bouton n'apparaît que s'il est renseigné) |
-| Comptes locaux (adresse + mot de passe) | `APP_REGISTRATION=open` (chacun crée son compte) ou `closed` (CAS seul) |
+| Comptes locaux (adresse + mot de passe) | Réglage « Création de comptes » de l'assistant puis d'**Administration** (`APP_REGISTRATION` ne donne que la valeur de départ) |
 | Mot de passe oublié | `MAILER_DSN` et `MAILER_FROM` : sans eux, le lien n'est envoyé à personne |
 | Annuaire des destinataires | `LDAP_URL`, `LDAP_BASE_DN`, compte de service en lecture (`LDAP_BIND_DN`, `LDAP_BIND_PASSWORD`) et attributs |
 
@@ -72,7 +92,7 @@ docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
 ## Liste de contrôle de sécurité
 
 - [ ] `.env.prod` hors du dépôt et lisible par root seulement (`chmod 600`).
-- [ ] `APP_REGISTRATION=closed` si l'instance est réservée à l'établissement.
+- [ ] Création de comptes **fermée** (Administration) si l'instance est réservée à l'établissement.
 - [ ] `CORS_ALLOW_ORIGIN` limité à l'adresse publique du site.
 - [ ] Sauvegarde de la base **et** de `APP_VAULT_KEY`, restauration essayée une fois.
 - [ ] Pare-feu : seuls 80 et 443 ouverts ; PostgreSQL n'est pas exposé (il ne l'est pas dans ce Compose).
@@ -80,6 +100,7 @@ docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
 
 ## Ce qui reste à faire avant un vrai usage
 
-- Construire et essayer l'image, corriger ce qui sera signalé.
+- Essayer l'image sur un serveur public (HTTPS réel avec un nom de domaine), pas seulement en local.
+- Écran Administration : il ne contient pour l'instant que les réglages globaux ; la liste des utilisateurs, l'état de santé et le journal d'audit sont à venir.
 - Essayer le CAS de l'établissement et le LDAP réels.
 - Journaux centralisés et supervision (le journal d'erreurs d'Oscar est dans l'application, pas dans un outil externe).

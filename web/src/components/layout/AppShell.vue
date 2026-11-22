@@ -87,6 +87,9 @@ const isCurrent = (name: string) => route.name === name || (name === 'mails' && 
       <RouterLink to="/reglages" class="link wide" :class="{ current: route.name === 'settings' || route.name === 'journal' }" :aria-current="route.name === 'settings' ? 'page' : undefined">
         <BaseIcon name="settings" :size="22" /><span>{{ t('nav.settings') }}</span>
       </RouterLink>
+      <RouterLink v-if="session.admin" to="/administration" class="link wide" :class="{ current: route.name === 'admin' }" :aria-current="route.name === 'admin' ? 'page' : undefined">
+        <BaseIcon name="lock" :size="22" /><span>{{ t('nav.admin') }}</span>
+      </RouterLink>
       <button v-if="session.token" type="button" class="link wide out" :aria-label="t('nav.signOut')" @click="signOut"><BaseIcon name="lock" :size="22" /><span>{{ t('nav.signOutShort') }}</span></button>
     </nav>
 

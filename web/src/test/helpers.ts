@@ -26,6 +26,8 @@ export async function mountApp(component: Component, path = '/', props: Record<s
       { path: '/mot-de-passe/reinitialiser', name: 'reset', component: { template: '<div/>' } },
       { path: '/bienvenue', name: 'welcome', component: { template: '<div/>' } },
       { path: '/ecrire', name: 'compose', component: { template: '<div/>' } },
+      { path: '/administration', name: 'admin', component: { template: '<div/>' } },
+      { path: '/installation', name: 'setup', component: { template: '<div/>' } },
       { path: '/:rest(.*)*', component: { template: '<div/>' } },
     ],
   })

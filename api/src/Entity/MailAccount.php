@@ -127,7 +127,7 @@ class MailAccount implements OwnedInterface, SyncableAccount
     public function getAttachmentLimitMb(): ?int { return $this->attachmentLimitMb; }
     public function setAttachmentLimitMb(?int $v): static { $this->attachmentLimitMb = $v; return $this; }
     /** Limite effective, en octets (somme des pièces jointes décodées). */
-    public function attachmentLimitBytes(): int { return ($this->attachmentLimitMb ?? self::DEFAULT_ATTACHMENT_MB) * 1024 * 1024; }
+    public function attachmentLimitBytes(?int $defaultMb = null): int { return ($this->attachmentLimitMb ?? $defaultMb ?? self::DEFAULT_ATTACHMENT_MB) * 1024 * 1024; }
     public function getSignature(): ?string { return $this->signature; }
     public function setSignature(?string $v): static { $this->signature = $v === null || trim($v) === '' ? null : $v; return $this; }
     public function getRelanceHours(): ?int { return $this->relanceHours; }
