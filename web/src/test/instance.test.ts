@@ -82,7 +82,7 @@ describe('administration de l’instance', () => {
 })
 
 describe('administration : comptes, santé, journal', () => {
-  const click = (label: string) => [...document.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent?.includes(label))!.click()
+  const click = (label: string) => ([...document.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent?.includes(label)) as HTMLElement).click()
 
   it('liste les comptes avec leurs états, sans aucun contenu', async () => {
     const { wrapper } = await mountApp(AdminUsers, '/administration')
