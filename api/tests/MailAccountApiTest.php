@@ -53,4 +53,16 @@ final class MailAccountApiTest extends ApiTestCase
         self::assertStringContainsString('Vérifie', $r['message']);
         self::assertStringNotContainsString('secret', $r['message']);
     }
+
+    public function testAttachmentLimitIsSettablePerAccountAndBounded(): void
+    {
+        $t = $this->tokenFor($this->user('david'));
+        [, $a] = $this->call('POST', '/api/mail-accounts', $t, self::PAYLOAD);
+        self::assertNull($a['attachmentLimitMb'], 'défaut : 10 Mo côté serveur');
+        [$st, $r] = $this->call('PATCH', '/api/mail-accounts/'.$a['id'], $t, ['attachmentLimitMb' => 20]);
+        self::assertSame([200, 20], [$st, $r['attachmentLimitMb']]);
+        self::assertSame(422, $this->call('PATCH', '/api/mail-accounts/'.$a['id'], $t, ['attachmentLimitMb' => 26])[0]);
+        self::assertSame(422, $this->call('PATCH', '/api/mail-accounts/'.$a['id'], $t, ['attachmentLimitMb' => 0])[0]);
+        self::assertSame(200, $this->call('PATCH', '/api/mail-accounts/'.$a['id'], $t, ['attachmentLimitMb' => null])[0], 'revenir au défaut');
+    }
 }

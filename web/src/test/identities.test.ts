@@ -85,3 +85,36 @@ describe('identités et signatures (F-19)', () => {
     expect((ta.element as HTMLTextAreaElement).value).not.toContain('La direction des études')
   })
 })
+
+describe('signature en HTML', () => {
+  it('bascule texte / HTML, aperçu assaini dans un cadre isolé, et enregistrement avec le texte dérivé', async () => {
+    const { wrapper, pinia } = await mountApp(IdentitiesPanel, '/reglages')
+    const accounts = useAccountsStore(pinia)
+    await accounts.load()
+    await flushPromises()
+    click('Ajouter une identité')
+    await flushPromises()
+    const set = (id: string, v: string) => { const el = document.body.querySelector(`#${id}`) as HTMLInputElement; el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })) }
+    set('id-name', 'Direction'); set('id-address', 'direction@iut-troyes.fr')
+    const radios = [...document.body.querySelectorAll('[role="radio"], button')].filter((b) => b.textContent?.trim() === 'HTML')
+    ;(radios[0] as HTMLElement).click()
+    await flushPromises()
+    set('id-sig-html', '<p style="color:red">Marc <b>D.</b></p><script>alert(1)</script><a href="javascript:x()">pi</a>')
+    await new Promise((r) => setTimeout(r, 450))
+    await flushPromises()
+    const frame = document.body.querySelector('iframe') as HTMLIFrameElement
+    expect(frame).not.toBeNull()
+    expect(frame.getAttribute('sandbox')).toBe('')
+    expect(frame.getAttribute('srcdoc')).toContain('<b>D.</b>')
+    expect(frame.getAttribute('srcdoc')).not.toContain('script')
+    expect(frame.getAttribute('srcdoc')).not.toContain('javascript')
+    expect(document.body.textContent).toContain('Version texte')
+    ;(document.body.querySelector('#identity-form') as HTMLFormElement).requestSubmit()
+    await flushPromises()
+    const made = accounts.identities.find((i) => i.address === 'direction@iut-troyes.fr')!
+    expect(made.signatureHtml).toContain('<b>D.</b>')
+    expect(made.signatureHtml).not.toContain('script')
+    expect(made.signature).toContain('Marc D.')
+    void wrapper
+  })
+})

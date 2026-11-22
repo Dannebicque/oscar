@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Identity;
 use App\Entity\MailAccount;
 use App\Entity\User;
+use App\Mail\SignatureHtml;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +22,7 @@ final class IdentityController extends AbstractController
 {
     private const MAX = 20;
 
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly SignatureHtml $html)
     {
     }
 
@@ -31,6 +32,19 @@ final class IdentityController extends AbstractController
         $this->ensurePrimaries($user);
 
         return new JsonResponse(array_map(static fn (Identity $i) => $i->toArray(), $this->all($user)));
+    }
+
+    /** Aperçu d'une signature HTML : ce qui sera réellement envoyé (assaini) et son équivalent texte. Rien n'est enregistré. */
+    #[Route('/api/identities/preview', methods: ['POST'])]
+    public function preview(Request $r): JsonResponse
+    {
+        try {
+            $safe = $this->html->sanitize((string) ($r->toArray()['html'] ?? ''));
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['title' => 'La signature HTML ne doit pas dépasser '.SignatureHtml::MAX.' caractères.', 'field' => 'signatureHtml'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return new JsonResponse(['html' => $safe, 'text' => $this->html->toText($safe)]);
     }
 
     #[Route('/api/identities', methods: ['POST'])]
@@ -48,8 +62,11 @@ final class IdentityController extends AbstractController
         if ($err = $this->validate($in, true)) {
             return $err;
         }
-        $i = new Identity($user, $account, trim((string) $in['name']), strtolower(trim((string) $in['address'])), $in['replyTo'] ?? null, $in['signature'] ?? null);
+        $i = new Identity($user, $account, trim((string) $in['name']), strtolower(trim((string) $in['address'])));
         $i->setReplyTo($in['replyTo'] ?? null);
+        if ($err = $this->applySignature($i, $in)) {
+            return $err;
+        }
         $this->em->persist($i);
         $this->em->flush();
 
@@ -68,7 +85,10 @@ final class IdentityController extends AbstractController
             return $err;
         }
         // L'adresse de l'identité principale est celle du compte : on ne la change pas ici.
-        $i->setName(trim((string) $in['name']))->setReplyTo($in['replyTo'] ?? null)->setSignature($in['signature'] ?? null);
+        $i->setName(trim((string) $in['name']))->setReplyTo($in['replyTo'] ?? null);
+        if ($err = $this->applySignature($i, $in)) {
+            return $err;
+        }
         if (!$i->isPrimary()) {
             $i->setAddress(strtolower(trim((string) $in['address'])));
         }
@@ -120,6 +140,33 @@ final class IdentityController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    /**
+     * Signature en texte brut, ou en HTML (assaini ici, jamais pris tel quel) : dans ce cas le texte équivalent est dérivé.
+     *
+     * @param array<string, mixed> $in
+     */
+    private function applySignature(Identity $i, array $in): ?JsonResponse
+    {
+        $html = isset($in['signatureHtml']) && \is_string($in['signatureHtml']) ? trim($in['signatureHtml']) : '';
+        if ($html === '') {
+            $i->setSignatureHtml(null)->setSignature($in['signature'] ?? null);
+
+            return null;
+        }
+        try {
+            $safe = $this->html->sanitize($html);
+        } catch (\InvalidArgumentException) {
+            return new JsonResponse(['title' => 'La signature HTML ne doit pas dépasser '.SignatureHtml::MAX.' caractères.', 'field' => 'signatureHtml'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $text = $this->html->toText($safe);
+        if ($text === '' && !str_contains($safe, '<img')) {
+            return new JsonResponse(['title' => 'Cette signature HTML est vide une fois nettoyée. Seules les balises simples (texte, liens, images en https, tableaux) sont gardées.', 'field' => 'signatureHtml'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $i->setSignatureHtml($safe)->setSignature($text === '' ? null : $text);
+
+        return null;
+    }
+
     /** @return list<Identity> */
     private function all(User $user): array
     {
@@ -169,6 +216,9 @@ final class IdentityController extends AbstractController
         $reply = trim((string) ($in['replyTo'] ?? ''));
         if ($reply !== '' && (!filter_var($reply, \FILTER_VALIDATE_EMAIL) || mb_strlen($reply) > 180)) {
             return new JsonResponse(['title' => 'L’adresse « Répondre à » n’est pas valide.', 'field' => 'replyTo'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        if (isset($in['signatureHtml']) && !\is_string($in['signatureHtml'])) {
+            return new JsonResponse(['title' => 'La signature HTML n’est pas valide.', 'field' => 'signatureHtml'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         if (isset($in['signature']) && (!\is_string($in['signature']) || mb_strlen($in['signature']) > 2000)) {
             return new JsonResponse(['title' => 'La signature ne doit pas dépasser 2 000 caractères.', 'field' => 'signature'], Response::HTTP_UNPROCESSABLE_ENTITY);

@@ -37,7 +37,7 @@ start smtp-sink "$ROOT" python3 docker/dovecot/smtp-sink.py
 (cd api && php bin/console app:suivis:seed --user=david -q && php bin/console app:mail:sync >/dev/null 2>&1) || true
 
 echo "→ API, worker, front"
-start api "$ROOT/api" php -S 127.0.0.1:8000 -t public
+start api "$ROOT/api" php -d post_max_size=40M -d upload_max_filesize=40M -d memory_limit=256M -d max_execution_time=120 -S 127.0.0.1:8000 -t public
 start worker "$ROOT/api" php bin/console messenger:consume scheduler_default -vv
 [ -d web/node_modules ] || (cd web && npm ci --silent)
 printf 'VITE_API_URL=http://127.0.0.1:8000\n' > web/.env.local

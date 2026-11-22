@@ -64,7 +64,8 @@ async function remove() {
   } catch { ui.notify(t('settings.accounts.removeFailed'), { tone: 'error' }) }
 }
 const relanceFor = ref<MailAccount | null>(null)
-const relanceForm = reactive({ hours: '' as string, days: '' as string })
+const relanceForm = reactive({ hours: '' as string, days: '' as string, limit: '' as string })
+const limitError = ref('')
 const HOURS = ['', '24', '48', '72', '168'] as const
 const hoursOptions = computed(() => HOURS.map((h) => ({ value: h, label: h === '' ? t('settings.accounts.inherit') : t(`settings.relances.h${h}`) })))
 const daysOptions = computed(() => [{ value: '', label: t('settings.accounts.inherit') }, { value: 'biz', label: t('settings.accounts.bizOn') }, { value: 'real', label: t('settings.accounts.bizOff') }])
@@ -72,6 +73,8 @@ function openRelance(a: MailAccount) {
   relanceFor.value = a
   relanceForm.hours = a.relanceHours ? String(a.relanceHours) : ''
   relanceForm.days = a.businessDays === true ? 'biz' : a.businessDays === false ? 'real' : ''
+  relanceForm.limit = a.attachmentLimitMb ? String(a.attachmentLimitMb) : ''
+  limitError.value = ''
 }
 const relanceSummary = (a: MailAccount) => {
   const h = a.relanceHours ? t(`settings.relances.h${a.relanceHours}`) : t('settings.accounts.inheritShort')
@@ -81,8 +84,10 @@ const relanceSummary = (a: MailAccount) => {
 async function saveRelance() {
   const a = relanceFor.value
   if (!a) return
+  const lim = relanceForm.limit.trim()
+  if (lim !== '' && (!/^\d+$/.test(lim) || Number(lim) < 1 || Number(lim) > 25)) { limitError.value = t('settings.accounts.limitInvalid'); return }
   try {
-    await accounts.updateMail(a.id, { relanceHours: relanceForm.hours ? Number(relanceForm.hours) : null, businessDays: relanceForm.days === 'biz' ? true : relanceForm.days === 'real' ? false : null })
+    await accounts.updateMail(a.id, { attachmentLimitMb: lim === '' ? null : Number(lim), relanceHours: relanceForm.hours ? Number(relanceForm.hours) : null, businessDays: relanceForm.days === 'biz' ? true : relanceForm.days === 'real' ? false : null })
     ui.notify(t('settings.accounts.relanceSaved', { name: a.label }))
     relanceFor.value = null
   } catch { ui.notify(t('settings.accounts.addFailed'), { tone: 'error' }) }
@@ -149,6 +154,7 @@ const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings
     <form id="relance-form" class="stack" @submit.prevent="saveRelance">
       <SelectField id="rel-h" v-model="relanceForm.hours" :label="t('settings.relances.delay')" :options="hoursOptions" />
       <SelectField id="rel-d" v-model="relanceForm.days" :label="t('settings.relances.businessDays')" :options="daysOptions" />
+      <TextField id="acc-limit" v-model="relanceForm.limit" type="number" min="1" max="25" :label="t('settings.accounts.limit')" :hint="t('settings.accounts.limitHint')" :error="limitError" />
       <p class="hint">{{ t('settings.accounts.signatureMoved') }}</p>
     </form>
     <template #footer>

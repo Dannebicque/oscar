@@ -97,4 +97,44 @@ final class IdentityApiTest extends ApiTestCase
         self::assertSame(422, $st, 'l’identité d’un autre utilisateur est refusée');
         self::assertSame(1, $this->em->getRepository(Identity::class)->count(['owner' => $claire]));
     }
+
+    public function testHtmlSignatureIsSanitizedStoredWithItsTextAndPreviewed(): void
+    {
+        $html = '<p style="color:#336699;background:url(x)">David <b>Annebicque</b></p><script>alert(1)</script><a href="javascript:x()">piège</a><a href="https://iut-troyes.fr">Site</a><img src="http://x/a.png">';
+        [$st, $p] = $this->call('POST', '/api/identities/preview', $this->token, ['html' => $html]);
+        self::assertSame(200, $st);
+        self::assertStringNotContainsString('script', $p['html']);
+        self::assertStringNotContainsString('javascript', $p['html']);
+        self::assertStringNotContainsString('url(', $p['html']);
+        self::assertStringNotContainsString('http://x', $p['html'], 'image non https refusée');
+        self::assertStringContainsString('https://iut-troyes.fr', $p['html']);
+        self::assertStringStartsWith("-- \nDavid Annebicque", $p['text']);
+        self::assertSame(422, $this->call('POST', '/api/identities/preview', $this->token, ['html' => str_repeat('<b>x</b>', 3000)])[0]);
+
+        $id = $this->call('GET', '/api/identities', $this->token)[1][0]['id'];
+        [$st, $u] = $this->call('PUT', '/api/identities/'.$id, $this->token, ['name' => 'David', 'signatureHtml' => $html]);
+        self::assertSame(200, $st);
+        self::assertStringNotContainsString('script', $u['signatureHtml']);
+        self::assertStringStartsWith("-- \nDavid Annebicque", $u['signature'], 'le texte est dérivé du HTML');
+        [, $back] = $this->call('PUT', '/api/identities/'.$id, $this->token, ['name' => 'David', 'signature' => 'Texte simple', 'signatureHtml' => '']);
+        self::assertSame([null, 'Texte simple'], [$back['signatureHtml'], $back['signature']], 'repasser en texte efface le HTML');
+        self::assertSame(422, $this->call('PUT', '/api/identities/'.$id, $this->token, ['name' => 'David', 'signatureHtml' => '<script>x()</script>'])[0]);
+    }
+
+    public function testAnHtmlSignatureIsSentAsMultipartWithTheTextSignatureReplaced(): void
+    {
+        $smtp = static::getContainer()->get(FakeOutgoingMailer::class);
+        $id = $this->call('GET', '/api/identities', $this->token)[1][0]['id'];
+        $sig = $this->call('PUT', '/api/identities/'.$id, $this->token, ['name' => 'David', 'signatureHtml' => '<b>David</b> · <a href="https://iut-troyes.fr">IUT</a>'])[1]['signature'];
+        $base = ['accountId' => $this->account->getId(), 'to' => ['marc@x.fr'], 'subject' => 'Bonjour', 'identityId' => $id];
+
+        self::assertSame(201, $this->call('POST', '/api/mails/send', $this->token, $base + ['body' => "Bonjour <Marc> & merci\n\n".$sig])[0]);
+        $mail = end($smtp->sent);
+        self::assertStringContainsString('<b>David</b>', (string) $mail->getHtmlBody());
+        self::assertStringContainsString('Bonjour &lt;Marc&gt; &amp; merci', (string) $mail->getHtmlBody(), 'le texte de l’utilisateur est échappé');
+        self::assertStringContainsString('Bonjour <Marc> & merci', (string) $mail->getTextBody());
+
+        self::assertSame(201, $this->call('POST', '/api/mails/send', $this->token, $base + ['body' => 'Signature retirée à la main'])[0]);
+        self::assertNull(end($smtp->sent)->getHtmlBody(), 'signature retouchée ou retirée : pas de partie HTML');
+    }
 }

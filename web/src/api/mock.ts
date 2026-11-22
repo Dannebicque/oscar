@@ -1,5 +1,6 @@
 import { addDays, atTime, isoDay } from '../domain/dates'
 import { handle as claimHandle, release as claimRelease, reopen as claimReopen, take as claimTake, takeOver as claimTakeOver } from '../domain/claim'
+import { sanitizeSignature, signatureText } from '../domain/signatureHtml'
 import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSettings } from './types'
 import type {
   Identity,
@@ -108,6 +109,11 @@ export function createMockApi(now: Date = new Date()): Api {
   ]
 
   const mailAccounts: MailAccount[] = [{ id: 'acc1', label: 'david@iut-troyes.fr', address: 'david@iut-troyes.fr', imapHost: 'imap.iut-troyes.fr', imapPort: 993, imapEncryption: 'ssl', smtpHost: 'smtp.iut-troyes.fr', smtpPort: 587, smtpEncryption: 'tls', username: 'david', aiAllowed: true }]
+  /** Signature en texte ou en HTML (assaini) : le texte équivalent est dérivé du HTML. */
+  const sig = (i: { signature: string | null; signatureHtml?: string | null }) => {
+    if (i.signatureHtml?.trim()) { const safe = sanitizeSignature(i.signatureHtml); return { signatureHtml: safe, signature: signatureText(safe) || null } }
+    return { signatureHtml: null, signature: i.signature || null }
+  }
   let identities: Identity[] = [
     { id: 'id1', accountId: 'acc1', name: 'David Annebicque', address: 'david@iut-troyes.fr', replyTo: null, signature: '-- \nDavid Annebicque\nIUT de Troyes · Département informatique', isDefault: true, primary: true },
     { id: 'id2', accountId: 'acc1', name: 'Direction des études', address: 'etudes@iut-troyes.fr', replyTo: 'secretariat@iut-troyes.fr', signature: '-- \nLa direction des études\nIUT de Troyes', isDefault: false, primary: false },
@@ -258,11 +264,12 @@ export function createMockApi(now: Date = new Date()): Api {
       },
       identities: {
         async list() { return clone(identities) },
-        async create(i) { const n: Identity = { id: uid('id'), accountId: i.accountId, name: i.name, address: i.address.toLowerCase(), replyTo: i.replyTo || null, signature: i.signature || null, isDefault: false, primary: false }; identities = [...identities, n]; return clone(n) },
+        async preview(html) { const safe = sanitizeSignature(html); return { html: safe, text: signatureText(safe) } },
+        async create(i) { const n: Identity = { id: uid('id'), accountId: i.accountId, name: i.name, address: i.address.toLowerCase(), replyTo: i.replyTo || null, ...sig(i), isDefault: false, primary: false }; identities = [...identities, n]; return clone(n) },
         async update(id, i) {
           const x = identities.find((y) => y.id === id)
           if (!x) throw new ApiError(404, 'Identité inconnue.')
-          Object.assign(x, { name: i.name, replyTo: i.replyTo || null, signature: i.signature || null }, x.primary ? {} : { address: i.address.toLowerCase() })
+          Object.assign(x, { name: i.name, replyTo: i.replyTo || null, ...sig(i) }, x.primary ? {} : { address: i.address.toLowerCase() })
           return clone(x)
         },
         async setDefault(id) { identities = identities.map((y) => ({ ...y, isDefault: y.id === id })); return clone(identities.find((y) => y.id === id)!) },

@@ -273,10 +273,18 @@ const en: typeof fr = {
     newTitle: 'New identity', editTitle: 'Edit identity', name: 'Display name', nameHint: 'What the recipient sees, for example “Studies office”.', nameRequired: 'Give the identity a name.',
     address: 'Sending address', addressHint: 'The “From” address. Your outgoing server must allow it (alias, shared mailbox): otherwise the message is not sent and Oscar tells you.',
     primaryHint: 'it is your account’s address, it does not change here', account: 'Sending account', replyTo: 'Reply-to (optional)', replyToHint: 'Replies will go to this address instead of the sending address.',
+    format: { text: 'Text', html: 'HTML' }, formatLabel: 'Signature format', signatureText: 'Signature (text)', signatureHtml: 'Signature (HTML code)',
+    htmlHint: 'Paste your HTML. It is cleaned before sending: text, links, tables, colours and https images are kept; scripts, forms and non-https images are removed. Recipients receive the text AND the HTML.',
+    previewHtml: 'Preview of what will be sent', plainVersion: 'Text version (the one inserted in the editor)',
     signature: 'Signature', signatureHint: 'Plain text, added at the bottom of your messages. Start with “--” on its own line for the usual separator.', preview: 'Preview',
     saved: 'Identity “{name}” saved.', defaulted: '“{name}” is now your default identity.', removed: 'Identity “{name}” deleted.',
     deleteTitle: 'Delete “{name}”?', deleteText: 'Only the identity is deleted, not the account or the mails. Your next messages will go out from your default identity.',
     from: 'From',
+  },
+  attach: {
+    title: 'Attachments', drag: 'Drag your files here', dropNow: 'Drop to attach', browse: 'Browse…', limit: 'Up to {max} in total (your account’s limit), {n} files at most.',
+    usage: '{used} of {max}', count: 'No file | 1 file | {n} files', added: '1 file added. | {n} files added.', removed: '{name} removed.',
+    tooBig: '“{name}” is over the limit: {left} left of {max}. Remove a file or send a link.', tooMany: '“{name}” is not attached: {n} files at most.', empty: '“{name}” is empty: it is not attached.',
   },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
@@ -369,6 +377,7 @@ const en: typeof fr = {
     title: 'Settings', sections: 'Sections',
     nav: { myaccount: 'My account', accounts: 'Accounts and calendars', relances: 'Reminders and follow-up', recap: 'Recaps', ai: 'Oscar, the AI assistant', look: 'Appearance and accessibility', journal: 'Connection status and log' },
     accounts: {
+      limit: 'Maximum attachment size (MB)', limitHint: 'It depends on your mail provider: often 20 to 25 MB. If unsure, leave empty (10 MB). From 1 to 25.', limitInvalid: 'Pick a whole number from 1 to 25.',
       signatureMoved: 'The signature is now set in “Identities and signatures”, just below.',
       signature: 'Signature', signatureHelp: 'Added at the bottom of your messages. Empty: the default signature.',
       relanceBtn: 'Reminders', relanceLabel: 'Reminder', inherit: 'Same as my settings', inheritShort: 'general setting', bizOn: 'Business days', bizOff: 'Real hours', relanceTitle: 'Reminders for “{name}”', relanceHelp: 'This account can have its own delay. Without a choice, the general setting applies.', relanceSaved: 'Reminders for “{name}” saved.',

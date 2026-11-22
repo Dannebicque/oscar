@@ -38,6 +38,12 @@ final class MailSender
             ->subject($r->subject)
             ->text($r->body)
             ->date($now);
+        // Signature HTML : le message part en texte ET en HTML ; la signature HTML remplace son équivalent texte dans le corps.
+        // Si l'utilisateur a retouché ou retiré la signature, il n'y a pas de partie HTML : on n'ajoute rien qu'il n'ait voulu.
+        if ($identity?->getSignatureHtml() !== null && $identity->getSignature() !== null && ($pos = mb_strrpos($r->body, $identity->getSignature())) !== false) {
+            $esc = static fn (string $t): string => nl2br(htmlspecialchars($t, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8'));
+            $email->html('<div>'.$esc(mb_substr($r->body, 0, $pos)).'</div><div>'.$identity->getSignatureHtml().'</div><div>'.$esc(mb_substr($r->body, $pos + mb_strlen($identity->getSignature()))).'</div>');
+        }
         if ($identity?->getReplyTo() !== null) {
             $email->replyTo(new Address($identity->getReplyTo()));
         }

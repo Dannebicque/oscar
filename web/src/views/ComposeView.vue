@@ -7,6 +7,7 @@ import type { MessageTemplate } from '../api/types'
 import OscarMark from '../components/OscarMark.vue'
 import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
+import AttachmentDropzone from '../components/mail/AttachmentDropzone.vue'
 import BaseDialog from '../components/ui/BaseDialog.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
 import CheckboxField from '../components/ui/CheckboxField.vue'
@@ -104,23 +105,10 @@ watch([body, subject], () => {
   }, 900)
 })
 const draftId = ref<string | null>(route.query.draft ? String(route.query.draft) : null)
-const MAX_BYTES = 5 * 1024 * 1024
+/** Pièces jointes : la limite est celle du compte d'envoi (identité choisie), 10 Mo par défaut. */
 const files = ref<File[]>([])
-const fileInput = ref<HTMLInputElement | null>(null)
-const attachError = ref('')
-const totalBytes = computed(() => files.value.reduce((n, f) => n + f.size, 0))
-function pickFiles(e: Event) {
-  const input = e.target as HTMLInputElement
-  const added = [...(input.files ?? [])]
-  input.value = ''
-  attachError.value = ''
-  for (const f of added) {
-    if (totalBytes.value + f.size > MAX_BYTES) { attachError.value = t('compose.attachTooBig'); continue }
-    files.value = [...files.value, f]
-  }
-}
+const limitMb = computed(() => accounts.mail.find((a) => a.id === identity.value?.accountId)?.attachmentLimitMb)
 const readBase64 = (f: File) => new Promise<string>((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] ?? ''); r.onerror = () => ko(r.error); r.readAsDataURL(f) })
-const sizeLabel = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} Ko` : `${(n / 1024 / 1024).toFixed(1)} Mo`)
 const quoteOn = ref(true)
 const original = computed(() => (route.query.reply ? mails.byId(String(route.query.reply)) : undefined))
 const originalSlots = computed(() => original.value?.hints.availability?.slots ?? [])
@@ -268,8 +256,9 @@ async function deliver(payload: SendPayload, after: After, leave = false) {
     }
     // Rien n'est parti et aucun suivi n'est créé : on le dit clairement, sans humour, avec une action (§5, F-79).
     const noAccount = e instanceof ApiError && e.message === 'no-account'
+    const tooBig = e instanceof ApiError && e.status === 413
     outgoing.restore = payload
-    ui.notify(noAccount ? t('compose.noAccount') : `${say('errorSend')} ${t('undoSend.kept')}`, { tone: 'error' })
+    ui.notify(noAccount ? t('compose.noAccount') : tooBig ? `${e.message} ${t('undoSend.kept')}` : `${say('errorSend')} ${t('undoSend.kept')}`, { tone: 'error' })
     if (!leave) void router.push({ name: 'compose', query: { restore: '1' } })
   }
 }
@@ -376,6 +365,7 @@ async function saveDraft() {
         <SelectField v-if="templates.length" id="tpl-pick" :model-value="tplChoice" :label="t('compose.template')" :options="[{ value: '', label: t('compose.templateNone') }, ...templates.map((x) => ({ value: x.id, label: x.name }))]" @update:model-value="(v: string) => insertTemplate(v)" />
         <TextareaField id="body" v-model="body" :label="t('compose.body')" :rows="12" @input="edited = true" />
         <CheckboxField v-if="original" v-model="quoteOn" :label="t('compose.quote')" />
+        <AttachmentDropzone v-model="files" :limit-mb="limitMb" />
       </section>
     </div>
 
@@ -413,16 +403,9 @@ async function saveDraft() {
       <div class="actions">
         <BaseButton variant="primary" type="submit" icon="send" :disabled="sending" :label="t('compose.send')" />
         <BaseButton icon="clock" :label="t('schedule.open')" @click="openSchedule" />
-        <BaseButton icon="paperclip" :label="t('compose.attach')" @click="fileInput?.click()" />
-        <input ref="fileInput" type="file" multiple class="sr-only" tabindex="-1" :aria-label="t('compose.attach')" @change="pickFiles" />
         <BaseButton :label="t('compose.saveDraft')" @click="saveDraft" />
         <BaseButton variant="ghost" :label="t('common.cancel')" @click="router.back()" />
       </div>
-      <section v-if="files.length || attachError" class="card pad-sm flat" :aria-label="t('compose.attached')">
-        <h2 class="ah">{{ t('compose.attached') }} · {{ sizeLabel(totalBytes) }}</h2>
-        <ul class="flist"><li v-for="(f, i) in files" :key="f.name + i"><span>{{ f.name }} · {{ sizeLabel(f.size) }}</span><BaseButton variant="ghost" icon="x" icon-only :label="t('compose.removeFile', { name: f.name })" @click="files = files.filter((_, n) => n !== i)" /></li></ul>
-        <p v-if="attachError" class="error-text" role="alert">{{ attachError }}</p>
-      </section>
       <p class="hint">{{ say('neverSend') }}</p>
     </aside>
   </form>

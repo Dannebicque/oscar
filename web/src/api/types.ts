@@ -106,7 +106,7 @@ export interface AccountsApi {
   mail: {
     list(): Promise<MailAccount[]>
     create(a: NewMailAccount): Promise<MailAccount>
-    update(id: string, patch: Partial<Pick<MailAccount, 'relanceHours' | 'businessDays' | 'aiAllowed' | 'label' | 'signature'>>): Promise<MailAccount>
+    update(id: string, patch: Partial<Pick<MailAccount, 'relanceHours' | 'businessDays' | 'aiAllowed' | 'label' | 'signature' | 'attachmentLimitMb'>>): Promise<MailAccount>
     remove(id: string): Promise<void>
     test(id: string): Promise<{ ok: boolean }>
   }
@@ -123,6 +123,8 @@ export interface AccountsApi {
     update(id: string, i: IdentityInput): Promise<Identity>
     setDefault(id: string): Promise<Identity>
     remove(id: string): Promise<void>
+    /** Aperçu d'une signature HTML : ce qui sera réellement envoyé (assaini par le serveur) et son équivalent texte. */
+    preview(html: string): Promise<{ html: string; text: string }>
   }
 }
 

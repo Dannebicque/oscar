@@ -73,6 +73,10 @@ class MailAccount implements OwnedInterface, SyncableAccount
     #[ORM\Column(type: Types::TEXT, nullable: true)] #[Assert\Length(max: 2000)]
     private ?string $signature = null;
 
+    /** Taille maximale des pièces jointes d'un message, en Mo : elle dépend du fournisseur de messagerie ; null = 10 Mo. */
+    #[ORM\Column(nullable: true)] #[Assert\Range(min: 1, max: 25)]
+    private ?int $attachmentLimitMb = null;
+
     /** Délai de relance propre à ce compte (F-12, F-54) ; null = celui des réglages de l'utilisateur. */
     #[ORM\Column(nullable: true)] #[Assert\Choice(choices: [24, 48, 72, 168])]
     private ?int $relanceHours = null;
@@ -119,6 +123,11 @@ class MailAccount implements OwnedInterface, SyncableAccount
     public function setPassword(?string $v): static { $this->password = $v; return $this; }
     public function isAiAllowed(): bool { return $this->aiAllowed; }
     public function setAiAllowed(bool $v): static { $this->aiAllowed = $v; return $this; }
+    public const DEFAULT_ATTACHMENT_MB = 10;
+    public function getAttachmentLimitMb(): ?int { return $this->attachmentLimitMb; }
+    public function setAttachmentLimitMb(?int $v): static { $this->attachmentLimitMb = $v; return $this; }
+    /** Limite effective, en octets (somme des pièces jointes décodées). */
+    public function attachmentLimitBytes(): int { return ($this->attachmentLimitMb ?? self::DEFAULT_ATTACHMENT_MB) * 1024 * 1024; }
     public function getSignature(): ?string { return $this->signature; }
     public function setSignature(?string $v): static { $this->signature = $v === null || trim($v) === '' ? null : $v; return $this; }
     public function getRelanceHours(): ?int { return $this->relanceHours; }

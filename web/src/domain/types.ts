@@ -105,6 +105,8 @@ export interface MailAccount {
   smtpEncryption: 'none' | 'ssl' | 'tls'
   username: string
   aiAllowed: boolean
+  /** Taille maximale des pièces jointes d'un message, en Mo (selon le fournisseur) ; null = 10 Mo. */
+  attachmentLimitMb?: number | null
   /** Signature de ce compte (F-19) ; vide = signature par défaut. */
   signature?: string | null
   /** Délai de relance propre à ce compte ; null = réglage de l'utilisateur (F-12, F-54). */
@@ -228,12 +230,15 @@ export interface Identity {
   name: string
   address: string
   replyTo: string | null
+  /** Texte brut inséré à la rédaction (dérivé du HTML quand la signature est en HTML). */
   signature: string | null
+  /** Signature en HTML assaini ; null = signature en texte seul. */
+  signatureHtml?: string | null
   isDefault: boolean
   /** Identité principale du compte : son adresse, non supprimable. */
   primary: boolean
 }
-export type IdentityInput = Pick<Identity, 'name' | 'address' | 'replyTo' | 'signature'> & { accountId?: string }
+export type IdentityInput = Pick<Identity, 'name' | 'address' | 'replyTo' | 'signature'> & { signatureHtml?: string | null; accountId?: string }
 
 export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed' | 'meetingSoon'
 export interface AppNotification {

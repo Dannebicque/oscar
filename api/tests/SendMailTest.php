@@ -109,4 +109,21 @@ final class SendMailTest extends ApiTestCase
         self::assertSame('smtps://d%40x.fr:p%40ss%2Fw%3Ard@smtp.x.fr:465', $m->dsn($a));
         self::assertStringContainsString('auto_tls=false', $m->dsn($a->setSmtpEncryption('none')->setSmtpPort(1025)));
     }
+
+    public function testAttachmentsAreLimitedPerAccountWithTenMegabytesByDefault(): void
+    {
+        self::assertSame(10 * 1024 * 1024, $this->account->attachmentLimitBytes(), 'défaut : 10 Mo');
+        $file = ['name' => 'a.bin', 'type' => 'application/octet-stream', 'content' => base64_encode(str_repeat('a', 1_300_000))]; // 1,3 Mo
+
+        $this->em->find(MailAccount::class, $this->account->getId())->setAttachmentLimitMb(1);
+        $this->em->flush();
+        [$st, $e] = $this->call('POST', '/api/mails/send', $this->token, $this->payload(['attachments' => [$file]]));
+        self::assertSame([413, 1], [$st, $e['limitMb']], 'la limite du compte s’applique');
+        self::assertStringContainsString('1 Mo', $e['title']);
+
+        $this->em->find(MailAccount::class, $this->account->getId())->setAttachmentLimitMb(3);
+        $this->em->flush();
+        self::assertSame(201, $this->call('POST', '/api/mails/send', $this->token, $this->payload(['attachments' => [$file, $file]]))[0], '2,6 Mo sous 3 Mo');
+        self::assertSame(413, $this->call('POST', '/api/mails/send', $this->token, $this->payload(['attachments' => [$file, $file, $file]]))[0], '3,9 Mo au-dessus de 3 Mo');
+    }
 }

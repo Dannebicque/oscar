@@ -25,7 +25,7 @@ final class SendMailRequest
         #[Assert\Range(min: 1, max: 24 * 60)] public ?int $followHours = null,
         /** La case a été précochée par l'IA (affichage « Suggéré par l'IA »). */
         public bool $followSuggestedByAi = false,
-        /** @var list<array{name: string, type: string, content: string}> pièces jointes en base64 (5 Mo au total) */
+        /** @var list<array{name: string, type: string, content: string}> pièces jointes en base64 (somme limitée par compte, 10 Mo par défaut) */
         #[Assert\Count(max: 10)] public array $attachments = [],
         /** Identité d'expéditeur (nom, adresse « De », « Répondre à ») ; absente = identité par défaut du compte. */
         public ?string $identityId = null,

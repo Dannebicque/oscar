@@ -75,10 +75,12 @@ final class MailMoveApiTest extends ApiTestCase
         self::assertSame(404, $st);
     }
 
-    public function testSendCarriesAttachmentsAndRefusesMoreThanFiveMegabytes(): void
+    public function testSendCarriesAttachmentsAndRefusesMoreThanTheAccountLimit(): void
     {
         $smtp = static::getContainer()->get(\App\Tests\Support\FakeOutgoingMailer::class);
         $accountId = $this->em->getRepository(MailAccount::class)->findAll()[0]->getId();
+        $this->em->find(MailAccount::class, $accountId)->setAttachmentLimitMb(5);
+        $this->em->flush();
         [$st] = $this->call('POST', '/api/mails/send', $this->token, ['accountId' => $accountId, 'to' => ['a@x.fr'], 'subject' => 'PJ', 'body' => 'Voir pièce jointe', 'attachments' => [['name' => 'note.txt', 'type' => 'text/plain', 'content' => base64_encode('bonjour')]]]);
         self::assertSame(201, $st);
         $atts = $smtp->sent[0]->getAttachments();

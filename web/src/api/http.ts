@@ -186,6 +186,7 @@ export function createHttpApi(baseUrl: string): Api {
         update: (id, i) => req('PUT', `/api/identities/${encodeURIComponent(id)}`, i),
         setDefault: (id) => req('POST', `/api/identities/${encodeURIComponent(id)}/default`, {}),
         async remove(id) { await req('DELETE', `/api/identities/${encodeURIComponent(id)}`) },
+        preview: (html) => req('POST', '/api/identities/preview', { html }),
       },
     },
     directory: {

@@ -32,8 +32,8 @@ final class SendMailController extends AbstractController
             }
         }
         $total = array_sum(array_map(static fn ($a) => (int) (\strlen((string) ($a['content'] ?? '')) * 0.75), $r->attachments));
-        if ($total > 5 * 1024 * 1024) {
-            return new JsonResponse(['title' => 'Les pièces jointes dépassent 5 Mo. Retire-en une ou envoie un lien.'], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+        if ($total > $account->attachmentLimitBytes()) {
+            return new JsonResponse(['title' => sprintf('Les pièces jointes dépassent %d Mo, la limite de ce compte. Retire-en une ou envoie un lien.', $account->attachmentLimitBytes() / 1048576), 'limitMb' => (int) ($account->attachmentLimitBytes() / 1048576)], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
         }
         $reply = null;
         if ($r->inReplyToMailId !== null) {

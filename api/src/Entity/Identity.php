@@ -20,6 +20,9 @@ class Identity
     private string $id;
     #[ORM\Column(options: ['default' => false])]
     private bool $isDefault = false;
+    /** Signature en HTML assaini (liste blanche) ; `signature` en garde alors l'équivalent texte, inséré à la rédaction. */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $signatureHtml = null;
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
@@ -49,16 +52,18 @@ class Identity
     public function setReplyTo(?string $v): static { $this->replyTo = $v === null || trim($v) === '' ? null : trim($v); return $this; }
     public function getSignature(): ?string { return $this->signature; }
     public function setSignature(?string $v): static { $this->signature = $v === null || trim($v) === '' ? null : $v; return $this; }
+    public function getSignatureHtml(): ?string { return $this->signatureHtml; }
+    public function setSignatureHtml(?string $v): static { $this->signatureHtml = $v === null || trim($v) === '' ? null : $v; return $this; }
     public function isDefault(): bool { return $this->isDefault; }
     public function setDefault(bool $v): static { $this->isDefault = $v; return $this; }
     public function isPrimary(): bool { return $this->primary; }
 
-    /** @return array{id: string, accountId: string, name: string, address: string, replyTo: ?string, signature: ?string, isDefault: bool, primary: bool} */
+    /** @return array{id: string, accountId: string, name: string, address: string, replyTo: ?string, signature: ?string, signatureHtml: ?string, isDefault: bool, primary: bool} */
     public function toArray(): array
     {
         return [
             'id' => $this->id, 'accountId' => $this->account->getId(), 'name' => $this->name, 'address' => $this->address, 'replyTo' => $this->replyTo,
-            'signature' => $this->signature, 'isDefault' => $this->isDefault, 'primary' => $this->primary,
+            'signature' => $this->signature, 'signatureHtml' => $this->signatureHtml, 'isDefault' => $this->isDefault, 'primary' => $this->primary,
         ];
     }
 }

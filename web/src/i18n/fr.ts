@@ -273,10 +273,18 @@ export default {
     newTitle: 'Nouvelle identité', editTitle: 'Modifier l’identité', name: 'Nom affiché', nameHint: 'Ce que voit le destinataire, par exemple « Direction des études ».', nameRequired: 'Donne un nom à l’identité.',
     address: 'Adresse d’envoi', addressHint: 'L’adresse « De ». Ton serveur d’envoi doit l’autoriser (alias, boîte partagée) : sinon le message ne part pas et Oscar te le dit.',
     primaryHint: 'c’est celle de ton compte, elle ne change pas ici', account: 'Compte d’envoi', replyTo: 'Répondre à (facultatif)', replyToHint: 'Les réponses iront à cette adresse au lieu de l’adresse d’envoi.',
+    format: { text: 'Texte', html: 'HTML' }, formatLabel: 'Format de la signature', signatureText: 'Signature (texte)', signatureHtml: 'Signature (code HTML)',
+    htmlHint: 'Colle ton HTML. Il est nettoyé avant envoi : texte, liens, tableaux, couleurs et images en https sont gardés ; scripts, formulaires et images hors https sont retirés. Les destinataires reçoivent le texte ET le HTML.',
+    previewHtml: 'Aperçu de ce qui sera envoyé', plainVersion: 'Version texte (celle qui s’insère dans l’éditeur)',
     signature: 'Signature', signatureHint: 'Texte brut, ajouté en bas de tes messages. Commence par « -- » sur une ligne seule pour le séparateur habituel.', preview: 'Aperçu',
     saved: 'Identité « {name} » enregistrée.', defaulted: '« {name} » est maintenant ton identité par défaut.', removed: 'Identité « {name} » supprimée.',
     deleteTitle: 'Supprimer « {name} » ?', deleteText: 'Seule l’identité est supprimée, pas le compte ni les mails. Les prochains messages partiront de ton identité par défaut.',
     from: 'De',
+  },
+  attach: {
+    title: 'Pièces jointes', drag: 'Glisse tes fichiers ici', dropNow: 'Dépose pour joindre', browse: 'Parcourir…', limit: 'Jusqu’à {max} au total (limite de ton compte), {n} fichiers au plus.',
+    usage: '{used} sur {max}', count: 'Aucun fichier | 1 fichier | {n} fichiers', added: '1 fichier ajouté. | {n} fichiers ajoutés.', removed: '{name} retiré.',
+    tooBig: '« {name} » dépasse la limite : il reste {left} sur {max}. Retire un fichier ou envoie un lien.', tooMany: '« {name} » n’est pas joint : {n} fichiers au plus.', empty: '« {name} » est vide : il n’est pas joint.',
   },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
@@ -369,6 +377,7 @@ export default {
     title: 'Réglages', sections: 'Sections',
     nav: { myaccount: 'Mon compte', accounts: 'Comptes et agendas', relances: 'Relances et suivi', recap: 'Récapitulatifs', ai: 'Oscar, l’assistant IA', look: 'Apparence et accessibilité', journal: 'État des connexions et journal' },
     accounts: {
+      limit: 'Taille maximale des pièces jointes (Mo)', limitHint: 'Elle dépend de ton fournisseur de messagerie : souvent 20 à 25 Mo. En cas de doute, laisse vide (10 Mo). De 1 à 25.', limitInvalid: 'Choisis un nombre entier de 1 à 25.',
       signatureMoved: 'La signature se règle maintenant dans « Identités et signatures », juste en dessous.',
       signature: 'Signature', signatureHelp: 'Ajoutée en bas de tes messages. Vide : la signature par défaut.',
       relanceBtn: 'Relances', relanceLabel: 'Relance', inherit: 'Comme dans mes réglages', inheritShort: 'réglage général', bizOn: 'Jours ouvrés', bizOff: 'Heures réelles', relanceTitle: 'Relances du compte « {name} »', relanceHelp: 'Ce compte peut avoir son propre délai. Sans choix, le réglage général s’applique.', relanceSaved: 'Relances du compte « {name} » enregistrées.',

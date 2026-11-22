@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ApiError } from '../../api'
+import { ApiError, api } from '../../api'
 import type { Identity } from '../../domain/types'
 import { useAccountsStore } from '../../stores/accounts'
 import { useUiStore } from '../../stores/ui'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseCard from '../ui/BaseCard.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
+import SegmentedControl from '../ui/SegmentedControl.vue'
 import SelectField from '../ui/SelectField.vue'
 import TextareaField from '../ui/TextareaField.vue'
 import TextField from '../ui/TextField.vue'
@@ -22,7 +23,36 @@ const accounts = useAccountsStore()
 const ui = useUiStore()
 
 const editing = ref<Identity | 'new' | null>(null)
-const form = reactive({ name: '', address: '', replyTo: '', signature: '', accountId: '' })
+const form = reactive({ name: '', address: '', replyTo: '', signature: '', signatureHtml: '', accountId: '' })
+/** Texte brut ou HTML : une signature HTML est nettoyée par le serveur et garde une version texte pour la rédaction. */
+const format = ref<'text' | 'html'>('text')
+const formatOptions = computed(() => (['text', 'html'] as const).map((v) => ({ value: v, label: t(`identities.format.${v}`) })))
+const preview = reactive({ html: '', text: '', error: '', loading: false })
+let timer: ReturnType<typeof setTimeout> | undefined
+let seq = 0
+async function refreshPreview() {
+  const mine = ++seq
+  if (format.value !== 'html' || !form.signatureHtml.trim()) { Object.assign(preview, { html: '', text: '', error: '', loading: false }); return }
+  preview.loading = true
+  try {
+    const r = await api.accounts.identities.preview(form.signatureHtml)
+    if (mine === seq) Object.assign(preview, { html: r.html, text: r.text, error: '', loading: false })
+  } catch (e) {
+    if (mine === seq) Object.assign(preview, { html: '', text: '', error: e instanceof Error && e.message ? e.message : t('common.actionFailed'), loading: false })
+  }
+}
+// L'aperçu suit la frappe, avec un léger délai : c'est ce que le serveur enverra vraiment, pas ce qui est tapé.
+watch(() => [form.signatureHtml, format.value], () => { clearTimeout(timer); timer = setTimeout(refreshPreview, 350) })
+onBeforeUnmount(() => clearTimeout(timer))
+const frame = computed(() => `<!doctype html><meta charset="utf-8"><base target="_blank"><style>body{font:14px system-ui,sans-serif;color:black;margin:8px;overflow-wrap:anywhere}img{max-width:100%}</style>${preview.html}`)
+const escapeHtml = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+function chooseFormat(v: 'text' | 'html') {
+  if (v === 'html' && !form.signatureHtml.trim() && form.signature.trim()) {
+    // Du texte vers le HTML : on reprend le texte existant, les retours à la ligne deviennent des <br>.
+    form.signatureHtml = form.signature.split('\n').filter((l) => l.trim() !== '--').map(escapeHtml).join('<br>\n')
+  }
+  format.value = v
+}
 const errors = ref<Record<string, string>>({})
 const busy = ref(false)
 const toDelete = ref<Identity | null>(null)
@@ -34,14 +64,17 @@ const primary = computed(() => (editing.value && editing.value !== 'new' ? editi
 const firstLines = (s: string | null) => (s ?? '').split('\n').filter((l) => l.trim() && l.trim() !== '--').slice(0, 2).join(' · ')
 
 function openNew() {
-  Object.assign(form, { name: '', address: '', replyTo: '', signature: '', accountId: accounts.mail[0]?.id ?? '' })
+  Object.assign(form, { name: '', address: '', replyTo: '', signature: '', signatureHtml: '', accountId: accounts.mail[0]?.id ?? '' })
+  format.value = 'text'
   errors.value = {}
   editing.value = 'new'
 }
 function openEdit(i: Identity) {
-  Object.assign(form, { name: i.name, address: i.address, replyTo: i.replyTo ?? '', signature: i.signature ?? '', accountId: i.accountId })
+  Object.assign(form, { name: i.name, address: i.address, replyTo: i.replyTo ?? '', signature: i.signature ?? '', signatureHtml: i.signatureHtml ?? '', accountId: i.accountId })
+  format.value = i.signatureHtml ? 'html' : 'text'
   errors.value = {}
   editing.value = i
+  void refreshPreview()
 }
 function fail(e: unknown) {
   if (e instanceof ApiError) {
@@ -57,7 +90,7 @@ async function save() {
   if (!form.name.trim()) { errors.value = { name: t('identities.nameRequired') }; return }
   busy.value = true
   try {
-    const body = { name: form.name.trim(), address: form.address.trim(), replyTo: form.replyTo.trim() || null, signature: form.signature.trim() ? form.signature : null }
+    const body = { name: form.name.trim(), address: form.address.trim(), replyTo: form.replyTo.trim() || null, signature: format.value === 'text' && form.signature.trim() ? form.signature : null, signatureHtml: format.value === 'html' && form.signatureHtml.trim() ? form.signatureHtml : null }
     if (editing.value === 'new') await accounts.addIdentity({ ...body, accountId: form.accountId })
     else if (editing.value) await accounts.saveIdentity(editing.value.id, body)
     ui.notify(t('identities.saved', { name: form.name.trim() }))
@@ -114,10 +147,21 @@ async function remove() {
       <p v-else class="static"><strong>{{ t('identities.address') }}</strong><br />{{ form.address }} <span class="muted">· {{ t('identities.primaryHint') }}</span></p>
       <SelectField v-if="isNew && accountOptions.length > 1" id="id-account" v-model="form.accountId" :label="t('identities.account')" :options="accountOptions" />
       <TextField id="id-reply" v-model="form.replyTo" type="email" :label="t('identities.replyTo')" :hint="t('identities.replyToHint')" :error="errors.replyTo" />
-      <TextareaField id="id-sig" v-model="form.signature" :label="t('identities.signature')" :rows="5" :hint="t('identities.signatureHint')" :error="errors.signature" />
-      <div v-if="form.signature.trim()" class="preview" aria-live="polite">
+      <div class="field">
+        <span class="lbl">{{ t('identities.signature') }}</span>
+        <SegmentedControl :model-value="format" :options="formatOptions" :label="t('identities.formatLabel')" @update:model-value="chooseFormat" />
+      </div>
+      <TextareaField v-if="format === 'text'" id="id-sig" v-model="form.signature" :label="t('identities.signatureText')" :rows="5" :hint="t('identities.signatureHint')" :error="errors.signature" />
+      <TextareaField v-else id="id-sig-html" v-model="form.signatureHtml" :label="t('identities.signatureHtml')" :rows="7" :hint="t('identities.htmlHint')" :error="errors.signatureHtml" />
+      <div v-if="format === 'text' && form.signature.trim()" class="preview" aria-live="polite">
         <strong>{{ t('identities.preview') }}</strong>
         <pre>{{ form.signature }}</pre>
+      </div>
+      <div v-if="format === 'html' && form.signatureHtml.trim()" class="preview" aria-live="polite">
+        <strong>{{ t('identities.previewHtml') }}</strong>
+        <p v-if="preview.error" class="error-text" role="alert">{{ preview.error }}</p>
+        <iframe v-else class="frame" :title="t('identities.previewHtml')" sandbox="" referrerpolicy="no-referrer" :srcdoc="frame" />
+        <details v-if="preview.text" class="plain"><summary>{{ t('identities.plainVersion') }}</summary><pre>{{ preview.text }}</pre></details>
       </div>
     </form>
     <template #footer>
@@ -146,5 +190,8 @@ async function remove() {
 .acts { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: flex-start; }
 .static { margin: 0; overflow-wrap: anywhere; }
 .preview { display: grid; gap: var(--space-1); padding: var(--space-3); background: var(--c-surface-2); border: var(--bw) solid var(--c-border); border-radius: var(--radius-md); }
+.frame { width: 100%; min-height: 140px; border: var(--bw) solid var(--c-border); border-radius: var(--radius-sm); background: white; }
+.plain summary { cursor: pointer; min-height: var(--target); display: flex; align-items: center; font-weight: 600; }
+.lbl { font-weight: 700; }
 .preview pre { margin: 0; white-space: pre-wrap; font: inherit; overflow-wrap: anywhere; }
 </style>
