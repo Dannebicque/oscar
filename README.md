@@ -8,6 +8,10 @@ Cahier des charges v2 et maquette cliquable : voir `CLAUDE.md` pour les liens et
 - `docker/dovecot/` : serveur IMAP de test local (voir son README).
 - `desktop/` : enveloppe Tauri 2, à ajouter une fois le flux principal en place.
 
+## Documentation
+
+Installation, administration, utilisation, sécurité : voir [docs/](docs/README.md). Ce fichier s'adresse à celles et ceux qui **développent** Oscar.
+
 ## Tout lancer en local
 
 ```bash

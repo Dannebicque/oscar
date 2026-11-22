@@ -16,3 +16,4 @@ api/var
 **/.env.*.local
 .env.prod
 web/.env.local
+backups

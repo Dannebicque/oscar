@@ -34,6 +34,11 @@ Majordome numérique (« Votre majordome numérique. »). Phrases courtes, jamai
 - Un sens (`toHandle` / `waiting`) et un état (`new` / `inProgress` / `waiting` / `done`).
 - « En retard », « relance due », « réponse reçue » sont des signaux calculés, jamais des états stockés.
 
+## Documentation et exploitation
+- Guides dans `docs/` (installation, administration, utilisateur, sécurité) ; `scripts/backup.sh` et `scripts/restore.sh` pour la base de production (essayés contre une vraie pile Docker).
+- Rôle administrateur d'instance : gère l'outil, **jamais le contenu** des utilisateurs (pas de lecture de mails/agendas/tâches, pas de lien de mot de passe renvoyé). Ne pas casser cette règle.
+- Avant de pousser : `cd web && npm run build` (la construction de l'image compile aussi les tests), pas seulement `npm test`.
+
 ## État
 Voir `docs/MVP.md` : tableau exigence par exigence (✅ / 🟡 / ❌), à tenir à jour à chaque tranche.
 
