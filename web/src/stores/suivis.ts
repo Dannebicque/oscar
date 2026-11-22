@@ -20,7 +20,8 @@ export const useSuivisStore = defineStore('suivis', () => {
   const sorted = computed(() => sortByPriority(inScope.value, clock.now()))
   const mine = computed(() => items.value.filter((s) => s.mailbox === 'personal'))
   const actionCount = computed(() => mine.value.filter((s) => needsAction(s, clock.now())).length)
-  const relances = computed(() => relanceQueue(mine.value, clock.now(), useSettingsStore().s.dailyCap))
+  // Mode congés : aucune relance n'est proposée pendant l'absence ; elles reviennent au retour.
+  const relances = computed(() => (useSettingsStore().vacationActive(clock.now()) ? [] : relanceQueue(mine.value, clock.now(), useSettingsStore().s.dailyCap)))
   const byId = (id: string) => items.value.find((s) => s.id === id)
 
   async function load() {

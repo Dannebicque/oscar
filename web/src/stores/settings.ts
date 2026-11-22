@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { isoDay } from '../domain/dates'
 import { reactive, watch } from 'vue'
 import { api, apiMode } from '../api'
 import type { ServerSettings } from '../api/types'
@@ -37,6 +38,10 @@ export interface Settings {
   dirShowPhone: boolean
   /** Ton d'Oscar : léger (pointe d'humour) ou sobre. L'humour disparaît toujours dans une erreur. */
   oscarTone: 'light' | 'neutral'
+  /** Mode congés : premier et dernier jour d'absence (AAAA-MM-JJ, vide = pas de congés) et message d'absence prêt à envoyer. */
+  vacationFrom: string
+  vacationTo: string
+  vacationMessage: string
   /** Rappel avant un rendez-vous, en minutes (0 = pas de rappel). */
   meetingLeadMinutes: 0 | 5 | 10 | 15 | 30
   /** Demander confirmation avant de mettre des mails à la corbeille. */
@@ -48,7 +53,7 @@ export interface Settings {
 }
 
 export const DEFAULTS: Settings = {
-  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, confirmDelete: true, meetingLeadMinutes: 15, undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
+  locale: 'fr', theme: 'system', style: 'modern', palette: 'azur', customAccent: '#2457d6', density: 'normal', oscarTone: 'light', shortcuts: true, confirmDelete: true, meetingLeadMinutes: 15, vacationFrom: '', vacationTo: '', vacationMessage: '', undoSendSeconds: 10, aiMode: 'university', relanceHours: 48, businessDays: true, dailyCap: 5,
   recapMorning: '08:00', recapEvening: '17:30', recapEmail: true, recapHome: true, includePersonalCalendar: false,
   shareBusy: false, aiSuggestFollow: true, aiSuggestTasks: true, aiDraftRelance: true, notifyChannels: {}, dirShowDepartment: true, dirShowPhone: false,
 }
@@ -57,7 +62,7 @@ const KEY = 'oscar.settings'
 
 /** Réglages que le serveur applique (relances, récaps, mode d'IA). Les autres restent sur l'appareil. */
 export const SERVER_KEYS = [
-  'relanceHours', 'businessDays', 'dailyCap', 'meetingLeadMinutes', 'recapMorning', 'recapEvening', 'recapEmail', 'recapHome', 'includePersonalCalendar',
+  'relanceHours', 'businessDays', 'dailyCap', 'meetingLeadMinutes', 'vacationFrom', 'vacationTo', 'vacationMessage', 'recapMorning', 'recapEvening', 'recapEmail', 'recapHome', 'includePersonalCalendar',
   'shareBusy', 'aiMode', 'aiSuggestFollow', 'aiSuggestTasks', 'aiDraftRelance', 'notifyChannels', 'dirShowDepartment', 'dirShowPhone', 'locale',
 ] as const
 
@@ -128,5 +133,13 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  return { s, loadFromServer }
+  /** Mode congés : en pause du premier au dernier jour inclus. */
+  const vacationActive = (now: Date) => {
+    const today = isoDay(now)
+    return s.vacationFrom !== '' && s.vacationTo !== '' && today >= s.vacationFrom && today <= s.vacationTo
+  }
+  const vacationPlanned = (now: Date) => s.vacationFrom !== '' && s.vacationTo !== '' && isoDay(now) < s.vacationFrom
+  const stopVacation = () => { s.vacationFrom = ''; s.vacationTo = '' }
+
+  return { s, loadFromServer, vacationActive, vacationPlanned, stopVacation }
 })

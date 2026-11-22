@@ -29,6 +29,10 @@ final class RecapService
     {
         $settings = ($this->em->getRepository(UserSettings::class)->findOneBy(['owner' => $user]) ?? new UserSettings($user))->all();
         $local = $nowUtc->setTimezone(new \DateTimeZone((string) $settings['timezone']));
+        // Mode congés : pas de récap pendant l'absence.
+        if (UserSettings::onVacation($settings, $local)) {
+            return [];
+        }
         $done = [];
         foreach (['morning' => 'recapMorning', 'evening' => 'recapEvening'] as $slot => $key) {
             if ($local->format('H:i') < $settings[$key] || !$this->claim($user, $slot, $local->format('Y-m-d'))) {

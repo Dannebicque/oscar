@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { apiMode, session } from '../api'
+import VacationBanner from '../components/ui/VacationBanner.vue'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -110,6 +111,7 @@ async function quickAdd() {
   </PageHeader>
 
   <div class="grid">
+    <VacationBanner class="span" />
     <NextEventCard :now="now" class="span" />
 
     <OscarSays class="span" :situation="assistant.situation" :params="assistant.params" suggestion>

@@ -6,6 +6,7 @@ import NewSuiviDialog from '../components/suivis/NewSuiviDialog.vue'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
 import RelanceBatch from '../components/suivis/RelanceBatch.vue'
 import SuiviKpis, { type KpiId } from '../components/suivis/SuiviKpis.vue'
+import VacationBanner from '../components/ui/VacationBanner.vue'
 import SuiviHealth from '../components/suivis/SuiviHealth.vue'
 import SuiviBoard from '../components/suivis/SuiviBoard.vue'
 import SuiviRow from '../components/suivis/SuiviRow.vue'
@@ -160,6 +161,7 @@ function suggest(accept: boolean) {
 
     <div class="layout">
     <div class="stack">
+      <VacationBanner />
       <SuiviHealth v-if="view === 'health'" @list="view = 'priorities'" />
       <template v-else>
       <NextEventCard v-if="store.scope === 'mine'" :now="now" />

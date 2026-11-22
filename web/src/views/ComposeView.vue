@@ -154,6 +154,12 @@ onMounted(async () => {
     to.value = [o.from.address]
     subject.value = /^re\s*:/i.test(o.subject) ? o.subject : `Re : ${o.subject}`
     body.value = `\n\n${signature()}`
+    // Mode congés : le message d'absence est préparé, jamais envoyé seul ; pas de suivi pour une réponse automatique.
+    if (route.query.absence) {
+      body.value = `${absenceText()}\n\n${signature()}`
+      follow.value = false
+      aiPicked.value = false
+    }
     if (route.query.ai && settings.s.aiMode !== 'off') { aiDraft.value = true; follow.value = true; aiPicked.value = true; await regenerate() }
   } else {
     body.value = `\n\n${signature()}`
@@ -162,6 +168,12 @@ onMounted(async () => {
     aiPicked.value = true
   }
 })
+
+/** Le message d'absence de l'utilisateur, ou le modèle d'Oscar avec les dates de ses congés. */
+function absenceText() {
+  const own = settings.s.vacationMessage.trim()
+  return own || t('vacation.defaultMessage', { from: fmt.dateLong(settings.s.vacationFrom), to: fmt.dateLong(settings.s.vacationTo) })
+}
 
 async function regenerate() {
   const o = original.value

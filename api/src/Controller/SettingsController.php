@@ -61,6 +61,14 @@ final class SettingsController extends AbstractController
                 if (!\is_string($v) || !\in_array($v, \DateTimeZone::listIdentifiers(), true)) {
                     return $this->invalid($k);
                 }
+            } elseif ($k === 'vacationFrom' || $k === 'vacationTo') {
+                if (!\is_string($v) || ($v !== '' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) || !checkdate((int) substr($v, 5, 2), (int) substr($v, 8, 2), (int) substr($v, 0, 4))))) {
+                    return $this->invalid($k);
+                }
+            } elseif ($k === 'vacationMessage') {
+                if (!\is_string($v) || mb_strlen($v) > 2000) {
+                    return $this->invalid($k);
+                }
             } elseif (\in_array($k, self::TIMES, true)) {
                 if (!\is_string($v) || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $v)) {
                     return $this->invalid($k);
@@ -71,6 +79,10 @@ final class SettingsController extends AbstractController
             $changes[$k] = $v;
         }
         $settings = $em->getRepository(UserSettings::class)->findOneBy(['owner' => $user]) ?? new UserSettings($user);
+        $merged = $changes + $settings->all();
+        if (($merged['vacationFrom'] ?? '') !== '' && ($merged['vacationTo'] ?? '') !== '' && $merged['vacationTo'] < $merged['vacationFrom']) {
+            return $this->invalid('vacationTo');
+        }
         $settings->apply($changes);
         $em->persist($settings);
         $em->flush();

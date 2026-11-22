@@ -23,6 +23,10 @@ final class RelanceNotifier
     public function notify(User $user, \DateTimeImmutable $now): int
     {
         $settings = ($this->em->getRepository(UserSettings::class)->findOneBy(['owner' => $user]) ?? new UserSettings($user))->all();
+        // Mode congés : les relances sont en pause ; elles reviennent, regroupées, au premier jour de retour.
+        if (UserSettings::onVacation($settings, $now->setTimezone(new \DateTimeZone((string) $settings['timezone'])))) {
+            return 0;
+        }
         $day = $now->format('Y-m-d');
         $due = array_values(array_filter(
             $this->em->getRepository(Suivi::class)->findBy(['owner' => $user, 'direction' => SuiviDirection::Waiting, 'noRelance' => false, 'replyReceived' => false], ['relanceAt' => 'ASC']),

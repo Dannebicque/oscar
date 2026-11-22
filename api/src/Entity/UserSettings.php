@@ -13,7 +13,7 @@ class UserSettings
     public const DEFAULTS = [
         'relanceHours' => 48, 'businessDays' => true, 'dailyCap' => 5, 'recapMorning' => '08:00', 'recapEvening' => '17:30',
         'recapEmail' => true, 'recapHome' => true, 'includePersonalCalendar' => false, 'shareBusy' => false,
-        'meetingLeadMinutes' => 15, 'aiMode' => 'university', 'timezone' => 'Europe/Paris', 'locale' => 'fr', 'aiSuggestFollow' => true, 'aiSuggestTasks' => true, 'aiDraftRelance' => true,
+        'meetingLeadMinutes' => 15, 'vacationFrom' => '', 'vacationTo' => '', 'vacationMessage' => '', 'aiMode' => 'university', 'timezone' => 'Europe/Paris', 'locale' => 'fr', 'aiSuggestFollow' => true, 'aiSuggestTasks' => true, 'aiDraftRelance' => true,
         // Canaux par type de notification (F-75) : voir NotificationCenter::DEFAULTS.
         'notifyChannels' => [],
         // Annuaire (F-18) : champs affichés sous le nom, en plus de nom, prénom et e-mail.
@@ -43,6 +43,16 @@ class UserSettings
     public function apply(array $changes): void
     {
         $this->values = array_replace($this->values, array_intersect_key($changes, self::DEFAULTS));
+    }
+
+    /** Mode congés : les relances et les récaps sont en pause du premier au dernier jour inclus (jour civil de l'utilisateur). */
+    public static function onVacation(array $all, \DateTimeImmutable $local): bool
+    {
+        $from = (string) ($all['vacationFrom'] ?? '');
+        $to = (string) ($all['vacationTo'] ?? '');
+        $day = $local->format('Y-m-d');
+
+        return $from !== '' && $to !== '' && $day >= $from && $day <= $to;
     }
 
     public function getOwner(): User { return $this->owner; }

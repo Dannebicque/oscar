@@ -21,11 +21,18 @@ import StatusChip from '../components/ui/StatusChip.vue'
 import { LOCALES } from '../i18n'
 import { DENSITIES, THEMES } from '../themes'
 import { useOscar } from '../oscar/useOscar'
+import { useFormat } from '../composables/useFormat'
+import { clock } from '../domain/clock'
 import { useSettingsStore } from '../stores/settings'
 import { useSystemStore } from '../stores/system'
 
 const { t } = useI18n()
-const { s } = useSettingsStore()
+const settingsStore = useSettingsStore()
+const { s } = settingsStore
+const fmt = useFormat()
+const now = clock.now()
+/** Le dernier jour ne peut pas précéder le premier : sinon le serveur refuserait le réglage. */
+const vacationInvalid = computed(() => !!s.vacationFrom && !!s.vacationTo && s.vacationTo < s.vacationFrom)
 const system = useSystemStore()
 const { say } = useOscar()
 
@@ -86,6 +93,19 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
           <SwitchField v-model="s.businessDays" :label="t('settings.relances.businessDays')" :help="t('settings.relances.businessDaysHelp')" />
           <RadioGroup v-model="s.dailyCap" name="cap" :legend="t('settings.relances.cap')" :options="capOpts" />
           <p class="callout" data-tone="neutral">{{ t('settings.relances.never') }}</p>
+        </div>
+        <div class="card stack">
+          <h3>{{ t('vacation.title') }}</h3>
+          <p class="hint">{{ t('vacation.help') }}</p>
+          <div class="two">
+            <div class="field"><label for="vf">{{ t('vacation.from') }}</label><input id="vf" v-model="s.vacationFrom" type="date" class="input" /></div>
+            <div class="field"><label for="vt">{{ t('vacation.to') }}</label><input id="vt" v-model="s.vacationTo" type="date" class="input" :min="s.vacationFrom || undefined" /></div>
+          </div>
+          <p v-if="vacationInvalid" class="error-text" role="alert">{{ t('vacation.invalid') }}</p>
+          <p v-else-if="s.vacationFrom && s.vacationTo" class="hint" aria-live="polite">{{ settingsStore.vacationActive(now) ? t('vacation.active', { to: fmt.dateLong(s.vacationTo) }) : t('vacation.planned', { from: fmt.dateLong(s.vacationFrom), to: fmt.dateLong(s.vacationTo) }) }}</p>
+          <div class="field"><label for="vm">{{ t('vacation.message') }}</label><textarea id="vm" v-model="s.vacationMessage" class="input" rows="5" :placeholder="t('vacation.defaultMessage', { from: '…', to: '…' })" /></div>
+          <p class="hint">{{ t('vacation.messageHelp') }}</p>
+          <BaseButton v-if="s.vacationFrom || s.vacationTo" :label="t('vacation.stop')" @click="settingsStore.stopVacation()" />
         </div>
         <FollowRulesPanel />
         <SortRulesPanel />

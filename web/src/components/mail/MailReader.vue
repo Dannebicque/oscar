@@ -27,6 +27,7 @@ import BaseDialog from '../ui/BaseDialog.vue'
 import ActivityNotes from './ActivityNotes.vue'
 import AvailabilityDialog from './AvailabilityDialog.vue'
 import AttachmentsMenu from './AttachmentsMenu.vue'
+import Callout from '../ui/Callout.vue'
 import ConfirmTrashDialog from './ConfirmTrashDialog.vue'
 import MoveDialog from './MoveDialog.vue'
 import { isCustom, pathOf, prettyPath } from '../../domain/folders'
@@ -100,6 +101,7 @@ async function download(a: Attachment) {
   try { await api.mails.download(props.mail.id, a) } catch { ui.notify(t('mail.downloadFailed'), { tone: 'error' }) }
 }
 /** Archiver, corbeille ou classement : message parti d'ici, annulation possible depuis la notification. */
+const onVacation = computed(() => settings.vacationActive(clock.now()) && props.mail.folder === 'inbox' && !shared.value)
 const showTrash = ref(false)
 function relocate(folder: MoveTarget) {
   showMove.value = false
@@ -210,6 +212,10 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
           @release="act(() => mails.release(mail.id), t('mail.claim.released'))" @handle="act(() => mails.handle(mail.id), t('mail.claim.handled2'))"
           @reopen="act(() => mails.reopen(mail.id), t('mail.claim.reopened'))" @take-over="act(() => mails.takeOver(mail.id), t('mail.claim.takeOverDone', { who: mail.claim?.by ?? '' }))" @reply="reply"
         />
+        <Callout v-if="onVacation" tone="info" icon="clock" :level="3" :title="t('vacation.replyTitle')">
+          <p>{{ t('vacation.replyText') }}</p>
+          <template #actions><BaseButton icon="reply" :label="t('vacation.reply')" @click="router.push({ name: 'compose', query: { reply: mail.id, absence: '1' } })" /></template>
+        </Callout>
         <SuiviBanner
           v-else-if="suivi" :suivi="suivi" @draft="showDraft = true" @stop="suivis.stopRelance(suivi.id)" @close="closeSuivi"
           @keep-open="suivis.keepOpen(suivi.id)" @keep-waiting="suivis.keepWaiting(suivi.id)" @reopen="suivis.setStatus(suivi.id, 'inProgress')"

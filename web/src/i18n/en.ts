@@ -256,6 +256,14 @@ const en: typeof fr = {
     confirmTitle: 'Send this reminder to', confirmText: 'Each message goes out as you reviewed it, as a reply in its thread. You can still go back.',
     confirmYes: 'Yes, send', back: 'Go back', sentMany: '1 reminder sent. | {n} reminders sent.', someFailed: '1 reminder was not sent: it stays here, nothing is marked as sent. | {n} reminders were not sent: they stay here, nothing is marked as sent.',
   },
+  vacation: {
+    title: 'Vacation mode', help: 'From the first to the last chosen day, Oscar pauses reminders and recaps. Nothing is closed or deleted: everything comes back when you return.',
+    from: 'First day away', to: 'Last day away', message: 'Out-of-office message', messageHelp: 'Oscar prepares it when you open a mail during your vacation. It never goes out on its own: you send it with one click, mail by mail.',
+    defaultMessage: 'Hello,\n\nI am away from {from} to {to}. I will reply when I am back. For anything urgent, please contact the office.\n\nBest regards,',
+    stop: 'Stop vacation mode', settings: 'Settings', bannerTitle: 'You are on vacation', banner: 'Reminders and recaps are paused until {date}. Everything comes back when you return.',
+    planned: 'Planned from {from} to {to}.', active: 'Active until {to}.', invalid: 'The last day must come after the first.',
+    replyTitle: 'You are on vacation', replyText: 'I can prepare your out-of-office message for this mail. You review it and send it, nothing goes out on its own.', reply: 'Prepare the out-of-office message',
+  },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
     kept: 'Your message is kept: reopen it and try again.',

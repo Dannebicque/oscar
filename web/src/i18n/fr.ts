@@ -256,6 +256,14 @@ export default {
     confirmTitle: 'Envoyer cette relance à', confirmText: 'Chaque message part tel que tu l’as relu, en réponse dans son fil. Tu peux encore revenir en arrière.',
     confirmYes: 'Oui, envoyer', back: 'Revenir', sentMany: '1 relance envoyée. | {n} relances envoyées.', someFailed: '1 relance n’est pas partie : elle reste là, rien n’est marqué envoyé. | {n} relances ne sont pas parties : elles restent là, rien n’est marqué envoyé.',
   },
+  vacation: {
+    title: 'Mode congés', help: 'Du premier au dernier jour choisi, Oscar met en pause les relances et les récaps. Rien n’est fermé ni supprimé : tout revient à ton retour.',
+    from: 'Premier jour d’absence', to: 'Dernier jour d’absence', message: 'Message d’absence', messageHelp: 'Oscar le prépare quand tu ouvres un mail pendant tes congés. Il ne part jamais seul : tu l’envoies d’un clic, mail par mail.',
+    defaultMessage: 'Bonjour,\n\nJe suis absent(e) du {from} au {to}. Je réponds à mon retour. Pour une urgence, merci de contacter le secrétariat.\n\nCordialement,',
+    stop: 'Arrêter le mode congés', settings: 'Réglages', bannerTitle: 'Tu es en congés', banner: 'Les relances et les récaps sont en pause jusqu’au {date}. Tout reviendra à ton retour.',
+    planned: 'Prévu du {from} au {to}.', active: 'Actif jusqu’au {to}.', invalid: 'Le dernier jour doit venir après le premier.',
+    replyTitle: 'Tu es en congés', replyText: 'Je peux préparer ton message d’absence pour ce mail. Tu le relis et tu l’envoies, rien ne part seul.', reply: 'Préparer le message d’absence',
+  },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
     kept: 'Ton message est conservé : rouvre-le et réessaie.',
