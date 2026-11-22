@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { session } from '../../api'
+import { ApiError, session } from '../../api'
+import { useRelance } from '../../composables/useRelance'
 import type { Suivi } from '../../domain/types'
 import { useSuivisStore } from '../../stores/suivis'
 import { useUiStore } from '../../stores/ui'
@@ -19,6 +20,8 @@ const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 const store = useSuivisStore()
 const ui = useUiStore()
+const relance = useRelance()
+const sending = ref(false)
 
 const done = ref<Set<string>>(new Set())
 const body = ref('')
@@ -45,7 +48,19 @@ watch(current, resetDraft)
 async function act(kind: 'send' | 'snooze' | 'stop') {
   const s = current.value
   if (!s) return
-  if (kind === 'send') { await store.relanceSent(s.id); ui.notify(t('suivis.relanceSent', { who: s.contact })) }
+  if (kind === 'send') {
+    // Un vrai envoi, en réponse dans le fil : rien n'est marqué envoyé s'il échoue.
+    sending.value = true
+    try {
+      await relance.send(s, body.value)
+      ui.notify(t('suivis.relanceSent', { who: s.contact }))
+    } catch (e) {
+      ui.notify(e instanceof ApiError && e.message === 'no-recipient' ? t('suivis.relanceNoRecipient', { who: s.contact }) : t('suivis.relanceFailed', { who: s.contact }), { tone: 'error' })
+      return
+    } finally {
+      sending.value = false
+    }
+  }
   if (kind === 'snooze') { await store.snooze(s.id, 2); ui.notify(t('suivis.relanceSnoozed')) }
   if (kind === 'stop') { await store.stopRelance(s.id); ui.notify(t('suivis.relanceStopped', { subject: s.subject })) }
   done.value = new Set([...done.value, s.id])
@@ -69,7 +84,7 @@ async function act(kind: 'send' | 'snooze' | 'stop') {
     <p v-else class="end">{{ t('suivis.relanceEnd') }}</p>
     <template #footer>
       <template v-if="current">
-        <BaseButton variant="primary" icon="send" :label="t('suivis.relanceSend')" @click="act('send')" />
+        <BaseButton variant="primary" icon="send" :disabled="sending" :label="t('suivis.relanceSend')" @click="act('send')" />
         <BaseButton icon="clock" :label="t('suivis.relanceSnooze')" @click="act('snooze')" />
         <BaseButton icon="pause" :label="t('suivis.relanceStop')" @click="act('stop')" />
       </template>

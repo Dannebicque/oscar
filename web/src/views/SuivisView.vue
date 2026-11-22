@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import NewSuiviDialog from '../components/suivis/NewSuiviDialog.vue'
 import NextEventCard from '../components/suivis/NextEventCard.vue'
-import RelanceDialog from '../components/suivis/RelanceDialog.vue'
+import RelanceBatch from '../components/suivis/RelanceBatch.vue'
 import SuiviKpis, { type KpiId } from '../components/suivis/SuiviKpis.vue'
 import SuiviHealth from '../components/suivis/SuiviHealth.vue'
 import SuiviBoard from '../components/suivis/SuiviBoard.vue'
@@ -204,7 +204,7 @@ function suggest(accept: boolean) {
   </template>
 
   <NewSuiviDialog :open="showNew" @close="showNew = false" @create="create" />
-  <RelanceDialog :open="showRelances" :queue="store.relances" @close="showRelances = false" />
+  <RelanceBatch :open="showRelances" @close="showRelances = false" />
 </template>
 
 <style scoped>

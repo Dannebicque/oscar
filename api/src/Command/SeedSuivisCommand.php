@@ -96,6 +96,9 @@ final class SeedSuivisCommand extends Command
             $s = (new Suivi())->setSubject($marker.$subject)->setContact($contact)->setDirection(SuiviDirection::Waiting)
                 ->setStatus($open ? SuiviStatus::Waiting : SuiviStatus::Done)->setDueAt($sent->modify('+7 days')->setTime(0, 0))
                 ->setOwner($owner)->setResponsible($me)->setRelanceCount($relances);
+            if ($open) {
+                $s->setRelanceAt((new \DateTimeImmutable('today'))->modify(sprintf('-%d days', min($daysAgo, 3))));
+            }
             $s->log($me, 'created', $sent);
             $s->log($me, 'sent', $sent);
             if ($replyH !== null) {
