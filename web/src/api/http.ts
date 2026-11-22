@@ -180,6 +180,13 @@ export function createHttpApi(baseUrl: string): Api {
         remove: async (id) => { await req('DELETE', `/api/calendar-accounts/${encodeURIComponent(id)}`) },
       },
       shared: { list: () => req('GET', '/api/shared-mailboxes') },
+      identities: {
+        list: () => req('GET', '/api/identities'),
+        create: (i) => req('POST', '/api/identities', i),
+        update: (id, i) => req('PUT', `/api/identities/${encodeURIComponent(id)}`, i),
+        setDefault: (id) => req('POST', `/api/identities/${encodeURIComponent(id)}/default`, {}),
+        async remove(id) { await req('DELETE', `/api/identities/${encodeURIComponent(id)}`) },
+      },
     },
     directory: {
       status: () => req('GET', '/api/directory/status'),

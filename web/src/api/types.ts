@@ -1,5 +1,5 @@
 import type {
-  FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
+  Identity, IdentityInput, FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
   MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
 } from '../domain/types'
 
@@ -29,6 +29,9 @@ export interface SendPayload {
   bcc: string[]
   subject: string
   body: string
+  /** Compte et identité d'expéditeur ; absents = premier compte, identité par défaut. */
+  accountId?: string
+  identityId?: string
   /** Délai de relance en heures ; absent = ne pas suivre. */
   followHours?: number
   followSuggestedByAi?: boolean
@@ -113,6 +116,14 @@ export interface AccountsApi {
     remove(id: string): Promise<void>
   }
   shared: { list(): Promise<SharedMailboxInfo[]> }
+  /** Identités d'expéditeur et signatures. La principale de chaque compte existe d'office. */
+  identities: {
+    list(): Promise<Identity[]>
+    create(i: IdentityInput & { accountId: string }): Promise<Identity>
+    update(id: string, i: IdentityInput): Promise<Identity>
+    setDefault(id: string): Promise<Identity>
+    remove(id: string): Promise<void>
+  }
 }
 
 /** Réglages utiles au serveur (relances, récaps, mode d'IA). Thème et densité restent sur l'appareil. */

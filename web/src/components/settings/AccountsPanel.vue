@@ -64,7 +64,7 @@ async function remove() {
   } catch { ui.notify(t('settings.accounts.removeFailed'), { tone: 'error' }) }
 }
 const relanceFor = ref<MailAccount | null>(null)
-const relanceForm = reactive({ hours: '' as string, days: '' as string, signature: '' })
+const relanceForm = reactive({ hours: '' as string, days: '' as string })
 const HOURS = ['', '24', '48', '72', '168'] as const
 const hoursOptions = computed(() => HOURS.map((h) => ({ value: h, label: h === '' ? t('settings.accounts.inherit') : t(`settings.relances.h${h}`) })))
 const daysOptions = computed(() => [{ value: '', label: t('settings.accounts.inherit') }, { value: 'biz', label: t('settings.accounts.bizOn') }, { value: 'real', label: t('settings.accounts.bizOff') }])
@@ -72,7 +72,6 @@ function openRelance(a: MailAccount) {
   relanceFor.value = a
   relanceForm.hours = a.relanceHours ? String(a.relanceHours) : ''
   relanceForm.days = a.businessDays === true ? 'biz' : a.businessDays === false ? 'real' : ''
-  relanceForm.signature = a.signature ?? ''
 }
 const relanceSummary = (a: MailAccount) => {
   const h = a.relanceHours ? t(`settings.relances.h${a.relanceHours}`) : t('settings.accounts.inheritShort')
@@ -83,7 +82,7 @@ async function saveRelance() {
   const a = relanceFor.value
   if (!a) return
   try {
-    await accounts.updateMail(a.id, { relanceHours: relanceForm.hours ? Number(relanceForm.hours) : null, businessDays: relanceForm.days === 'biz' ? true : relanceForm.days === 'real' ? false : null, signature: relanceForm.signature.trim() || null })
+    await accounts.updateMail(a.id, { relanceHours: relanceForm.hours ? Number(relanceForm.hours) : null, businessDays: relanceForm.days === 'biz' ? true : relanceForm.days === 'real' ? false : null })
     ui.notify(t('settings.accounts.relanceSaved', { name: a.label }))
     relanceFor.value = null
   } catch { ui.notify(t('settings.accounts.addFailed'), { tone: 'error' }) }
@@ -150,7 +149,7 @@ const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings
     <form id="relance-form" class="stack" @submit.prevent="saveRelance">
       <SelectField id="rel-h" v-model="relanceForm.hours" :label="t('settings.relances.delay')" :options="hoursOptions" />
       <SelectField id="rel-d" v-model="relanceForm.days" :label="t('settings.relances.businessDays')" :options="daysOptions" />
-      <TextareaField id="acc-sig" v-model="relanceForm.signature" :label="t('settings.accounts.signature')" :rows="4" :hint="t('settings.accounts.signatureHelp')" />
+      <p class="hint">{{ t('settings.accounts.signatureMoved') }}</p>
     </form>
     <template #footer>
       <BaseButton :label="t('common.cancel')" @click="relanceFor = null" />

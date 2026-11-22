@@ -49,7 +49,21 @@ const showCc = ref(false)
 const subject = ref('')
 const body = ref(`\n\n${t('compose.signature')}`)
 /** Signature du compte (F-19), sinon celle par défaut. */
-const signature = () => accounts.mail[0]?.signature?.trim() || t('compose.signature')
+const identityId = ref('')
+const identity = computed(() => accounts.identityOf(identityId.value) ?? accounts.defaultIdentity())
+/** La signature de l'identité choisie, sinon celle du compte, sinon celle d'Oscar. */
+const signatureOf = (id: { signature: string | null; accountId: string } | undefined) => id?.signature?.trim() || accounts.mail.find((a) => a.id === id?.accountId)?.signature?.trim() || t('compose.signature')
+const signature = () => signatureOf(identity.value)
+const identityOptions = computed(() => accounts.identities.map((i) => ({ value: i.id, label: `${i.name} <${i.address}>` })))
+/** En changeant d'identité, la signature suit, sauf si l'utilisateur l'a retouchée à la main. */
+watch(identityId, (next, prev) => {
+  const from = accounts.identityOf(prev)
+  const to = accounts.identityOf(next)
+  if (!from || !to) return
+  const a = signatureOf(from)
+  const b = signatureOf(to)
+  if (a !== b && body.value.includes(a)) body.value = body.value.replace(a, b)
+})
 const follow = ref(false)
 const aiPicked = ref(false)
 const delayHours = ref<number>(settings.s.relanceHours)
@@ -120,9 +134,14 @@ onMounted(async () => {
   templates.value = await api.settings.templates.list().catch(() => [])
   const acc = accounts.mail[0]
   if (acc?.relanceHours) delayHours.value = acc.relanceHours
+  // Identité d'envoi : celle à laquelle le mail reçu était adressé (un alias), sinon l'identité par défaut.
+  const orig = route.query.reply ? mails.byId(String(route.query.reply)) : undefined
+  const addressed = orig ? accounts.identities.find((i) => orig.to.some((x) => x.address.toLowerCase() === i.address.toLowerCase())) : undefined
+  identityId.value = (addressed ?? accounts.defaultIdentity())?.id ?? ''
   // Envoi annulé (ou parti en échec) : on reprend le message exactement où il était.
   const back = route.query.restore ? outgoing.takeRestore() : null
   if (back) {
+    if (back.identityId && accounts.identityOf(back.identityId)) identityId.value = back.identityId
     to.value = back.to; cc.value = back.cc; bcc.value = back.bcc
     showCc.value = back.cc.length > 0 || back.bcc.length > 0
     subject.value = back.subject
@@ -203,6 +222,7 @@ async function buildPayload(): Promise<SendPayload> {
     attachments: await Promise.all(files.value.map(async (f) => ({ name: f.name, type: f.type || 'application/octet-stream', content: await readBase64(f) }))),
     followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
     inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
+    ...(identity.value ? { identityId: identity.value.id, accountId: identity.value.accountId } : {}),
   }
 }
 const valid = () => { submitted.value = true; return !!subject.value.trim() && to.value.length > 0 }
@@ -326,6 +346,7 @@ async function saveDraft() {
       </article>
 
       <section class="card compose-card stack" :aria-label="t('compose.title')">
+        <SelectField v-if="accounts.identities.length > 1" id="from" v-model="identityId" :label="t('identities.from')" :options="identityOptions" />
         <div class="field">
           <label for="to">{{ t('compose.to') }}</label>
           <RecipientInput id="to" v-model="to" :label="t('compose.to')" :invalid="submitted && to.length === 0" described-by="dir-help" />

@@ -2,6 +2,7 @@ import { addDays, atTime, isoDay } from '../domain/dates'
 import { handle as claimHandle, release as claimRelease, reopen as claimReopen, take as claimTake, takeOver as claimTakeOver } from '../domain/claim'
 import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSettings } from './types'
 import type {
+  Identity,
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
 } from '../domain/types'
 
@@ -61,7 +62,7 @@ export function createMockApi(now: Date = new Date()): Api {
     m('m2', { folder: 'sent', from: { name: ME, address: 'david@iut-troyes.fr' }, to: [{ name: 'Marc Dubois', address: 'marc.dubois@imprimerie.fr' }], subject: 'Devis des affiches', at: hoursAgo(52), suivi: 's2', paragraphs: ['Bonjour Marc,', 'Pourriez-vous m’envoyer le devis pour 40 affiches A2 ?', 'Merci, David'] }),
     m('m3', { from: { name: 'Scolarité', address: 'scolarite@iut-troyes.fr' }, subject: 'Salle B104 pour le jury', at: hoursAgo(96), suivi: 's3', paragraphs: ['Bonjour, la salle B104 est disponible sous réserve de confirmation avant vendredi.'] }),
     m('m4', { folder: 'sent', from: { name: ME, address: 'david@iut-troyes.fr' }, to: [{ name: 'Claire Petit', address: 'claire.petit@entreprise.fr' }], subject: 'Convention de stage', at: hoursAgo(20), suivi: 's4', paragraphs: ['Bonjour Claire, ci-joint la convention à signer.'], attachments: [{ name: 'convention.pdf', size: '184 Ko' }] }),
-    m('m6', { from: { name: 'Service achats', address: 'achats@iut-troyes.fr' }, subject: 'Matériel de TP livré', at: hoursAgo(160), paragraphs: ['Le matériel est arrivé au magasin.'] }),
+    m('m6', { from: { name: 'Service achats', address: 'achats@iut-troyes.fr' }, to: [{ name: 'Direction des études', address: 'etudes@iut-troyes.fr' }], subject: 'Matériel de TP livré', at: hoursAgo(160), paragraphs: ['Le matériel est arrivé au magasin.'] }),
     m('c1', { mailbox: 'contact', from: { name: 'Camille Roux', address: 'camille.roux@gmail.com' }, to: [{ name: 'contact@', address: SHARED.address }], subject: 'Question d’inscription', at: hoursAgo(5), unread: true, suivi: 's6', claim: claim('taken', 'Claire'), composing: 'Claire', paragraphs: ['Bonjour, les inscriptions sont-elles encore ouvertes pour la rentrée de janvier ?', 'Merci d’avance.'], activity: [entry(5, 'Claire', 'take')] }),
     m('c2', { mailbox: 'contact', from: { name: 'Lycée Camus', address: 'secretariat@lycee-camus.fr' }, to: [{ name: 'contact@', address: SHARED.address }], subject: 'Demande de visite de l’IUT', at: hoursAgo(28), unread: true, suivi: 's7', claim: claim('new'), paragraphs: ['Bonjour, une classe de terminale souhaiterait visiter l’IUT en décembre.'] }),
     m('c3', { mailbox: 'contact', from: { name: 'Imprimerie du Nord', address: 'devis@imprimerie-nord.fr' }, to: [{ name: 'contact@', address: SHARED.address }], subject: 'Catalogue 2027', at: hoursAgo(70), claim: claim('handled', 'Marc'), paragraphs: ['Veuillez trouver notre catalogue.'], activity: [entry(70, 'Marc', 'take'), entry(69, 'Marc', 'handled')], notes: [{ id: 'n1', author: 'Marc', text: 'Rien à faire, archivé.', at: hoursAgo(69) }] }),
@@ -107,6 +108,10 @@ export function createMockApi(now: Date = new Date()): Api {
   ]
 
   const mailAccounts: MailAccount[] = [{ id: 'acc1', label: 'david@iut-troyes.fr', address: 'david@iut-troyes.fr', imapHost: 'imap.iut-troyes.fr', imapPort: 993, imapEncryption: 'ssl', smtpHost: 'smtp.iut-troyes.fr', smtpPort: 587, smtpEncryption: 'tls', username: 'david', aiAllowed: true }]
+  let identities: Identity[] = [
+    { id: 'id1', accountId: 'acc1', name: 'David Annebicque', address: 'david@iut-troyes.fr', replyTo: null, signature: '-- \nDavid Annebicque\nIUT de Troyes · Département informatique', isDefault: true, primary: true },
+    { id: 'id2', accountId: 'acc1', name: 'Direction des études', address: 'etudes@iut-troyes.fr', replyTo: 'secretariat@iut-troyes.fr', signature: '-- \nLa direction des études\nIUT de Troyes', isDefault: false, primary: false },
+  ]
   const calendarAccounts: CalendarAccount[] = [
     { id: 'iut', label: 'IUT', kind: 'caldav', url: 'https://agenda.iut-troyes.fr/dav/', username: 'david', personal: false },
     { id: 'perso', label: 'Perso', kind: 'google', url: '', username: '', personal: true },
@@ -250,6 +255,23 @@ export function createMockApi(now: Date = new Date()): Api {
         async update(id, patch) { const a = mailAccounts.find((x) => x.id === id)!; Object.assign(a, patch); return clone(a) },
         async remove(id) { const i = mailAccounts.findIndex((a) => a.id === id); if (i >= 0) mailAccounts.splice(i, 1) },
         async test() { return { ok: true } },
+      },
+      identities: {
+        async list() { return clone(identities) },
+        async create(i) { const n: Identity = { id: uid('id'), accountId: i.accountId, name: i.name, address: i.address.toLowerCase(), replyTo: i.replyTo || null, signature: i.signature || null, isDefault: false, primary: false }; identities = [...identities, n]; return clone(n) },
+        async update(id, i) {
+          const x = identities.find((y) => y.id === id)
+          if (!x) throw new ApiError(404, 'Identité inconnue.')
+          Object.assign(x, { name: i.name, replyTo: i.replyTo || null, signature: i.signature || null }, x.primary ? {} : { address: i.address.toLowerCase() })
+          return clone(x)
+        },
+        async setDefault(id) { identities = identities.map((y) => ({ ...y, isDefault: y.id === id })); return clone(identities.find((y) => y.id === id)!) },
+        async remove(id) {
+          const x = identities.find((y) => y.id === id)
+          if (x?.primary) throw new ApiError(409, 'L’identité principale d’un compte ne se supprime pas : elle suit l’adresse du compte.')
+          identities = identities.filter((y) => y.id !== id)
+          if (!identities.some((y) => y.isDefault)) identities = identities.map((y, n) => ({ ...y, isDefault: n === 0 }))
+        },
       },
       calendar: {
         async list() { return clone(calendarAccounts) },

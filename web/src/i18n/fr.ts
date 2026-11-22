@@ -266,6 +266,18 @@ export default {
     planned: 'Prévu du {from} au {to}.', active: 'Actif jusqu’au {to}.', invalid: 'Le dernier jour doit venir après le premier.',
     replyTitle: 'Tu es en congés', replyText: 'Je peux préparer ton message d’absence pour ce mail. Tu le relis et tu l’envoies, rien ne part seul.', reply: 'Préparer le message d’absence',
   },
+  identities: {
+    title: 'Identités et signatures', help: 'Une identité, c’est un nom, une adresse « De », une adresse « Répondre à » et une signature. Tu choisis laquelle utiliser dans l’éditeur ; elle suit aussi tes réponses quand un mail était adressé à un de tes alias.',
+    none: 'Aucune identité : ajoute d’abord un compte de messagerie.', add: 'Ajouter une identité', edit: 'Modifier', delete: 'Supprimer', makeDefault: 'Utiliser par défaut',
+    default: 'Par défaut', primary: 'Adresse du compte', noSignature: 'Pas de signature : celle d’Oscar est utilisée.', replyToShort: 'Réponses vers {address}',
+    newTitle: 'Nouvelle identité', editTitle: 'Modifier l’identité', name: 'Nom affiché', nameHint: 'Ce que voit le destinataire, par exemple « Direction des études ».', nameRequired: 'Donne un nom à l’identité.',
+    address: 'Adresse d’envoi', addressHint: 'L’adresse « De ». Ton serveur d’envoi doit l’autoriser (alias, boîte partagée) : sinon le message ne part pas et Oscar te le dit.',
+    primaryHint: 'c’est celle de ton compte, elle ne change pas ici', account: 'Compte d’envoi', replyTo: 'Répondre à (facultatif)', replyToHint: 'Les réponses iront à cette adresse au lieu de l’adresse d’envoi.',
+    signature: 'Signature', signatureHint: 'Texte brut, ajouté en bas de tes messages. Commence par « -- » sur une ligne seule pour le séparateur habituel.', preview: 'Aperçu',
+    saved: 'Identité « {name} » enregistrée.', defaulted: '« {name} » est maintenant ton identité par défaut.', removed: 'Identité « {name} » supprimée.',
+    deleteTitle: 'Supprimer « {name} » ?', deleteText: 'Seule l’identité est supprimée, pas le compte ni les mails. Les prochains messages partiront de ton identité par défaut.',
+    from: 'De',
+  },
   undoSend: {
     pending: 'Message en cours d’envoi.', in: 'Envoi dans {n} s', cancel: 'Annuler l’envoi', now: 'Envoyer maintenant',
     kept: 'Ton message est conservé : rouvre-le et réessaie.',
@@ -357,6 +369,7 @@ export default {
     title: 'Réglages', sections: 'Sections',
     nav: { myaccount: 'Mon compte', accounts: 'Comptes et agendas', relances: 'Relances et suivi', recap: 'Récapitulatifs', ai: 'Oscar, l’assistant IA', look: 'Apparence et accessibilité', journal: 'État des connexions et journal' },
     accounts: {
+      signatureMoved: 'La signature se règle maintenant dans « Identités et signatures », juste en dessous.',
       signature: 'Signature', signatureHelp: 'Ajoutée en bas de tes messages. Vide : la signature par défaut.',
       relanceBtn: 'Relances', relanceLabel: 'Relance', inherit: 'Comme dans mes réglages', inheritShort: 'réglage général', bizOn: 'Jours ouvrés', bizOff: 'Heures réelles', relanceTitle: 'Relances du compte « {name} »', relanceHelp: 'Ce compte peut avoir son propre délai. Sans choix, le réglage général s’applique.', relanceSaved: 'Relances du compte « {name} » enregistrées.',
       mailAccounts: 'Comptes de messagerie', addMail: 'Ajouter un compte de messagerie', addCalendar: 'Ajouter un agenda', noMail: 'Aucun compte de messagerie pour l’instant. Ajoute le tien pour que je lise tes mails.',

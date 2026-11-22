@@ -1,18 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../api'
-import type { CalendarAccount, MailAccount, NewCalendarAccount, NewMailAccount, SharedMailboxInfo } from '../domain/types'
+import type { CalendarAccount, Identity, IdentityInput, MailAccount, NewCalendarAccount, NewMailAccount, SharedMailboxInfo } from '../domain/types'
 
 /** Comptes de messagerie, agendas et boîtes partagées de l'utilisateur. Les mots de passe ne reviennent jamais de l'API. */
 export const useAccountsStore = defineStore('accounts', () => {
   const mail = ref<MailAccount[]>([])
   const calendar = ref<CalendarAccount[]>([])
   const shared = ref<SharedMailboxInfo[]>([])
+  const identities = ref<Identity[]>([])
   const loaded = ref(false)
 
   async function load() {
     try {
-      ;[mail.value, calendar.value, shared.value] = await Promise.all([api.accounts.mail.list(), api.accounts.calendar.list(), api.accounts.shared.list()])
+      ;[mail.value, calendar.value, shared.value, identities.value] = await Promise.all([api.accounts.mail.list(), api.accounts.calendar.list(), api.accounts.shared.list(), api.accounts.identities.list().catch(() => [])])
     } finally {
       loaded.value = true
     }
@@ -24,5 +25,14 @@ export const useAccountsStore = defineStore('accounts', () => {
   async function addCalendar(a: NewCalendarAccount) { calendar.value = [...calendar.value, await api.accounts.calendar.create(a)] }
   async function removeCalendar(id: string) { await api.accounts.calendar.remove(id); calendar.value = calendar.value.filter((a) => a.id !== id) }
 
-  return { mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
+  /** Identité d'expéditeur par défaut, sinon la première. */
+  const defaultIdentity = () => identities.value.find((i) => i.isDefault) ?? identities.value[0]
+  const identityOf = (id: string | null | undefined) => identities.value.find((i) => i.id === id)
+  const reloadIdentities = async () => { identities.value = await api.accounts.identities.list() }
+  async function addIdentity(i: IdentityInput & { accountId: string }) { const n = await api.accounts.identities.create(i); await reloadIdentities(); return n }
+  async function saveIdentity(id: string, i: IdentityInput) { const n = await api.accounts.identities.update(id, i); await reloadIdentities(); return n }
+  async function makeDefaultIdentity(id: string) { await api.accounts.identities.setDefault(id); await reloadIdentities() }
+  async function removeIdentity(id: string) { await api.accounts.identities.remove(id); await reloadIdentities() }
+
+  return { identities, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
 })

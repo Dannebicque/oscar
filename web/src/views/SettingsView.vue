@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountsPanel from '../components/settings/AccountsPanel.vue'
+import IdentitiesPanel from '../components/settings/IdentitiesPanel.vue'
 import TemplatesPanel from '../components/settings/TemplatesPanel.vue'
 import DirectoryPanel from '../components/settings/DirectoryPanel.vue'
 import SortRulesPanel from '../components/settings/SortRulesPanel.vue'
@@ -72,6 +73,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
       <section id="set-accounts" aria-labelledby="h-accounts">
         <h2 id="h-accounts">{{ t('settings.nav.accounts') }}</h2>
         <AccountsPanel />
+        <IdentitiesPanel />
         <TemplatesPanel />
         <DirectoryPanel />
         <div class="card stack">

@@ -221,6 +221,20 @@ export interface CalEvent {
   attendees?: { name: string; address: string }[]
 }
 
+/** Identité d'expéditeur (F-19) : nom affiché, adresse « De », « Répondre à » et signature, par compte de messagerie. */
+export interface Identity {
+  id: string
+  accountId: string
+  name: string
+  address: string
+  replyTo: string | null
+  signature: string | null
+  isDefault: boolean
+  /** Identité principale du compte : son adresse, non supprimable. */
+  primary: boolean
+}
+export type IdentityInput = Pick<Identity, 'name' | 'address' | 'replyTo' | 'signature'> & { accountId?: string }
+
 export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed' | 'meetingSoon'
 export interface AppNotification {
   id: string

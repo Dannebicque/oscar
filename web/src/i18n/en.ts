@@ -266,6 +266,18 @@ const en: typeof fr = {
     planned: 'Planned from {from} to {to}.', active: 'Active until {to}.', invalid: 'The last day must come after the first.',
     replyTitle: 'You are on vacation', replyText: 'I can prepare your out-of-office message for this mail. You review it and send it, nothing goes out on its own.', reply: 'Prepare the out-of-office message',
   },
+  identities: {
+    title: 'Identities and signatures', help: 'An identity is a name, a “From” address, a “Reply-to” address and a signature. You pick one in the editor; it also follows your replies when a mail was sent to one of your aliases.',
+    none: 'No identity: add a mail account first.', add: 'Add an identity', edit: 'Edit', delete: 'Delete', makeDefault: 'Use by default',
+    default: 'Default', primary: 'Account address', noSignature: 'No signature: Oscar’s is used.', replyToShort: 'Replies go to {address}',
+    newTitle: 'New identity', editTitle: 'Edit identity', name: 'Display name', nameHint: 'What the recipient sees, for example “Studies office”.', nameRequired: 'Give the identity a name.',
+    address: 'Sending address', addressHint: 'The “From” address. Your outgoing server must allow it (alias, shared mailbox): otherwise the message is not sent and Oscar tells you.',
+    primaryHint: 'it is your account’s address, it does not change here', account: 'Sending account', replyTo: 'Reply-to (optional)', replyToHint: 'Replies will go to this address instead of the sending address.',
+    signature: 'Signature', signatureHint: 'Plain text, added at the bottom of your messages. Start with “--” on its own line for the usual separator.', preview: 'Preview',
+    saved: 'Identity “{name}” saved.', defaulted: '“{name}” is now your default identity.', removed: 'Identity “{name}” deleted.',
+    deleteTitle: 'Delete “{name}”?', deleteText: 'Only the identity is deleted, not the account or the mails. Your next messages will go out from your default identity.',
+    from: 'From',
+  },
   undoSend: {
     pending: 'Message is being sent.', in: 'Sending in {n} s', cancel: 'Undo send', now: 'Send now',
     kept: 'Your message is kept: reopen it and try again.',
@@ -357,6 +369,7 @@ const en: typeof fr = {
     title: 'Settings', sections: 'Sections',
     nav: { myaccount: 'My account', accounts: 'Accounts and calendars', relances: 'Reminders and follow-up', recap: 'Recaps', ai: 'Oscar, the AI assistant', look: 'Appearance and accessibility', journal: 'Connection status and log' },
     accounts: {
+      signatureMoved: 'The signature is now set in “Identities and signatures”, just below.',
       signature: 'Signature', signatureHelp: 'Added at the bottom of your messages. Empty: the default signature.',
       relanceBtn: 'Reminders', relanceLabel: 'Reminder', inherit: 'Same as my settings', inheritShort: 'general setting', bizOn: 'Business days', bizOff: 'Real hours', relanceTitle: 'Reminders for “{name}”', relanceHelp: 'This account can have its own delay. Without a choice, the general setting applies.', relanceSaved: 'Reminders for “{name}” saved.',
       mailAccounts: 'Mail accounts', addMail: 'Add a mail account', addCalendar: 'Add a calendar', noMail: 'No mail account yet. Add yours so I can read your mail.',

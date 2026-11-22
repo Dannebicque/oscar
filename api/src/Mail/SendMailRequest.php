@@ -27,6 +27,8 @@ final class SendMailRequest
         public bool $followSuggestedByAi = false,
         /** @var list<array{name: string, type: string, content: string}> pièces jointes en base64 (5 Mo au total) */
         #[Assert\Count(max: 10)] public array $attachments = [],
+        /** Identité d'expéditeur (nom, adresse « De », « Répondre à ») ; absente = identité par défaut du compte. */
+        public ?string $identityId = null,
     ) {
     }
 }

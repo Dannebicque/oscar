@@ -31,7 +31,7 @@ final class SendDueMailsHandler
             $r = $s->getRequest();
             $request = new SendMailRequest(
                 $r['accountId'] ?? '', $r['to'] ?? [], $r['cc'] ?? [], $r['bcc'] ?? [], $r['subject'] ?? '', $r['body'] ?? '',
-                $r['inReplyToMailId'] ?? null, $r['followHours'] ?? null, (bool) ($r['followSuggestedByAi'] ?? false), $r['attachments'] ?? [],
+                $r['inReplyToMailId'] ?? null, $r['followHours'] ?? null, (bool) ($r['followSuggestedByAi'] ?? false), $r['attachments'] ?? [], $r['identityId'] ?? null,
             );
             $owner = $s->getOwner();
             try {

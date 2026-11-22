@@ -31,12 +31,16 @@ final class MailSender
     public function send(User $user, MailAccount $account, SendMailRequest $r, ?Mail $replyTo = null, ?\DateTimeImmutable $now = null): array
     {
         $now ??= new \DateTimeImmutable();
+        $identity = $this->identity($user, $account, $r);
         $email = (new Email())
-            ->from(new Address($account->getAddress(), $user->getDisplayName()))
+            ->from($identity !== null ? new Address($identity->getAddress(), $identity->getName()) : new Address($account->getAddress(), $user->getDisplayName()))
             ->to(...array_map(static fn (string $a) => new Address($a), $r->to))
             ->subject($r->subject)
             ->text($r->body)
             ->date($now);
+        if ($identity?->getReplyTo() !== null) {
+            $email->replyTo(new Address($identity->getReplyTo()));
+        }
         if ($r->cc !== []) {
             $email->cc(...array_map(static fn (string $a) => new Address($a), $r->cc));
         }
@@ -80,6 +84,20 @@ final class MailSender
         }
 
         return ['messageId' => $messageId, 'suivi' => $suivi, 'savedToSent' => $saved];
+    }
+
+    /** @throws \InvalidArgumentException si l'identité n'existe pas, n'est pas à l'utilisateur ou n'est pas celle de ce compte */
+    private function identity(User $user, MailAccount $account, SendMailRequest $r): ?\App\Entity\Identity
+    {
+        if ($r->identityId === null || $r->identityId === '') {
+            return null;
+        }
+        $i = $this->em->find(\App\Entity\Identity::class, $r->identityId);
+        if ($i === null || $i->getOwner()->getId() !== $user->getId() || $i->getAccount()->getId() !== $account->getId()) {
+            throw new \InvalidArgumentException('Identité inconnue.');
+        }
+
+        return $i;
     }
 
     /** Réponse envoyée depuis une boîte partagée : journal de la demande et information des autres membres (F-68). */
