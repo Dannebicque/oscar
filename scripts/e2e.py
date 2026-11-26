@@ -6,12 +6,13 @@ Sans dépendance. Code de sortie ≠ 0 au premier écart. Idempotent : chaque ex
 """
 import imaplib
 import json
+import os
 import sys
 import time
 import urllib.error
 import urllib.request
 
-API = "http://127.0.0.1:8000"
+API = os.environ.get("OSCAR_API", "http://127.0.0.1:8000")
 RUN = str(int(time.time()))
 failures = []
 

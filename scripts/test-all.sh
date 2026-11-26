@@ -32,7 +32,8 @@ run "IMAP · scénarios Dovecot (smoke)"                python3 docker/dovecot/s
 run "Front · types"                                   bash -c 'cd web && npx vue-tsc --noEmit'
 run "Front · tests (domaine, flux, HTTP, axe-core)"   bash -c 'cd web && npm test'
 run "Front · build"                                   bash -c 'cd web && npm run build >/dev/null'
-run "Bout en bout · pile réelle"                      python3 scripts/e2e.py
+[ -f .dev/ports ] && . .dev/ports
+run "Bout en bout · pile réelle"                      env "OSCAR_API=http://127.0.0.1:${API_PORT:-8000}" python3 scripts/e2e.py
 
 if [ "$WAS_UP" = 0 ] && [ "$KEEP" = 0 ]; then scripts/dev-down.sh >/dev/null 2>&1; fi
 

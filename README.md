@@ -15,8 +15,9 @@ Installation, administration, utilisation, sécurité : voir [docs/](docs/README
 ## Tout lancer en local
 
 ```bash
-scripts/dev-up.sh     # PostgreSQL + IMAP de test (Docker), API, worker, SMTP de test, front
-scripts/dev-down.sh
+make dev      # PostgreSQL + IMAP de test (Docker), migrations, API, worker, SMTP de test, front
+make stop
+make          # toutes les commandes (journaux, tests, site…)
 ```
 
 Front : http://localhost:5173, connexion de développement avec `david`, `claire`, `marc` ou `lea` (quatre membres de l'alias `contact@`).

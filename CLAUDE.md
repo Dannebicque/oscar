@@ -42,7 +42,7 @@ Majordome numérique (« Votre majordome numérique. »). Phrases courtes, jamai
 ## État
 Voir `docs/MVP.md` : tableau exigence par exigence (✅ / 🟡 / ❌), à tenir à jour à chaque tranche.
 
-- Dev en une commande : `scripts/dev-up.sh` (PostgreSQL + Dovecot en tmpfs, API, worker, SMTP de test, front) ; `scripts/dev-down.sh`.
+- Dev en une commande : `make dev` (`scripts/dev-up.sh` : PostgreSQL + Dovecot en tmpfs, API, worker, SMTP de test, front ; prend le port libre suivant si 8000 ou 5173 sont pris) ; `make stop` ; `make` liste le reste.
 - Tests : `cd api && php bin/phpunit` (SQLite en mémoire ; `DATABASE_URL=postgresql://…` pour PostgreSQL), `cd web && npm test` (dont axe-core).
 - Le front parle à l'API par défaut ; `VITE_USE_MOCK=true` pour la démo hors ligne.
 - Composants du front : Reka UI (fenêtres, interrupteurs, choix, cases, notifications, pastilles de destinataires) et FullCalendar 6 (agenda), habillés par les jetons de thème ; ne pas réécrire à la main un widget interactif complexe. Seule exception : la liste de suggestions de `RecipientInput` (motif ARIA combobox écrit à la main, car Combobox + TagsInput de Reka réécrivait le texte tapé).
