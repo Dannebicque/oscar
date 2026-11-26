@@ -12,7 +12,7 @@ use Symfony\Component\Uid\Uuid;
 /** Notification dans l'application (F-75). Le texte est composé côté front à partir du type et des paramètres (fr/en). */
 #[ORM\Entity]
 #[ORM\UniqueConstraint(name: 'notification_dedupe', columns: ['owner_id', 'dedupe_key'])]
-#[ApiResource(operations: [new GetCollection()], formats: ['json' => ['application/json']], order: ['at' => 'DESC'])]
+#[ApiResource(operations: [new GetCollection()], formats: ['json' => ['application/json']], order: ['at' => 'DESC', 'id' => 'DESC'])]
 class Notification implements OwnedInterface
 {
     #[ORM\Id]

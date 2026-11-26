@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     operations: [new GetCollection(), new Get(), new Post(), new Patch(inputFormats: ['json' => ['application/merge-patch+json', 'application/json']]), new Delete()],
     formats: ['json' => ['application/json']],
-    order: ['dueAt' => 'ASC'],
+    order: ['dueAt' => 'ASC', 'id' => 'ASC'],
 )]
 class Task implements OwnedInterface
 {

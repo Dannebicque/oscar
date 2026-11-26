@@ -46,7 +46,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
     ],
     formats: ['json' => ['application/json']],
-    order: ['dueAt' => 'ASC'],
+    order: ['dueAt' => 'ASC', 'id' => 'ASC'],
 )]
 class Suivi implements OwnedInterface
 {

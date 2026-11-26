@@ -21,6 +21,7 @@ final readonly class MailHeader
         public bool $autoSubmitted = false,
         public ?int $uid = null,
         public string $folder = 'INBOX',
+        public bool $seen = true,
     ) {
     }
 

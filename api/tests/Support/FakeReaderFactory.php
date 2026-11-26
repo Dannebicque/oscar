@@ -5,6 +5,7 @@ namespace App\Tests\Support;
 use App\Entity\MailAccount;
 use App\Mail\MailboxAppender;
 use App\Mail\MailboxDraftReader;
+use App\Mail\MailboxFlags;
 use App\Mail\MailboxFolders;
 use App\Mail\MailboxMover;
 use App\Mail\MailboxReader;
@@ -20,6 +21,11 @@ final class FakeReaderFactory extends MailboxReaderFactory
     /** @var list<array{string, int, string}> */
     public static array $moved = [];
     public static bool $moveFails = false;
+    /** @var list<int> UID non lus annoncés par le serveur simulé */
+    public static array $unseen = [];
+    /** @var list<array{string, int, bool}> */
+    public static array $seenCalls = [];
+    public static bool $seenFails = false;
     public static ?string $ics = null;
     /** @var array{cc: list<string>, bcc: list<string>} servis par draftRecipients */
     public static array $draftRecipients = ['cc' => [], 'bcc' => []];
@@ -37,13 +43,13 @@ final class FakeReaderFactory extends MailboxReaderFactory
         parent::__construct($vault);
     }
 
-    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover&MailboxFolders&MailboxDraftReader
+    public function create(MailAccount $a): MailboxReader&MailboxAppender&MailboxMover&MailboxFolders&MailboxDraftReader&MailboxFlags
     {
         if ($a->getImapPort() === 1) {
             throw new \RuntimeException('connexion refusée (port 1, simulé)');
         }
 
-        return new class implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders, MailboxDraftReader {
+        return new class implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders, MailboxDraftReader, MailboxFlags {
             public function move(string $folder, int $uid, string $messageId, string $target): ?int
             {
                 if (FakeReaderFactory::$moveFails) {
@@ -73,6 +79,14 @@ final class FakeReaderFactory extends MailboxReaderFactory
             public function attachments(string $folder, int $uid): array { return [['name' => 'convention.pdf', 'size' => 2048, 'type' => 'application/pdf']]; }
             public function attachment(string $folder, int $uid, int $index): ?array { return $index === 0 ? ['name' => 'convention.pdf', 'type' => 'application/pdf', 'content' => '%PDF-simulé'] : null; }
             public function fetchAfter(string $folder, int $afterUid): array { return []; }
+            public function unseenUids(string $folder): array { return FakeReaderFactory::$unseen; }
+            public function setSeen(string $folder, int $uid, bool $seen): void
+            {
+                if (FakeReaderFactory::$seenFails) {
+                    throw new \RuntimeException('imap down');
+                }
+                FakeReaderFactory::$seenCalls[] = [$folder, $uid, $seen];
+            }
             public function fetchBody(string $folder, int $uid): ?string { return 'Corps simulé'; }
             public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
             {

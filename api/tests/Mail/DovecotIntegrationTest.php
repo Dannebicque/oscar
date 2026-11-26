@@ -38,6 +38,20 @@ final class DovecotIntegrationTest extends TestCase
         self::assertCount(1, $this->reader->fetchAfter('INBOX', $lastUid - 1));
     }
 
+    public function testReadFlagGoesBothWays(): void
+    {
+        $inbox = $this->reader->fetchAfter('INBOX', 0);
+        $uid = $inbox[0]->uid;
+        $this->reader->setSeen('INBOX', $uid, false);
+        self::assertContains($uid, $this->reader->unseenUids('INBOX'));
+        self::assertFalse($this->reader->fetchAfter('INBOX', $uid - 1)[0]->seen);
+
+        $this->reader->setSeen('INBOX', $uid, true);
+        self::assertNotContains($uid, $this->reader->unseenUids('INBOX'));
+        self::assertTrue($this->reader->fetchAfter('INBOX', $uid - 1)[0]->seen);
+        self::assertNotNull($this->reader->fetchBody('INBOX', $uid));
+    }
+
     public function testFixtureScenarios(): void
     {
         $inbox = $this->reader->fetchAfter('INBOX', 0);

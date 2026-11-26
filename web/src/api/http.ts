@@ -49,19 +49,35 @@ interface RawMail {
   toAddresses: string[]
   subject: string
   date: string
+  seen?: boolean
 }
 const FOLDERS: Record<string, MailFolder> = { INBOX: 'inbox', Sent: 'sent', Drafts: 'drafts', Archive: 'archive', Trash: 'trash' }
 
 const toMail = (r: RawMail): Mail => ({
   id: r.id, messageId: r.messageId, parents: [...(r.references ?? []), ...(r.inReplyTo ? [r.inReplyTo] : [])], mailbox: r.mailbox ?? 'personal',
   folder: FOLDERS[r.folder] ?? `f:${r.folder}`, from: { name: r.fromName || r.fromAddress, address: r.fromAddress }, to: r.toAddresses.map((a) => ({ name: a, address: a })),
-  subject: r.subject, paragraphs: [], at: r.date, unread: false, attachments: [], suivi: null, claim: null, composing: null, notes: [], activity: [], hints: {},
+  subject: r.subject, paragraphs: [], at: r.date, unread: r.seen === false && r.folder !== 'Sent' && r.folder !== 'Drafts', attachments: [], suivi: null, claim: null, composing: null, notes: [], activity: [], hints: {},
 })
 
 /** « Nom <adresse> » ou « adresse » → adresse. Renvoie null si ce n'est pas une adresse. */
 export function extractAddress(input: string): string | null {
   const m = input.match(/<([^<>\s]+@[^<>\s]+)>/) ?? input.trim().match(/^([^\s<>,;]+@[^\s<>,;]+)$/)
   return m ? m[1].toLowerCase() : null
+}
+
+/** Taille de page des listes de l'API (pagination_items_per_page dans api_platform.yaml). */
+export const PAGE_SIZE = 500
+
+/** Lit toutes les pages d'une liste : s'arrêter à la première faisait disparaître les éléments suivants sans rien dire. */
+export async function listAll<T extends { id: string }>(req: Request, path: string): Promise<T[]> {
+  const byId = new Map<string, T>()
+  for (let page = 1; ; page++) {
+    const rows = await req<T[]>('GET', page === 1 ? path : `${path}?page=${page}`)
+    const before = byId.size
+    for (const r of rows) byId.set(r.id, r)
+    // Page incomplète : c'est la dernière. « Rien de nouveau » évite de tourner en rond si le serveur ignore le numéro de page.
+    if (rows.length < PAGE_SIZE || byId.size === before) return [...byId.values()]
+  }
 }
 
 export function createHttpApi(baseUrl: string): Api {
@@ -73,7 +89,7 @@ export function createHttpApi(baseUrl: string): Api {
 
   return {
     suivis: {
-      async list() { return (await req<Partial<Suivi>[]>('GET', '/api/suivis')).map(hydrateSuivi) },
+      async list() { return (await listAll<Partial<Suivi> & { id: string }>(req, '/api/suivis')).map(hydrateSuivi) },
       async create(n) { return hydrateSuivi(await req<Partial<Suivi>>('POST', '/api/suivis', { status: 'new', ...n })) },
       async update(id, patch) { return hydrateSuivi(await req<Partial<Suivi>>('PATCH', `/api/suivis/${encodeURIComponent(id)}`, patch, { merge: true })) },
       async close(id) { await req('POST', `/api/suivis/${encodeURIComponent(id)}/close`) },
@@ -85,7 +101,7 @@ export function createHttpApi(baseUrl: string): Api {
       },
     },
     mails: {
-      async list() { return (await req<RawMail[]>('GET', '/api/mails')).map(toMail) },
+      async list() { return (await listAll<RawMail>(req, '/api/mails')).map(toMail) },
       async body(id) { return (await req<{ paragraphs: string[] }>('GET', `/api/mails/${encodeURIComponent(id)}/body`)).paragraphs },
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
       async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
@@ -137,7 +153,7 @@ export function createHttpApi(baseUrl: string): Api {
       invitation: (id) => req('GET', `/api/mails/${encodeURIComponent(id)}/invitation`),
       replyInvitation: (id, p) => req('POST', `/api/mails/${encodeURIComponent(id)}/invitation/reply`, p),
       composeHints: (subject, body) => req('POST', '/api/ai/compose-hints', { subject, body }),
-      async markRead() { /* l'état lu n'est pas encore suivi côté serveur */ },
+      async markRead(id) { await req('POST', `/api/mails/${encodeURIComponent(id)}/seen`, { seen: true }) },
       async claim(_mailId, suiviId, action) {
         if (!suiviId) throw new ApiError(404, 'no-suivi')
         await req('POST', `/api/suivis/${encodeURIComponent(suiviId)}/claim`, { action })
@@ -154,7 +170,7 @@ export function createHttpApi(baseUrl: string): Api {
       },
     },
     tasks: {
-      list: () => req<Task[]>('GET', '/api/tasks'),
+      list: () => listAll<Task>(req, '/api/tasks'),
       create: (t) => req<Task>('POST', '/api/tasks', t),
       update: (id, patch) => req<Task>('PATCH', `/api/tasks/${encodeURIComponent(id)}`, patch, { merge: true }),
       remove: async (id) => { await req('DELETE', `/api/tasks/${encodeURIComponent(id)}`) },
@@ -164,7 +180,7 @@ export function createHttpApi(baseUrl: string): Api {
         return (await req<CalendarAccount[]>('GET', '/api/calendar-accounts')).map((a) => ({ id: a.id, label: a.label, kind: a.kind, personal: a.personal }))
       },
       async events(): Promise<CalEvent[]> {
-        const rows = await req<{ id: string; calendarId: string; title: string; start: string; end: string; location: string | null; attendees?: { name: string; address: string }[] }[]>('GET', '/api/calendar-events')
+        const rows = await listAll<{ id: string; calendarId: string; title: string; start: string; end: string; location: string | null; attendees?: { name: string; address: string }[] }>(req, '/api/calendar-events')
         return rows.map((e) => ({ id: e.id, calendar: e.calendarId, title: e.title, start: e.start, end: e.end, location: e.location ?? null, attendees: e.attendees ?? [] }))
       },
       teamBusy: (mailbox, from, to) => req('GET', `/api/team/busy?mailbox=${encodeURIComponent(mailbox)}&from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`),
@@ -244,7 +260,7 @@ export function createHttpApi(baseUrl: string): Api {
     },
     system: {
       async notifications(): Promise<AppNotification[]> {
-        const rows = await req<{ id: string; kind: AppNotification['kind']; params: Record<string, string | number>; to: string; read: boolean; at: string }[]>('GET', '/api/notifications')
+        const rows = await listAll<{ id: string; kind: AppNotification['kind']; params: Record<string, string | number>; to: string; read: boolean; at: string }>(req, '/api/notifications')
         return rows.map((n) => ({ id: n.id, kind: n.kind, params: n.params, to: n.to, read: n.read, at: n.at }))
       },
       async markAllRead() { await req('POST', '/api/notifications/read-all', {}) },

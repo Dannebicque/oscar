@@ -6,7 +6,7 @@ use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Message;
 
 /** Lecture IMAP via webklex/php-imap (PHP pur, sans l'extension imap retirée du noyau). */
-final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders, MailboxDraftReader
+final class WebklexMailboxReader implements MailboxReader, MailboxAppender, MailboxMover, MailboxFolders, MailboxDraftReader, MailboxFlags
 {
     private ?\Webklex\PHPIMAP\Client $client = null;
 
@@ -91,6 +91,20 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         usort($out, static fn (MailHeader $a, MailHeader $b) => $a->uid <=> $b->uid);
 
         return $out;
+    }
+
+    public function unseenUids(string $folder): array
+    {
+        $box = $this->client()->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
+
+        return array_values(array_map(intval(...), $box->messages()->whereUnseen()->search()->all()));
+    }
+
+    public function setSeen(string $folder, int $uid, bool $seen): void
+    {
+        $m = $this->client()->getFolderByPath($folder)?->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(false)->get()->first()
+            ?? throw new \RuntimeException('Message introuvable sur le serveur.');
+        $seen ? $m->setFlag('Seen') : $m->unsetFlag('Seen');
     }
 
     public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
@@ -228,6 +242,7 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
             ),
             uid: (int) $m->getUid(),
             folder: $folder,
+            seen: $m->hasFlag('seen'),
         );
     }
 

@@ -4,5 +4,7 @@ api_platform:
     version: 1.0.0
     defaults:
         stateless: true
+        # Les listes restent bornées par page, et le front les lit TOUTES (PAGE_SIZE dans web/src/api/http.ts : garder la même valeur).
+        pagination_items_per_page: 500
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']

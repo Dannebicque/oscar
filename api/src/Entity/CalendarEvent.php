@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity]
 #[ORM\UniqueConstraint(name: 'event_uid', columns: ['calendar_id', 'uid'])]
 #[ORM\Index(columns: ['owner_id', 'starts_at'])]
-#[ApiResource(operations: [new GetCollection(), new Get()], formats: ['json' => ['application/json']], order: ['start' => 'ASC'])]
+#[ApiResource(operations: [new GetCollection(), new Get()], formats: ['json' => ['application/json']], order: ['start' => 'ASC', 'id' => 'ASC'])]
 class CalendarEvent implements OwnedInterface
 {
     #[ORM\Id]

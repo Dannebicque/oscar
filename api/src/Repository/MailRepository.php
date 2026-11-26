@@ -37,6 +37,18 @@ class MailRepository extends ServiceEntityRepository
         return array_values(array_filter(array_column($rows, 'f'), static fn (string $f) => !\in_array($f, ['INBOX', 'Sent', 'Drafts'], true)));
     }
 
+    /**
+     * Recale l'état « lu » d'un dossier sur le serveur de messagerie.
+     *
+     * @param list<int> $unseenUids
+     */
+    public function reconcileSeen(MailAccount $account, string $folder, array $unseenUids): void
+    {
+        foreach ($this->findBy(['account' => $account, 'folder' => $folder]) as $mail) {
+            $mail->setSeen(!\in_array($mail->getUid(), $unseenUids, true));
+        }
+    }
+
     /** @return list<Mail> messages reçus (hors envoyés) de tous les comptes d'un utilisateur */
     public function inbound(User $owner): array
     {

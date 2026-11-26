@@ -19,7 +19,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: MailRepository::class)]
 #[ORM\UniqueConstraint(name: 'mail_position', columns: ['account_id', 'folder', 'uid'])]
 #[ORM\Index(columns: ['message_id'])]
-#[ApiResource(operations: [new GetCollection(), new Get()], formats: ['json' => ['application/json']], order: ['date' => 'DESC'])]
+#[ApiResource(operations: [new GetCollection(), new Get()], formats: ['json' => ['application/json']], order: ['date' => 'DESC', 'id' => 'DESC'])]
 class Mail implements OwnedInterface
 {
     #[ORM\ManyToOne]
@@ -34,6 +34,10 @@ class Mail implements OwnedInterface
     /** Réponse de l'utilisateur à l'invitation jointe (F-25) : accepted | declined | tentative. */
     #[ORM\Column(length: 12, nullable: true)]
     private ?string $invitationResponse = null;
+
+    /** Lu (drapeau IMAP \Seen). */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $seen = true;
 
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
@@ -60,16 +64,18 @@ class Mail implements OwnedInterface
 
     public static function fromHeader(MailAccount $account, MailHeader $h): self
     {
-        return (new self($account, $h->folder, $h->uid ?? 0, $h->messageId, $h->inReplyTo, $h->references, $h->fromName, $h->fromAddress, $h->to, mb_substr($h->subject, 0, 500), $h->date, $h->autoSubmitted))->setOwner($account->getOwner());
+        return (new self($account, $h->folder, $h->uid ?? 0, $h->messageId, $h->inReplyTo, $h->references, $h->fromName, $h->fromAddress, $h->to, mb_substr($h->subject, 0, 500), $h->date, $h->autoSubmitted))->setOwner($account->getOwner())->setSeen($h->seen);
     }
 
     #[Ignore]
     public function toHeader(): MailHeader
     {
-        return new MailHeader($this->messageId, $this->inReplyTo, $this->references, $this->fromName, $this->fromAddress, $this->toAddresses, $this->subject, $this->date, $this->autoSubmitted, $this->uid, $this->folder);
+        return new MailHeader($this->messageId, $this->inReplyTo, $this->references, $this->fromName, $this->fromAddress, $this->toAddresses, $this->subject, $this->date, $this->autoSubmitted, $this->uid, $this->folder, $this->seen);
     }
 
     public function getId(): string { return $this->id; }
+    public function isSeen(): bool { return $this->seen; }
+    public function setSeen(bool $seen): static { $this->seen = $seen; return $this; }
     #[Ignore]
     public function getOwner(): ?User { return $this->owner; }
     public function setOwner(User $owner): static { $this->owner = $owner; return $this; }

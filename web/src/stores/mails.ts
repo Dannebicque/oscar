@@ -144,7 +144,8 @@ export const useMailsStore = defineStore('mails', () => {
   async function markRead(id: string) {
     const m = byId(id)
     if (!m?.unread) return
-    await api.mails.markRead(id)
+    // Un serveur de messagerie qui ne répond pas ne bloque pas la lecture : le message reste « non lu », ce qui est vrai.
+    try { await api.mails.markRead(id) } catch { return }
     patch(id, { unread: false })
   }
 

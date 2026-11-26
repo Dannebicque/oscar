@@ -1,4 +1,4 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -11,7 +11,10 @@ import { useUiStore } from '../stores/ui'
 import MailView from '../views/MailView.vue'
 import { mountApp } from './helpers'
 
-afterEach(() => { document.body.innerHTML = '' })
+// Les réglages sont gardés en local : sans remise à zéro, « raccourcis désactivés » fuyait dans les tests suivants.
+afterEach(() => { document.body.innerHTML = ''; localStorage.clear() })
+// Déclaré après : s'exécute avant. Démonter d'abord, sinon un composant encore vivant se met à jour dans un document vidé (erreur non gérée, CI en échec).
+enableAutoUnmount(afterEach)
 
 async function setup() {
   const pinia = createPinia()
