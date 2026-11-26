@@ -111,7 +111,7 @@ const en: typeof fr = {
     empty: 'No messages here.', selectOne: 'Pick a message to read it.',
     reply: 'Reply', replyAll: 'Reply all', forward: 'Forward', archive: 'Archive', move: 'Move', delete: 'Delete',
     actionDone: '{action}: “{subject}”. (mockup: nothing is actually moved)',
-    bodyLoading: 'Loading the message…', bodyError: 'I couldn’t read this message.', bodyEmpty: 'This message has no text.',
+    bodyLoading: 'Loading the message…', bodyError: 'I couldn’t read this message.', bodyGone: 'This message is no longer on your mail server: deleted or moved elsewhere. It will leave the list at the next sync.', bodyEmpty: 'This message has no text.',
     compact: 'Compact mode',
     suivi: 'Follow-up', banner: {
       reply: 'Reply received', replyText: '{who} replied. Close the request, or keep it open if something remains.',

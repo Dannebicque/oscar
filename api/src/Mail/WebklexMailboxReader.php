@@ -93,6 +93,13 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
         return $out;
     }
 
+    public function uids(string $folder): array
+    {
+        $box = $this->client()->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");
+
+        return array_values(array_map(intval(...), $box->messages()->all()->search()->all()));
+    }
+
     public function unseenUids(string $folder): array
     {
         $box = $this->client()->getFolderByPath($folder) ?? throw new \RuntimeException("Dossier $folder introuvable.");

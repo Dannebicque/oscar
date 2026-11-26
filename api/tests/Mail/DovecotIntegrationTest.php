@@ -52,6 +52,15 @@ final class DovecotIntegrationTest extends TestCase
         self::assertNotNull($this->reader->fetchBody('INBOX', $uid));
     }
 
+    public function testListsTheMessagesStillOnTheServer(): void
+    {
+        $uids = array_map(static fn (MailHeader $h) => $h->uid, $this->reader->fetchAfter('INBOX', 0));
+        self::assertSame($uids, array_values(array_intersect($this->reader->uids('INBOX'), $uids)));
+        self::assertCount(\count($uids), $this->reader->uids('INBOX'));
+        $this->expectException(\RuntimeException::class);
+        $this->reader->uids('Dossier-qui-n-existe-pas');
+    }
+
     public function testFixtureScenarios(): void
     {
         $inbox = $this->reader->fetchAfter('INBOX', 0);

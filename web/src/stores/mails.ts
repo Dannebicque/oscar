@@ -13,6 +13,8 @@ export const useMailsStore = defineStore('mails', () => {
   const error = ref(false)
   const loadingBody = ref<Set<string>>(new Set())
   const bodyError = ref<Set<string>>(new Set())
+  /** Messages que le serveur de messagerie n'a plus (supprimés ou déplacés ailleurs). */
+  const gone = ref<Set<string>>(new Set())
   const hintsLoaded = ref<Set<string>>(new Set())
 
   const inFolder = (mailbox: string, folder: MailFolder) =>
@@ -111,8 +113,9 @@ export const useMailsStore = defineStore('mails', () => {
     bodyError.value.delete(id)
     try {
       patch(id, { paragraphs: await api.mails.body(id) })
-    } catch {
-      bodyError.value = new Set([...bodyError.value, id])
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 410) gone.value = new Set([...gone.value, id])
+      else bodyError.value = new Set([...bodyError.value, id])
     } finally {
       const next = new Set(loadingBody.value)
       next.delete(id)
@@ -260,5 +263,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { gone, openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

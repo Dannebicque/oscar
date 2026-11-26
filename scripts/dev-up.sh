@@ -50,7 +50,8 @@ start smtp-sink "$ROOT" python3 docker/dovecot/smtp-sink.py
 (cd api && php bin/console app:suivis:seed --user=david -q && php bin/console app:mail:sync >/dev/null 2>&1) || true
 
 echo "→ API, worker, front"
-start api "$ROOT/api" php -d post_max_size=40M -d upload_max_filesize=40M -d memory_limit=256M -d max_execution_time=120 -S "127.0.0.1:$API_PORT" -t public
+# Plusieurs requêtes à la fois : sinon l'ouverture d'un mail (texte, pièces jointes, fil) attend en file derrière chaque appel IMAP.
+start api "$ROOT/api" env PHP_CLI_SERVER_WORKERS=6 php -d post_max_size=40M -d upload_max_filesize=40M -d memory_limit=256M -d max_execution_time=120 -S "127.0.0.1:$API_PORT" -t public
 start worker "$ROOT/api" php bin/console messenger:consume scheduler_default -vv
 [ -d web/node_modules ] || (cd web && npm ci --silent)
 printf 'VITE_API_URL=http://127.0.0.1:%s\n' "$API_PORT" > web/.env.local

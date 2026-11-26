@@ -23,6 +23,8 @@ final class MailSeenTest extends ApiTestCase
         FakeReaderFactory::$unseen = [];
         FakeReaderFactory::$seenCalls = [];
         FakeReaderFactory::$seenFails = false;
+        FakeReaderFactory::$serverUids = [7];
+        FakeReaderFactory::$body = 'Corps simulé';
         $david = $this->user('david');
         $this->account = (new MailAccount())->setOwner($david)->setLabel('IUT')->setAddress('d@x.fr')->setImapHost('h')->setSmtpHost('h')->setUsername('d');
         $this->em->persist($this->account);
@@ -55,6 +57,25 @@ final class MailSeenTest extends ApiTestCase
         self::assertSame(422, $this->call('POST', '/api/mails/'.$this->mail->getId().'/seen', $this->token, ['seen' => 'oui'])[0]);
         self::assertSame(404, $this->call('POST', '/api/mails/'.$this->mail->getId().'/seen', $this->tokenFor($this->user('claire')), ['seen' => true])[0]);
         self::assertSame([], FakeReaderFactory::$seenCalls);
+    }
+
+    public function testAMessageDeletedElsewhereIsSaidGoneThenLeaves(): void
+    {
+        FakeReaderFactory::$body = null;
+        self::assertSame([200, []], [$this->call('GET', '/api/mails/'.$this->mail->getId().'/body', $this->token)[0], $this->call('GET', '/api/mails/'.$this->mail->getId().'/body', $this->token)[1]['paragraphs']], 'présent mais sans texte');
+        FakeReaderFactory::$serverUids = [];
+        self::assertSame(410, $this->call('GET', '/api/mails/'.$this->mail->getId().'/body', $this->token)[0]);
+
+        $account = $this->em->find(MailAccount::class, $this->account->getId());
+        $sync = static::getContainer()->get(MailSynchronizer::class);
+        $reader = static::getContainer()->get(MailboxReaderFactory::class)->create($account);
+        FakeReaderFactory::$serverUids = null; // le serveur ne répond pas : on ne retire rien
+        $sync->sync($account, $reader);
+        self::assertSame(1, $this->em->getRepository(Mail::class)->count([]));
+        FakeReaderFactory::$serverUids = [];
+        $sync->sync($account, $reader);
+        self::assertSame(0, $this->em->getRepository(Mail::class)->count([]));
+        FakeReaderFactory::$body = 'Corps simulé';
     }
 
     public function testSyncFollowsWhatWasReadElsewhere(): void

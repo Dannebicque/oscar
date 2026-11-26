@@ -42,6 +42,8 @@ const who = (m: Mail) => (m.folder === 'sent' ? t('mail.thread.me') : m.from.nam
         <div v-if="isOpen(m)" :id="`th-${m.id}`" class="text">
           <p v-for="(p, i) in m.paragraphs" :key="i">{{ p }}</p>
           <p v-if="mails.loadingBody.has(m.id)" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
+          <p v-else-if="mails.gone.has(m.id)" class="muted">{{ t('mail.bodyGone') }}</p>
+          <p v-else-if="mails.bodyError.has(m.id)" class="error-text" role="alert">{{ t('mail.bodyError') }}</p>
           <p v-else-if="!m.paragraphs.length" class="muted">{{ t('mail.bodyEmpty') }}</p>
         </div>
       </li>

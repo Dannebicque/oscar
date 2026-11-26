@@ -257,6 +257,7 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
           <p v-for="(p, i) in mail.paragraphs" :key="i">{{ p }}</p>
           <p v-if="bodyLoading" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
           <p v-else-if="bodyFailed" class="error-text" role="alert">{{ t('mail.bodyError') }} <BaseButton :label="t('common.retry')" @click="mails.loadBody(mail.id)" /></p>
+          <p v-else-if="mails.gone.has(mail.id)" class="callout" data-tone="neutral">{{ t('mail.bodyGone') }}</p>
           <p v-else-if="mail.paragraphs.length === 0" class="muted">{{ t('mail.bodyEmpty') }}</p>
           <AttachmentsMenu v-if="mail.attachments.length" :items="mail.attachments" @download="download" />
         </div>

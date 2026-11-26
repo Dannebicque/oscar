@@ -111,7 +111,7 @@ export default {
     empty: 'Aucun message ici.', selectOne: 'Choisis un message pour le lire.',
     reply: 'Répondre', replyAll: 'Répondre à tous', forward: 'Transférer', archive: 'Archiver', move: 'Déplacer', delete: 'Supprimer',
     actionDone: '{action} : « {subject} ». (maquette : rien n’est réellement déplacé)',
-    bodyLoading: 'Chargement du message…', bodyError: 'Je n’ai pas pu lire ce message.', bodyEmpty: 'Ce message n’a pas de texte.',
+    bodyLoading: 'Chargement du message…', bodyError: 'Je n’ai pas pu lire ce message.', bodyGone: 'Ce message n’est plus sur ton serveur de messagerie : supprimé ou déplacé ailleurs. Il quittera la liste à la prochaine synchronisation.', bodyEmpty: 'Ce message n’a pas de texte.',
     compact: 'Mode compact',
     suivi: 'Suivi', banner: {
       reply: 'Réponse reçue', replyText: '{who} a répondu. Tu clos la demande ou tu la gardes ouverte s’il reste une action.',

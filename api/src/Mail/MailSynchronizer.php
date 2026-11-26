@@ -64,20 +64,20 @@ final class MailSynchronizer
         }
         $account->markSynced();
         $this->em->flush();
-        $this->syncSeen($account, $reader);
+        $this->reconcile($account, $reader);
 
         return ['fetched' => $fetched, 'replies' => $this->markReplies($account->getOwner())];
     }
 
-    /** Un mail lu (ou remis en non lu) depuis un autre logiciel l'est aussi ici. Un dossier injoignable garde son dernier état connu. */
-    private function syncSeen(MailAccount $account, MailboxReader $reader): void
+    /** Ce qui a changé depuis un autre logiciel (lu, supprimé, déplacé) l'est aussi ici. Un dossier injoignable garde son dernier état connu. */
+    private function reconcile(MailAccount $account, MailboxReader $reader): void
     {
         if (!$reader instanceof MailboxFlags) {
             return;
         }
-        foreach (array_unique(['INBOX', ...$this->mails->knownFolders($account)]) as $folder) {
+        foreach (array_unique([...self::FOLDERS, ...$this->mails->knownFolders($account)]) as $folder) {
             try {
-                $this->mails->reconcileSeen($account, $folder, $reader->unseenUids($folder));
+                $this->mails->reconcile($account, $folder, $reader->uids($folder), $reader->unseenUids($folder));
             } catch (\Throwable) {
                 continue;
             }

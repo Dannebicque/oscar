@@ -21,6 +21,9 @@ final class FakeReaderFactory extends MailboxReaderFactory
     /** @var list<array{string, int, string}> */
     public static array $moved = [];
     public static bool $moveFails = false;
+    /** @var ?list<int> UID présents sur le serveur simulé ; null = ne répond pas (rien ne doit être retiré) */
+    public static ?array $serverUids = null;
+    public static ?string $body = 'Corps simulé';
     /** @var list<int> UID non lus annoncés par le serveur simulé */
     public static array $unseen = [];
     /** @var list<array{string, int, bool}> */
@@ -79,6 +82,7 @@ final class FakeReaderFactory extends MailboxReaderFactory
             public function attachments(string $folder, int $uid): array { return [['name' => 'convention.pdf', 'size' => 2048, 'type' => 'application/pdf']]; }
             public function attachment(string $folder, int $uid, int $index): ?array { return $index === 0 ? ['name' => 'convention.pdf', 'type' => 'application/pdf', 'content' => '%PDF-simulé'] : null; }
             public function fetchAfter(string $folder, int $afterUid): array { return []; }
+            public function uids(string $folder): array { return FakeReaderFactory::$serverUids ?? throw new \RuntimeException('imap down'); }
             public function unseenUids(string $folder): array { return FakeReaderFactory::$unseen; }
             public function setSeen(string $folder, int $uid, bool $seen): void
             {
@@ -87,7 +91,7 @@ final class FakeReaderFactory extends MailboxReaderFactory
                 }
                 FakeReaderFactory::$seenCalls[] = [$folder, $uid, $seen];
             }
-            public function fetchBody(string $folder, int $uid): ?string { return 'Corps simulé'; }
+            public function fetchBody(string $folder, int $uid): ?string { return FakeReaderFactory::$body; }
             public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
             {
                 if (FakeReaderFactory::$appendFails) {

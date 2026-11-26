@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Mail\MailboxFlags;
 use App\Mail\MailboxReaderFactory;
 use App\Repository\MailRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +25,10 @@ final class MailBodyController extends AbstractController
         try {
             $reader = $factory->create($mail->getAccount());
             $text = $reader->fetchBody($mail->getFolder(), $mail->getUid());
+            // « Pas de texte » et « plus là » ne se disent pas pareil.
+            if ($text === null && $reader instanceof MailboxFlags && !\in_array($mail->getUid(), $reader->uids($mail->getFolder()), true)) {
+                return new JsonResponse(['title' => 'Ce message n’est plus sur ton serveur de messagerie : supprimé ou déplacé ailleurs.'], Response::HTTP_GONE);
+            }
             // Un brouillon reprend aussi ses copies (Cc, Cci) : la liste des mails ne les garde pas.
             if ($mail->getFolder() === 'Drafts') {
                 $extra = $reader->draftRecipients('Drafts', $mail->getUid());

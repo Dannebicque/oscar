@@ -38,14 +38,22 @@ class MailRepository extends ServiceEntityRepository
     }
 
     /**
-     * Recale l'état « lu » d'un dossier sur le serveur de messagerie.
+     * Recale un dossier sur le serveur de messagerie : état « lu », et retrait de ce qui n'y est plus (supprimé ou déplacé ailleurs).
+     * Rien n'est supprimé sur le serveur : seule la copie des en-têtes d'Oscar disparaît ; les suivis restent.
      *
+     * @param list<int> $uids UID présents sur le serveur
      * @param list<int> $unseenUids
      */
-    public function reconcileSeen(MailAccount $account, string $folder, array $unseenUids): void
+    public function reconcile(MailAccount $account, string $folder, array $uids, array $unseenUids): void
     {
+        $present = array_flip($uids);
+        $unseen = array_flip($unseenUids);
         foreach ($this->findBy(['account' => $account, 'folder' => $folder]) as $mail) {
-            $mail->setSeen(!\in_array($mail->getUid(), $unseenUids, true));
+            if ($mail->getUid() > 0 && !isset($present[$mail->getUid()])) {
+                $this->getEntityManager()->remove($mail);
+                continue;
+            }
+            $mail->setSeen(!isset($unseen[$mail->getUid()]));
         }
     }
 

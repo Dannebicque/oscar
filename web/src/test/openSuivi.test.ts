@@ -1,6 +1,6 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { api } from '../api'
+import { api, ApiError } from '../api'
 import { useMailsStore } from '../stores/mails'
 import { useSuivisStore } from '../stores/suivis'
 import type { Mail, Suivi } from '../domain/types'
@@ -52,6 +52,18 @@ describe('recharger la liste ne vide pas le message ouvert (F-16)', () => {
     await mails.loadBody('a')
     await mails.load()
     expect(mails.byId('a')?.paragraphs).toEqual(['Bonjour David,'])
+    vi.restoreAllMocks()
+  })
+})
+
+describe('message disparu du serveur (F-16)', () => {
+  it('est dit « plus là », pas « sans texte » ni « en panne »', async () => {
+    await mountApp({ template: '<div/>' })
+    const mails = useMailsStore()
+    mails.items = [mail('a', 'x@x.fr', 'inbox', '2026-11-20T09:00:00Z')]
+    vi.spyOn(api.mails, 'body').mockRejectedValue(new ApiError(410, 'plus là'))
+    await mails.loadBody('a')
+    expect([mails.gone.has('a'), mails.bodyError.has('a'), mails.loadingBody.has('a')]).toEqual([true, false, false])
     vi.restoreAllMocks()
   })
 })
