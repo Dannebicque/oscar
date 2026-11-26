@@ -37,6 +37,24 @@ describe('F-40 : gérer les boîtes partagées', () => {
     box().querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     await flushPromises()
     expect(box().textContent).toContain('Claire')
+    expect(box().textContent).toContain('invitation en attente')
+  })
+
+  it('une invitation dit ce qui sera partagé et attend la réponse', async () => {
+    const list = await api.accounts.shared.list().catch(() => [])
+    await mountApp({ template: '<div/>' })
+    vi.spyOn(api.accounts.shared, 'list').mockResolvedValue([{ id: 'x', slug: 'jury', address: 'jury@x.fr', name: 'Jury', role: 'member', invited: true, aiEnabled: false, members: [{ username: 'claire', displayName: 'Claire', role: 'admin' }] }, ...list.slice(0, 0)])
+    const accept = vi.spyOn(api.accounts.shared, 'accept').mockResolvedValue({} as never)
+    const { pinia } = await mountApp(SharedMailboxesPanel, '/', {}, { keepApi: true })
+    await useAccountsStore(pinia).load()
+    await flushPromises()
+    const card = document.body.querySelector('[data-invitation="jury@x.fr"]') as HTMLElement
+    expect(card.textContent).toContain('Membres actuels : Claire')
+    expect(useAccountsStore(pinia).shared).toHaveLength(0)
+    expect(accept).not.toHaveBeenCalled()
+    button(card, 'Accepter').click()
+    await flushPromises()
+    expect(accept).toHaveBeenCalledWith('x')
   })
 
   it('retirer quelqu’un demande confirmation en le nommant ; le dernier administrateur ne peut pas partir', async () => {

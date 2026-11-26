@@ -20,33 +20,59 @@ export const useMailsStore = defineStore('mails', () => {
   const unread = (mailbox: string) => items.value.filter((m) => m.mailbox === mailbox && m.folder === 'inbox' && m.unread).length
   const byId = (id: string) => items.value.find((m) => m.id === id)
   /** Retrouve un mail par son id ou par son Message-ID (c'est ce que stocke un suivi). */
-  const find = (ref: string | null | undefined) => (ref ? items.value.find((m) => m.id === ref || m.messageId === ref) : undefined)
+  // Un Message-ID s'écrit avec ou sans chevrons selon qui l'a noté (envoi, synchro) : on compare toujours normalisé.
+  const find = (ref: string | null | undefined) => (ref ? items.value.find((m) => m.id === ref || norm(m.messageId ?? '') === norm(ref)) : undefined)
   const refOf = (m: Mail) => m.messageId ?? m.id
   /** Fil de la conversation : tous les messages reliés à celui-ci par Message-ID / In-Reply-To / References, du plus ancien au plus récent (un même Message-ID reçu dans deux boîtes ne compte qu'une fois). */
   function threadOf(mail: Mail): Mail[] {
-    const ids = new Set<string>([refOf(mail), ...(mail.parents ?? [])])
+    const idsOf = (m: Mail) => [refOf(m), ...(m.parents ?? [])].map(norm)
+    const ids = new Set<string>(idsOf(mail))
     let grew = true
     while (grew) {
       grew = false
       for (const m of items.value) {
-        const mine = [refOf(m), ...(m.parents ?? [])]
+        const mine = idsOf(m)
         if (mine.some((x) => ids.has(x)) && !mine.every((x) => ids.has(x))) { mine.forEach((x) => ids.add(x)); grew = true }
       }
     }
     const seen = new Map<string, Mail>()
     for (const m of items.value) {
-      if (!ids.has(refOf(m)) || m.folder === 'trash' || m.folder === 'drafts') continue
-      const key = refOf(m)
+      const key = norm(refOf(m))
+      if (!ids.has(key) || m.folder === 'trash' || m.folder === 'drafts') continue
       if (!seen.has(key) || m.id === mail.id) seen.set(key, m)
     }
     return [...seen.values()].sort((a, b) => a.at.localeCompare(b.at))
   }
+  /** Message à montrer quand on ouvre un suivi : le dernier du fil (la réponse reçue s'il y en a une). */
+  function openTarget(ref: string | null | undefined): Mail | undefined {
+    const m = find(ref)
+    return m ? (threadOf(m).at(-1) ?? m) : undefined
+  }
   const forSuivi = (suiviId: string) => items.value.find((m) => m.suivi === suiviId)
+
+  /**
+   * La liste ne porte que les en-têtes. Le texte, les pièces jointes et les suggestions lus à la demande sont gardés d'un rechargement à l'autre :
+   * sinon le message ouvert se vidait (« pas de texte ») dès que la liste revenait après lui.
+   */
+  function keepLoaded(fresh: Mail[]): Mail[] {
+    const before = new Map(items.value.map((m) => [m.id, m]))
+    return fresh.map((m) => {
+      const old = before.get(m.id)
+      if (!old) return m
+      return {
+        ...m,
+        paragraphs: m.paragraphs.length ? m.paragraphs : old.paragraphs,
+        attachments: m.attachments.length ? m.attachments : old.attachments,
+        hints: Object.keys(m.hints).length ? m.hints : old.hints,
+        invitation: m.invitation ?? old.invitation,
+      }
+    })
+  }
 
   async function load() {
     loading.value = true
     error.value = false
-    try { items.value = await api.mails.list(); link() } catch { error.value = true } finally { loading.value = false }
+    try { items.value = keepLoaded(await api.mails.list()); link() } catch { error.value = true } finally { loading.value = false }
   }
   const put = (m: Mail) => { items.value = items.value.map((x) => (x.id === m.id ? m : x)) }
   /**
@@ -234,5 +260,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

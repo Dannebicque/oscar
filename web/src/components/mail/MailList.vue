@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useFormat } from '../../composables/useFormat'
 import { clock } from '../../domain/clock'
@@ -44,6 +44,12 @@ const suiviOf = (m: Mail) => (m.suivi ? suivis.byId(m.suivi) : undefined)
 const preview = (m: Mail) => m.paragraphs.find((p) => p.length > 20) ?? ''
 /** Traitement par lot : on coche des messages, puis une action s'applique à tous (avec annulation). */
 const selecting = ref(false)
+// Le message ouvert depuis un suivi ou l'accueil peut être loin dans la liste : on l'amène à l'écran.
+const root = ref<HTMLElement | null>(null)
+watch([() => props.selectedId, () => props.mails.length], async () => {
+  await nextTick()
+  root.value?.querySelector('[aria-current="true"]')?.scrollIntoView?.({ block: 'nearest' })
+}, { immediate: true, flush: 'post' })
 const picked = ref<Set<string>>(new Set())
 const pickedIds = computed(() => visible.value.filter((m) => picked.value.has(m.id)).map((m) => m.id))
 const allPicked = computed(() => visible.value.length > 0 && pickedIds.value.length === visible.value.length)
@@ -60,7 +66,7 @@ defineExpose({ visible, clearSelection })
 </script>
 
 <template>
-  <section class="list" :aria-label="t('mail.list')">
+  <section ref="root" class="list" :aria-label="t('mail.list')">
     <div class="tools">
       <div class="search"><BaseIcon name="search" :size="16" /><label for="mail-q" class="sr-only">{{ t('mail.search') }}</label><input id="mail-q" v-model="q" type="search" class="input" :placeholder="t('mail.searchPlaceholder')" /></div>
       <SegmentedControl v-model="filter" :options="options" :label="t('mail.filterLabel')" />

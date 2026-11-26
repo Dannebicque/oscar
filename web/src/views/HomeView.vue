@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useOpenSuivi } from '../composables/useOpenSuivi'
+import SuiviDetailDialog from '../components/suivis/SuiviDetailDialog.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -76,12 +78,9 @@ const steps = computed(() => (['mail', 'calendar', 'rules', 'ai'] as const).map(
 })))
 const doneSteps = computed(() => steps.value.filter((s) => s.done).length)
 
+const { openSuivi, detail } = useOpenSuivi()
 function open(i: PriorityItem) {
-  if (i.kind === 'mail') {
-    const s = suivis.byId(i.refId)
-    const m = mails.find(s?.mailId)
-    return router.push(m ? { name: 'mails', params: { id: m.id } } : { name: 'mails' })
-  }
+  if (i.kind === 'mail') return openSuivi(i.refId)
   return router.push({ name: i.route.name })
 }
 async function close(i: PriorityItem) {
@@ -164,6 +163,7 @@ async function quickAdd() {
       </form>
     </BaseCard>
   </div>
+  <SuiviDetailDialog :suivi-id="detail" @close="detail = null" />
 </template>
 
 <style scoped>

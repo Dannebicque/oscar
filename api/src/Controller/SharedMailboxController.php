@@ -108,18 +108,34 @@ final class SharedMailboxController extends AbstractController
         if (!$target instanceof User || !\in_array($role, ['member', 'admin'], true)) {
             return new JsonResponse(['title' => 'Je ne trouve personne avec cet identifiant. La personne doit avoir un compte ici.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $existing = $box->memberOf($target);
-        if ($existing?->isAdmin() && $role !== 'admin' && $this->adminCount($box) <= 1) {
+        $existing = $box->membershipOf($target);
+        if ($existing?->isAccepted() && $existing->isAdmin() && $role !== 'admin' && $this->adminCount($box) <= 1) {
             return new JsonResponse(['title' => 'Il faut au moins un administrateur.'], Response::HTTP_CONFLICT);
         }
-        $box->addMember($target, $role)->setRole($role);
+        $member = $box->addMember($target, $role)->setRole($role);
         if ($existing === null) {
-            // La personne ajoutée est prévenue : elle sait ce qui est partagé et peut quitter la boîte.
+            // Une invitation : rien n'est partagé tant que la personne n'a pas dit oui.
+            $member->setAccepted(false);
             $this->center->deliver($target, new Notification('sharedAdded', ['who' => $user->getDisplayName(), 'subject' => $box->getAddress()], 'reglages', 'shared:'.$box->getId().':'.$target->getId().':'.time()));
         }
         $this->em->flush();
 
         return new JsonResponse($this->view($box, $user), Response::HTTP_CREATED);
+    }
+
+    /** Accepter une invitation. Pour la refuser : se retirer, comme pour quitter la boîte. */
+    #[Route('/api/shared-mailboxes/{id}/accept', methods: ['POST'])]
+    public function accept(string $id, #[CurrentUser] User $user): JsonResponse
+    {
+        $box = $this->em->find(SharedMailbox::class, $id);
+        $member = $box?->membershipOf($user);
+        if ($box === null || $member === null) {
+            return new JsonResponse(['title' => 'Boîte partagée inconnue.'], Response::HTTP_NOT_FOUND);
+        }
+        $member->setAccepted(true);
+        $this->em->flush();
+
+        return new JsonResponse($this->view($box, $user));
     }
 
     #[Route('/api/shared-mailboxes/{id}/members/{username}', methods: ['DELETE'])]
@@ -128,7 +144,7 @@ final class SharedMailboxController extends AbstractController
         // Chacun peut quitter une boîte ; retirer quelqu'un d'autre est réservé aux administrateurs.
         $leaving = $username === $user->getUsername();
         $box = $leaving ? $this->em->find(SharedMailbox::class, $id) : $this->adminBox($id, $user);
-        if ($box === null || ($leaving && $box->memberOf($user) === null)) {
+        if ($box === null || ($leaving && $box->membershipOf($user) === null)) {
             return $this->forbidden($id, $user);
         }
         $member = null;
@@ -138,7 +154,7 @@ final class SharedMailboxController extends AbstractController
         if ($member === null) {
             return new JsonResponse(['title' => 'Ce membre n’existe pas.'], Response::HTTP_NOT_FOUND);
         }
-        if ($member->isAdmin() && $this->adminCount($box) <= 1) {
+        if ($member->isAccepted() && $member->isAdmin() && $this->adminCount($box) <= 1) {
             return new JsonResponse(['title' => 'Il faut au moins un administrateur. Nomme quelqu’un d’autre avant.'], Response::HTTP_CONFLICT);
         }
         // Ses exemplaires des mails redeviennent des mails personnels : sinon ils disparaîtraient de son écran.
@@ -175,7 +191,7 @@ final class SharedMailboxController extends AbstractController
 
     private function adminCount(SharedMailbox $box): int
     {
-        return \count(array_filter($box->getMembers()->toArray(), static fn (SharedMailboxMember $m) => $m->isAdmin()));
+        return \count(array_filter($box->getAcceptedMembers(), static fn (SharedMailboxMember $m) => $m->isAdmin()));
     }
 
     private function adminBox(string $id, User $user): ?SharedMailbox
@@ -198,11 +214,17 @@ final class SharedMailboxController extends AbstractController
     /** @return array<string, mixed> */
     private function view(SharedMailbox $b, User $me): array
     {
+        $members = array_map(static fn (SharedMailboxMember $m) => ['username' => $m->getUser()->getUsername(), 'displayName' => $m->getUser()->getDisplayName(), 'role' => $m->getRole(), 'pending' => !$m->isAccepted()], $b->getMembers()->toArray());
+        // Une personne invitée voit de quoi décider (la boîte et qui en fait partie), pas de quoi s'en servir.
+        if ($b->memberOf($me) === null) {
+            return ['id' => $b->getId(), 'slug' => $b->getSlug(), 'address' => $b->getAddress(), 'name' => $b->getName(), 'invited' => true, 'role' => $b->membershipOf($me)?->getRole(), 'aiEnabled' => $b->isAiEnabled(), 'members' => $members];
+        }
+
         return [
             'id' => $b->getId(), 'slug' => $b->getSlug(), 'address' => $b->getAddress(), 'name' => $b->getName(),
             'senderName' => $b->getSenderName(), 'signature' => $b->getSignature(), 'identityId' => 'shared:'.$b->getId(),
             'role' => $b->memberOf($me)?->getRole(), 'autoFollow' => $b->isAutoFollow(), 'aiEnabled' => $b->isAiEnabled(),
-            'members' => array_map(static fn (SharedMailboxMember $m) => ['username' => $m->getUser()->getUsername(), 'displayName' => $m->getUser()->getDisplayName(), 'role' => $m->getRole()], $b->getMembers()->toArray()),
+            'invited' => false, 'members' => $members,
         ];
     }
 }

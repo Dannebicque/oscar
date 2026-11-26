@@ -334,7 +334,8 @@ export function createMockApi(now: Date = new Date()): Api {
           const known = SHARED.members.find((n) => n.toLowerCase() === u)
           if (!known) throw new ApiError(422, 'Je ne trouve personne avec cet identifiant. La personne doit avoir un compte ici.')
           if (role !== 'admin' && b.members.some((m) => m.username === u && m.role === 'admin') && oneAdminLeft(b, u)) throw new ApiError(409, 'Il faut au moins un administrateur.')
-          b.members = [...b.members.filter((m) => m.username !== u), { username: u, displayName: known, role }]
+          const old = b.members.find((m) => m.username === u)
+          b.members = [...b.members.filter((m) => m.username !== u), { username: u, displayName: known, role, pending: old ? old.pending : true }]
           return clone(b)
         },
         async removeMember(id, username) {
@@ -344,6 +345,7 @@ export function createMockApi(now: Date = new Date()): Api {
           if (username === ME.toLowerCase()) boxes = allBoxes().filter((x) => x.id !== id)
         },
         async remove(id) { boxOf(id); boxes = allBoxes().filter((x) => x.id !== id) },
+        async accept(id) { return clone(Object.assign(boxOf(id), { invited: false })) },
       },
     },
     instance: {

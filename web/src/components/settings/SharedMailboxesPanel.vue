@@ -86,8 +86,19 @@ async function confirmed() {
       <h3>{{ t('settings.accounts.sharedBoxes') }}</h3>
       <BaseButton icon="plus" :label="t('settings.accounts.sharedBox.add')" @click="creating = true; createError = ''" />
     </div>
-    <p v-if="accounts.shared.length === 0" class="muted">{{ t('settings.accounts.noShared') }}</p>
-    <ul v-else class="boxes">
+    <ul v-if="accounts.invitations.length" class="boxes" :aria-label="t('settings.accounts.sharedBox.invitations')">
+      <li v-for="b in accounts.invitations" :key="b.id" class="box invite-card" :data-invitation="b.address">
+        <ToneChip tone="warn" icon="users" :label="t('settings.accounts.sharedBox.invitation')" />
+        <strong class="addr">{{ b.name }} · {{ b.address }}</strong>
+        <p>{{ t('settings.accounts.sharedBox.invitationText', { names: b.members.filter((m) => !m.pending).map((m) => m.displayName).join(', ') }) }}</p>
+        <div class="acts">
+          <BaseButton variant="primary" :label="t('settings.accounts.sharedBox.accept')" @click="attempt(async () => { await accounts.acceptShared(b.id); await mails.load() }, t('settings.accounts.sharedBox.accepted', { address: b.address }))" />
+          <BaseButton :label="t('settings.accounts.sharedBox.decline')" @click="attempt(() => accounts.removeSharedMember(b.id, me()), t('settings.accounts.sharedBox.declined', { address: b.address }))" />
+        </div>
+      </li>
+    </ul>
+    <p v-if="accounts.shared.length === 0 && accounts.invitations.length === 0" class="muted">{{ t('settings.accounts.noShared') }}</p>
+    <ul v-if="accounts.shared.length" class="boxes">
       <li v-for="b in accounts.shared" :key="b.id" class="box" :data-box="b.address">
         <div class="head">
           <strong class="addr">{{ b.name }} · {{ b.address }}</strong>
@@ -95,7 +106,7 @@ async function confirmed() {
         </div>
         <ul class="members" :aria-label="t('settings.accounts.sharedBox.members', { address: b.address })">
           <li v-for="m in b.members" :key="m.username" class="member">
-            <span class="who">{{ m.displayName }} <span class="muted">· {{ m.role === 'admin' ? t('settings.accounts.roleAdmin') : t('settings.accounts.roleMember') }}</span></span>
+            <span class="who">{{ m.displayName }} <span class="muted">· {{ m.role === 'admin' ? t('settings.accounts.roleAdmin') : t('settings.accounts.roleMember') }}<template v-if="m.pending"> · {{ t('settings.accounts.sharedBox.pending') }}</template></span></span>
             <span v-if="b.role === 'admin' && m.username !== me()" class="acts">
               <BaseButton variant="ghost" icon="user" :label="t(m.role === 'admin' ? 'settings.accounts.sharedBox.makeMember' : 'settings.accounts.sharedBox.makeAdmin', { name: m.displayName })" icon-only @click="attempt(() => accounts.addSharedMember(b.id, m.username, m.role === 'admin' ? 'member' : 'admin'))" />
               <BaseButton variant="ghost" icon="trash" icon-only :label="t('settings.accounts.sharedBox.remove', { name: m.displayName })" @click="confirm = { kind: 'remove', box: b, username: m.username, name: m.displayName }" />

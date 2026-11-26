@@ -48,7 +48,7 @@ final class AliasRouter
     {
         // Même déclarée comme alias, une adresse à soi reste personnelle (compte connecté après la création de la boîte).
         $recipients = array_diff(array_map('strtolower', $recipients), $this->personal->of($owner));
-        foreach ($this->em->getRepository(SharedMailboxMember::class)->findBy(['user' => $owner]) as $member) {
+        foreach ($this->em->getRepository(SharedMailboxMember::class)->findBy(['user' => $owner, 'accepted' => true]) as $member) {
             if (\in_array($member->getMailbox()->getAddress(), $recipients, true)) {
                 return $member->getMailbox();
             }

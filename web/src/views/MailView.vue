@@ -75,10 +75,12 @@ async function deleteFolder() {
 }
 
 // Un lien direct vers un mail (depuis Suivis ou l'accueil) place le panneau sur la bonne boîte.
-watch(() => [props.id, mails.items.length], () => {
+// Le dossier affiché est celui du message ouvert : un suivi d'un mail envoyé ouvre « Envoyés », pas la réception.
+watch(() => [props.id, !!(props.id && mails.byId(props.id))], () => {
   const m = props.id ? mails.byId(props.id) : null
-  if (m && m.mailbox !== box.value.mailbox) box.value = { mailbox: m.mailbox, folder: 'inbox' }
-  if (m) mails.markRead(m.id)
+  if (!m) return
+  if (!list.value.some((x) => x.id === m.id)) box.value = { mailbox: m.mailbox, folder: m.folder }
+  mails.markRead(m.id)
 }, { immediate: true })
 
 function pick(mailbox: string, folder: Box['folder']) {

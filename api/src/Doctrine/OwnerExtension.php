@@ -40,8 +40,8 @@ final class OwnerExtension implements QueryCollectionExtensionInterface, QueryIt
             return;
         }
         if ($resourceClass === \App\Entity\Suivi::class) {
-            // Une demande d'alias est visible de tous les membres de la boîte partagée, et d'eux seuls.
-            $qb->andWhere(sprintf('%1$s.owner = :current_owner OR %1$s.sharedMailbox IN (SELECT IDENTITY(sm_member.mailbox) FROM %2$s sm_member WHERE sm_member.user = :current_owner)', $alias, \App\Entity\SharedMailboxMember::class))
+            // Une demande d'alias est visible de tous les membres de la boîte partagée, et d'eux seuls : même celui qui l'a fait naître ne la garde pas en partant.
+            $qb->andWhere(sprintf('(%1$s.owner = :current_owner AND %1$s.sharedMailbox IS NULL) OR %1$s.sharedMailbox IN (SELECT IDENTITY(sm_member.mailbox) FROM %2$s sm_member WHERE sm_member.user = :current_owner AND sm_member.accepted = true)', $alias, \App\Entity\SharedMailboxMember::class))
                 ->setParameter('current_owner', $user->getId());
 
             return;

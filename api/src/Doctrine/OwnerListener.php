@@ -20,6 +20,10 @@ final class OwnerListener
     public function prePersist(PrePersistEventArgs $args): void
     {
         $e = $args->getObject();
+        // Une demande d'équipe n'a pas de propriétaire (F-67), même quand elle naît pendant la synchronisation manuelle de quelqu'un.
+        if ($e instanceof \App\Entity\Suivi && $e->getSharedMailbox() !== null) {
+            return;
+        }
         if ($e instanceof OwnedInterface && $e->getOwner() === null && ($u = $this->security->getUser()) instanceof User) {
             $e->setOwner($u);
         }

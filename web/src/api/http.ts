@@ -210,6 +210,7 @@ export function createHttpApi(baseUrl: string): Api {
         addMember: (id, username, role) => req('POST', `/api/shared-mailboxes/${encodeURIComponent(id)}/members`, { username, role }),
         async removeMember(id, username) { await req('DELETE', `/api/shared-mailboxes/${encodeURIComponent(id)}/members/${encodeURIComponent(username)}`) },
         async remove(id) { await req('DELETE', `/api/shared-mailboxes/${encodeURIComponent(id)}`) },
+        accept: (id) => req('POST', `/api/shared-mailboxes/${encodeURIComponent(id)}/accept`, {}),
       },
       identities: {
         list: () => req('GET', '/api/identities'),

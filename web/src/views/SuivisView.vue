@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useOpenSuivi } from '../composables/useOpenSuivi'
+import SuiviDetailDialog from '../components/suivis/SuiviDetailDialog.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -115,15 +117,9 @@ function teamExtra(i: PriorityItem): string | undefined {
   return `${state} · ${t('suivis.teamAge', { n: age })}`
 }
 
-function openMail(ref: string | null | undefined) {
-  const m = mails.find(ref)
-  return router.push(m ? { name: 'mails', params: { id: m.id } } : { name: 'mails' })
-}
+const { openSuivi, detail } = useOpenSuivi()
 function open(i: PriorityItem) {
-  if (i.kind === 'mail') {
-    const s = store.byId(i.refId)
-    return openMail(s?.mailId)
-  }
+  if (i.kind === 'mail') return openSuivi(i.refId)
   return router.push({ name: i.route.name })
 }
 async function done(i: PriorityItem) {
@@ -187,7 +183,7 @@ function suggest(accept: boolean) {
           <SuiviRow v-for="(i, n) in shown" :key="i.key" :item="i" :rank="n + 1" :extra="teamExtra(i)" @open="open" @done="done" />
         </ol>
       </template>
-      <SuiviBoard v-else :items="store.inScope" @open="(s) => openMail(s.mailId)" />
+      <SuiviBoard v-else :items="store.inScope" @open="(s) => openSuivi(s.id)" />
       </template>
     </div>
     <aside v-if="view !== 'health' && (recent.length || groupOpen)" class="aside" :aria-label="t('suivis.activity')">
@@ -207,6 +203,7 @@ function suggest(accept: boolean) {
 
   <NewSuiviDialog :open="showNew" @close="showNew = false" @create="create" />
   <RelanceBatch :open="showRelances" @close="showRelances = false" />
+  <SuiviDetailDialog :suivi-id="detail" @close="detail = null" />
 </template>
 
 <style scoped>

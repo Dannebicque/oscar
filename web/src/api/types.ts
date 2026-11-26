@@ -129,6 +129,8 @@ export interface AccountsApi {
     /** Ajoute une personne (identifiant ou adresse de son compte) ou change son rôle. */
     addMember(id: string, username: string, role: 'member' | 'admin'): Promise<SharedMailboxInfo>
     removeMember(id: string, username: string): Promise<void>
+    /** Accepter une invitation (la refuser = se retirer). */
+    accept(id: string): Promise<SharedMailboxInfo>
     /** Possible seulement tant que la boîte n'a aucune demande. */
     remove(id: string): Promise<void>
   }

@@ -49,13 +49,13 @@ Il ne protège pas contre la personne qui a un **accès au serveur** (base de do
 | Signatures HTML | Reconstruites à partir d'une liste blanche (pas de script, de formulaire, de cadre, de lien javascript ; images en https seulement). L'aperçu est dans un cadre isolé. |
 | En-têtes HTTP | Politique de contenu stricte (`default-src 'self'`), interdiction d'être mis en cadre, `nosniff`, politique de référent. |
 | Données | Chaque utilisateur ne voit que les siennes (isolation vérifiée par test) ; une boîte partagée ne montre rien des mails personnels de ses membres. |
+| Boîtes partagées | Une personne n'entre dans une boîte qu'après avoir accepté l'invitation ; avant, rien de ses mails n'est partagé et elle ne voit aucune demande. Une adresse de compte ou de messagerie personnelle ne peut pas devenir une boîte partagée. |
 | Secrets | Hors de l'image Docker et du dépôt (`.env.prod`) ; connexion de développement impossible en production. |
 | Administration | Réservée au rôle administrateur ; dernier administrateur protégé ; journal d'audit. |
 | Envoi | **Aucun mail ne part sans un clic** ; aucune clôture ni relance automatique ; **jamais de suppression définitive de mail** (corbeille). |
 
 ## Ce qui n'est pas (encore) fait
 
-- **Ajout à une boîte partagée sans accord préalable** : un administrateur de boîte ajoute directement une personne (elle est prévenue et peut quitter). Les adresses des comptes et des messageries connectées sont protégées, mais un alias personnel qu'Oscar ne connaît pas pourrait être déclaré comme boîte partagée par quelqu'un d'autre : ses demandes (expéditeur, objet, date) seraient alors partagées.
 - **Pas d'audit de sécurité indépendant.** Le code est ouvert et testé, mais personne d'extérieur ne l'a audité.
 - **Pas de double authentification** pour les comptes locaux ; les comptes CAS profitent de celle de l'établissement.
 - **Pas de chiffrement de la base elle-même** (hormis les mots de passe et clés ci-dessus). Chiffre le disque du serveur et les sauvegardes.

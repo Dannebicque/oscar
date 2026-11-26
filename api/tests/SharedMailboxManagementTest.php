@@ -73,6 +73,48 @@ final class SharedMailboxManagementTest extends ApiTestCase
         self::assertSame('personal', $mail->getMailbox());
     }
 
+    public function testNothingIsSharedUntilTheInvitationIsAccepted(): void
+    {
+        $b = $this->box();
+        $this->call('POST', '/api/shared-mailboxes/'.$b['id'].'/members', $this->d, ['username' => 'claire', 'role' => 'admin']);
+
+        $seen = $this->call('GET', '/api/shared-mailboxes', $this->c)[1][0];
+        self::assertTrue($seen['invited']);
+        self::assertArrayNotHasKey('identityId', $seen, 'on ne peut pas encore écrire au nom de la boîte');
+        self::assertSame(404, $this->call('PATCH', '/api/shared-mailboxes/'.$b['id'], $this->c, ['aiEnabled' => true])[0]);
+
+        // Ses mails vers l'alias restent personnels ; les demandes de l'équipe lui sont invisibles.
+        $hers = Mail::fromHeader($this->account($this->claire, 'c.perso@iut.fr'), new MailHeader('<s@x>', null, [], 'Marc', 'm@x.fr', ['contact@iut.fr'], 'À elle', new \DateTimeImmutable(), false, 1));
+        $this->em->persist($hers);
+        self::assertNull(static::getContainer()->get(AliasRouter::class)->route($hers->getOwner(), $hers));
+        self::assertSame('personal', $hers->getMailbox());
+        $team = Mail::fromHeader($this->account($this->david, 'd.perso@iut.fr'), new MailHeader('<t@x>', null, [], 'Léa', 'l@x.fr', ['contact@iut.fr'], 'À l’équipe', new \DateTimeImmutable(), false, 1));
+        $this->em->persist($team);
+        static::getContainer()->get(AliasRouter::class)->route($team->getOwner(), $team);
+        $this->em->flush();
+        self::assertSame([], $this->call('GET', '/api/suivis', $this->c)[1]);
+
+        // L'invitation ne compte pas comme second administrateur.
+        self::assertSame(409, $this->call('DELETE', '/api/shared-mailboxes/'.$b['id'].'/members/david', $this->d)[0]);
+
+        self::assertFalse($this->call('POST', '/api/shared-mailboxes/'.$b['id'].'/accept', $this->c)[1]['invited']);
+        self::assertCount(1, $this->call('GET', '/api/suivis', $this->c)[1]);
+
+        // En partant, elle ne garde rien, même née pendant une de ses requêtes.
+        self::assertNull($this->em->getRepository(Suivi::class)->findOneBy([])?->getOwner());
+        $this->call('DELETE', '/api/shared-mailboxes/'.$b['id'].'/members/claire', $this->c);
+        self::assertSame([], $this->call('GET', '/api/suivis', $this->c)[1]);
+    }
+
+    public function testAnInvitationCanBeDeclined(): void
+    {
+        $b = $this->box();
+        $this->call('POST', '/api/shared-mailboxes/'.$b['id'].'/members', $this->d, ['username' => 'claire']);
+        self::assertSame(204, $this->call('DELETE', '/api/shared-mailboxes/'.$b['id'].'/members/claire', $this->c)[0]);
+        self::assertSame([], $this->call('GET', '/api/shared-mailboxes', $this->c)[1]);
+        self::assertSame(404, $this->call('POST', '/api/shared-mailboxes/'.$b['id'].'/accept', $this->c)[0]);
+    }
+
     public function testAddingByEmailNotifiesAndTheMemberCanLeave(): void
     {
         $b = $this->box();
@@ -80,6 +122,7 @@ final class SharedMailboxManagementTest extends ApiTestCase
         self::assertSame(201, $st);
         self::assertCount(2, $r['members']);
         self::assertSame('sharedAdded', $this->call('GET', '/api/notifications', $this->c)[1][0]['kind']);
+        self::assertSame(200, $this->call('POST', '/api/shared-mailboxes/'.$b['id'].'/accept', $this->c)[0]);
 
         $mail = Mail::fromHeader($this->account($this->claire, 'c.perso@iut.fr'), new MailHeader('<q@x>', null, [], 'Marc', 'm@x.fr', ['contact@iut.fr'], 'Question', new \DateTimeImmutable(), false, 1));
         $this->em->persist($mail);

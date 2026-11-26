@@ -41,7 +41,7 @@ final class TeamBusyController extends AbstractController
             return new JsonResponse(['title' => 'Période invalide (62 jours au plus)'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $out = [];
-        foreach ($box->getMembers() as $member) {
+        foreach ($box->getAcceptedMembers() as $member) {
             $u = $member->getUser();
             if ($u->getId() === $me->getId() || !((($this->em->getRepository(UserSettings::class)->findOneBy(['owner' => $u]) ?? new UserSettings($u))->all())['shareBusy'])) {
                 continue;

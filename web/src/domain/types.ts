@@ -136,12 +136,14 @@ export interface SharedMailboxInfo {
   address: string
   name: string
   role: 'member' | 'admin'
+  /** Invitation pas encore acceptée : rien n'est partagé. */
+  invited?: boolean
   aiEnabled: boolean
   /** Identité d'envoi de l'équipe (« De : contact@ ») : nom affiché et signature réglés par un administrateur. */
   senderName?: string | null
   signature?: string | null
   identityId?: string
-  members: { username: string; displayName: string; role: 'member' | 'admin' }[]
+  members: { username: string; displayName: string; role: 'member' | 'admin'; pending?: boolean }[]
 }
 
 export interface MailHints {

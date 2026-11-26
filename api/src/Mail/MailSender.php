@@ -102,7 +102,7 @@ final class MailSender
             return;
         }
         $team->log($user->getDisplayName(), 'sent', $now)->setComposing(null);
-        foreach ($box->getMembers() as $member) {
+        foreach ($box->getAcceptedMembers() as $member) {
             if ($member->getUser()->getId() !== $user->getId()) {
                 $this->em->persist((new \App\Entity\Notification('memberReplied', ['who' => $user->getDisplayName(), 'subject' => $team->getSubject()], 'suivis', 'memberreply:'.$team->getId().':'.$now->format('c').':'.$member->getUser()->getId(), $now))->setOwner($member->getUser()));
             }

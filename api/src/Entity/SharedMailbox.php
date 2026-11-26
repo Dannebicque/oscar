@@ -61,7 +61,19 @@ class SharedMailbox
     /** @return Collection<int, SharedMailboxMember> */
     public function getMembers(): Collection { return $this->members; }
 
+    /** @return list<SharedMailboxMember> les membres qui ont accepté : les seuls à voir et à partager */
+    public function getAcceptedMembers(): array { return array_values(array_filter($this->members->toArray(), static fn (SharedMailboxMember $m) => $m->isAccepted())); }
+
+    /** Membre effectif (invitation acceptée), celui qui a des droits. */
     public function memberOf(User $u): ?SharedMailboxMember
+    {
+        $m = $this->membershipOf($u);
+
+        return $m?->isAccepted() ? $m : null;
+    }
+
+    /** Membre ou personne invitée. */
+    public function membershipOf(User $u): ?SharedMailboxMember
     {
         foreach ($this->members as $m) {
             if ($m->getUser()->getId() === $u->getId()) {
@@ -74,7 +86,7 @@ class SharedMailbox
 
     public function addMember(User $u, string $role = 'member'): SharedMailboxMember
     {
-        if (($existing = $this->memberOf($u)) !== null) {
+        if (($existing = $this->membershipOf($u)) !== null) {
             return $existing;
         }
         $m = new SharedMailboxMember($this, $u, $role);

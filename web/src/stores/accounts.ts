@@ -7,13 +7,17 @@ import type { CalendarAccount, Identity, IdentityInput, MailAccount, NewCalendar
 export const useAccountsStore = defineStore('accounts', () => {
   const mail = ref<MailAccount[]>([])
   const calendar = ref<CalendarAccount[]>([])
+  /** Boîtes dont on est membre. Les invitations en attente sont à part : on ne peut pas encore s'en servir. */
   const shared = ref<SharedMailboxInfo[]>([])
+  const invitations = ref<SharedMailboxInfo[]>([])
+  const setShared = (all: SharedMailboxInfo[]) => { shared.value = all.filter((b) => !b.invited); invitations.value = all.filter((b) => b.invited) }
   const identities = ref<Identity[]>([])
   const loaded = ref(false)
 
   async function load() {
     try {
-      ;[mail.value, calendar.value, shared.value, identities.value] = await Promise.all([api.accounts.mail.list(), api.accounts.calendar.list(), api.accounts.shared.list(), api.accounts.identities.list().catch(() => [])])
+      const [m, c, boxes, ids] = await Promise.all([api.accounts.mail.list(), api.accounts.calendar.list(), api.accounts.shared.list(), api.accounts.identities.list().catch(() => [])])
+      mail.value = m; calendar.value = c; identities.value = ids; setShared(boxes)
     } finally {
       loaded.value = true
     }
@@ -47,13 +51,14 @@ export const useAccountsStore = defineStore('accounts', () => {
   /** Après tout changement de boîte, on relit la liste : le serveur décide du rôle et des membres. */
   async function changeShared<T>(action: () => Promise<T>): Promise<T> {
     const out = await action()
-    shared.value = await api.accounts.shared.list()
+    setShared(await api.accounts.shared.list())
     return out
   }
   const createShared = (p: { address: string; name: string }) => changeShared(() => api.accounts.shared.create(p))
   const updateShared = (id: string, p: { autoFollow?: boolean; aiEnabled?: boolean }) => changeShared(() => api.accounts.shared.update(id, p))
   const addSharedMember = (id: string, username: string, role: 'member' | 'admin') => changeShared(() => api.accounts.shared.addMember(id, username, role))
   const removeSharedMember = (id: string, username: string) => changeShared(() => api.accounts.shared.removeMember(id, username))
+  const acceptShared = (id: string) => changeShared(() => api.accounts.shared.accept(id))
   const removeShared = (id: string) => changeShared(() => api.accounts.shared.remove(id))
   const reloadIdentities = async () => { identities.value = await api.accounts.identities.list() }
   async function addIdentity(i: IdentityInput & { accountId: string }) { const n = await api.accounts.identities.create(i); await reloadIdentities(); return n }
@@ -61,5 +66,5 @@ export const useAccountsStore = defineStore('accounts', () => {
   async function makeDefaultIdentity(id: string) { await api.accounts.identities.setDefault(id); await reloadIdentities() }
   async function removeIdentity(id: string) { await api.accounts.identities.remove(id); await reloadIdentities() }
 
-  return { createShared, updateShared, addSharedMember, removeSharedMember, removeShared, identities, senders, sharedSenderOf, updateSharedSender, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
+  return { invitations, acceptShared, createShared, updateShared, addSharedMember, removeSharedMember, removeShared, identities, senders, sharedSenderOf, updateSharedSender, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
 })

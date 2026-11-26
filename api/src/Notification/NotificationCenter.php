@@ -110,7 +110,7 @@ final class NotificationCenter
                 ? ['Meeting soon', '“'.(string) ($p['title'] ?? '').'” starts in '.(int) ($p['minutes'] ?? 0).' min.'.((int) ($p['n'] ?? 0) > 0 ? ' '.(int) $p['n'].' recent exchange(s) with '.(string) ($p['who'] ?? '').' are in Oscar.' : '')]
                 : ['Rendez-vous imminent', '« '.(string) ($p['title'] ?? '').' » commence dans '.(int) ($p['minutes'] ?? 0).' min.'.((int) ($p['n'] ?? 0) > 0 ? ' '.(int) $p['n'].' échange(s) récent(s) avec '.(string) ($p['who'] ?? '').' dans Oscar.' : '')],
             'connectionFailed' => $l === 'en' ? ['Connection problem', 'Oscar cannot reach “'.(string) ($p['account'] ?? '').'”. Check the account in Settings.'] : ['Connexion en échec', 'Oscar n’arrive pas à joindre « '.(string) ($p['account'] ?? '').' ». Vérifie le compte dans Réglages.'],
-            'sharedAdded' => $l === 'en' ? ['Shared mailbox', "$who added you to “$subject”."] : ['Boîte partagée', "$who t’a ajouté à « $subject »."],
+            'sharedAdded' => $l === 'en' ? ['Shared mailbox', "$who invites you to “$subject”. Accept or decline in Settings."] : ['Boîte partagée', "$who t’invite dans « $subject ». Accepte ou refuse dans Réglages."],
             default => $l === 'en' ? ['Notification', 'Open Oscar to see what is waiting.'] : ['Notification', 'Ouvre Oscar pour voir ce qui t’attend.'],
         };
     }
