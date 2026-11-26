@@ -123,6 +123,14 @@ export interface AccountsApi {
     list(): Promise<SharedMailboxInfo[]>
     /** Nom et signature de l'équipe pour les réponses « De : contact@ » (administrateur de la boîte). */
     updateSender(id: string, p: { senderName: string | null; signature: string | null }): Promise<SharedMailboxInfo>
+    /** F-40 : créer une boîte (on en devient administrateur). L'identifiant court se déduit de l'adresse. */
+    create(p: { address: string; name: string }): Promise<SharedMailboxInfo>
+    update(id: string, p: { autoFollow?: boolean; aiEnabled?: boolean }): Promise<SharedMailboxInfo>
+    /** Ajoute une personne (identifiant ou adresse de son compte) ou change son rôle. */
+    addMember(id: string, username: string, role: 'member' | 'admin'): Promise<SharedMailboxInfo>
+    removeMember(id: string, username: string): Promise<void>
+    /** Possible seulement tant que la boîte n'a aucune demande. */
+    remove(id: string): Promise<void>
   }
   /** Identités d'expéditeur et signatures. La principale de chaque compte existe d'office. */
   identities: {

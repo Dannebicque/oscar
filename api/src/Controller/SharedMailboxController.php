@@ -2,9 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Mail;
+use App\Entity\Notification;
 use App\Entity\SharedMailbox;
 use App\Entity\SharedMailboxMember;
+use App\Entity\Suivi;
 use App\Entity\User;
+use App\Mail\PersonalAddresses;
+use App\Notification\NotificationCenter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 /** Boîtes partagées : membres et rôles (F-40). Un membre voit sa boîte ; un administrateur gère les membres et l'IA (§2, §5). */
 final class SharedMailboxController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly PersonalAddresses $personal, private readonly NotificationCenter $center)
     {
     }
 
@@ -37,11 +42,22 @@ final class SharedMailboxController extends AbstractController
         $in = $r->toArray();
         $address = strtolower(trim((string) ($in['address'] ?? '')));
         $slug = strtolower(trim((string) ($in['slug'] ?? '')));
+        // L'identifiant court se déduit de l'adresse (contact@ → « contact », puis « contact-2 » s'il est pris).
+        if ($slug === '') {
+            $base = substr(trim((string) preg_replace('/[^a-z0-9]+/', '-', explode('@', $address)[0]), '-'), 0, 36) ?: 'boite';
+            $base = $base === 'personal' ? 'boite' : $base;
+            for ($slug = $base, $n = 2; $this->em->getRepository(SharedMailbox::class)->findOneBy(['slug' => $slug]) !== null; ++$n) {
+                $slug = $base.'-'.$n;
+            }
+        }
         if (!filter_var($address, FILTER_VALIDATE_EMAIL) || !preg_match('/^[a-z0-9-]{1,40}$/', $slug) || trim((string) ($in['name'] ?? '')) === '' || $slug === 'personal') {
             return new JsonResponse(['title' => 'Adresse, nom ou identifiant invalide.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         if ($this->em->getRepository(SharedMailbox::class)->findOneBy(['address' => $address]) !== null || $this->em->getRepository(SharedMailbox::class)->findOneBy(['slug' => $slug]) !== null) {
             return new JsonResponse(['title' => 'Cette boîte partagée existe déjà.'], Response::HTTP_CONFLICT);
+        }
+        if ($this->personal->isPersonal($address)) {
+            return new JsonResponse(['title' => 'C’est une adresse personnelle : une boîte partagée doit être une adresse commune (alias).'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $box = new SharedMailbox($address, trim((string) $in['name']), $slug);
         $box->addMember($user, 'admin');
@@ -85,12 +101,22 @@ final class SharedMailboxController extends AbstractController
             return $this->forbidden($id, $user);
         }
         $in = $r->toArray();
-        $target = $this->em->getRepository(User::class)->findOneBy(['username' => (string) ($in['username'] ?? '')]);
+        $wanted = strtolower(trim((string) ($in['username'] ?? '')));
+        $target = $wanted === '' ? null : $this->em->createQueryBuilder()->select('u')->from(User::class, 'u')
+            ->where('LOWER(u.username) = :w OR LOWER(u.email) = :w')->setParameter('w', $wanted)->setMaxResults(1)->getQuery()->getOneOrNullResult();
         $role = (string) ($in['role'] ?? 'member');
-        if ($target === null || !\in_array($role, ['member', 'admin'], true)) {
-            return new JsonResponse(['title' => 'Utilisateur inconnu ou rôle invalide.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (!$target instanceof User || !\in_array($role, ['member', 'admin'], true)) {
+            return new JsonResponse(['title' => 'Je ne trouve personne avec cet identifiant. La personne doit avoir un compte ici.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $existing = $box->memberOf($target);
+        if ($existing?->isAdmin() && $role !== 'admin' && $this->adminCount($box) <= 1) {
+            return new JsonResponse(['title' => 'Il faut au moins un administrateur.'], Response::HTTP_CONFLICT);
         }
         $box->addMember($target, $role)->setRole($role);
+        if ($existing === null) {
+            // La personne ajoutée est prévenue : elle sait ce qui est partagé et peut quitter la boîte.
+            $this->center->deliver($target, new Notification('sharedAdded', ['who' => $user->getDisplayName(), 'subject' => $box->getAddress()], 'reglages', 'shared:'.$box->getId().':'.$target->getId().':'.time()));
+        }
         $this->em->flush();
 
         return new JsonResponse($this->view($box, $user), Response::HTTP_CREATED);
@@ -99,7 +125,10 @@ final class SharedMailboxController extends AbstractController
     #[Route('/api/shared-mailboxes/{id}/members/{username}', methods: ['DELETE'])]
     public function removeMember(string $id, string $username, #[CurrentUser] User $user): JsonResponse
     {
-        if (($box = $this->adminBox($id, $user)) === null) {
+        // Chacun peut quitter une boîte ; retirer quelqu'un d'autre est réservé aux administrateurs.
+        $leaving = $username === $user->getUsername();
+        $box = $leaving ? $this->em->find(SharedMailbox::class, $id) : $this->adminBox($id, $user);
+        if ($box === null || ($leaving && $box->memberOf($user) === null)) {
             return $this->forbidden($id, $user);
         }
         $member = null;
@@ -109,14 +138,44 @@ final class SharedMailboxController extends AbstractController
         if ($member === null) {
             return new JsonResponse(['title' => 'Ce membre n’existe pas.'], Response::HTTP_NOT_FOUND);
         }
-        $admins = array_filter($box->getMembers()->toArray(), static fn (SharedMailboxMember $m) => $m->isAdmin());
-        if ($member->isAdmin() && \count($admins) <= 1) {
-            return new JsonResponse(['title' => 'Il faut au moins un administrateur.'], Response::HTTP_CONFLICT);
+        if ($member->isAdmin() && $this->adminCount($box) <= 1) {
+            return new JsonResponse(['title' => 'Il faut au moins un administrateur. Nomme quelqu’un d’autre avant.'], Response::HTTP_CONFLICT);
         }
+        // Ses exemplaires des mails redeviennent des mails personnels : sinon ils disparaîtraient de son écran.
+        $this->release($box, $member->getUser());
         $box->getMembers()->removeElement($member);
         $this->em->flush();
 
-        return new JsonResponse($this->view($box, $user));
+        return $leaving ? new JsonResponse(null, Response::HTTP_NO_CONTENT) : new JsonResponse($this->view($box, $user));
+    }
+
+    /** Supprimer une boîte créée par erreur. Dès qu'elle porte des demandes, leur historique est protégé. */
+    #[Route('/api/shared-mailboxes/{id}', methods: ['DELETE'])]
+    public function delete(string $id, #[CurrentUser] User $user): JsonResponse
+    {
+        if (($box = $this->adminBox($id, $user)) === null) {
+            return $this->forbidden($id, $user);
+        }
+        if ($this->em->getRepository(Suivi::class)->count(['sharedMailbox' => $box]) > 0) {
+            return new JsonResponse(['title' => 'Cette boîte a des demandes : je la garde pour ne pas perdre leur historique. Tu peux retirer ses membres.'], Response::HTTP_CONFLICT);
+        }
+        $this->release($box);
+        $this->em->remove($box);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function release(SharedMailbox $box, ?User $only = null): void
+    {
+        foreach ($this->em->getRepository(Mail::class)->findBy(['sharedMailbox' => $box] + ($only === null ? [] : ['owner' => $only])) as $mail) {
+            $mail->setSharedMailbox(null);
+        }
+    }
+
+    private function adminCount(SharedMailbox $box): int
+    {
+        return \count(array_filter($box->getMembers()->toArray(), static fn (SharedMailboxMember $m) => $m->isAdmin()));
     }
 
     private function adminBox(string $id, User $user): ?SharedMailbox

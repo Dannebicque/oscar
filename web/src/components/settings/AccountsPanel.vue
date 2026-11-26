@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { MailAccount } from '../../domain/types'
 import { useAccountsStore } from '../../stores/accounts'
 import { useUiStore } from '../../stores/ui'
+import SharedMailboxesPanel from './SharedMailboxesPanel.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseCard from '../ui/BaseCard.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
@@ -134,20 +135,7 @@ const encOptions = computed(() => ENC.map((e) => ({ value: e, label: t(`settings
       </ul>
     </BaseCard>
 
-    <BaseCard class="stack">
-      <h3>{{ t('settings.accounts.sharedBoxes') }}</h3>
-      <p v-if="accounts.shared.length === 0" class="muted">{{ t('settings.accounts.noShared') }}</p>
-      <ul class="list">
-        <li v-for="b in accounts.shared" :key="b.id" class="row acc">
-          <div class="main">
-            <strong>{{ b.name }} · {{ b.address }}</strong>
-            <ToneChip tone="info" icon="users" :label="b.role === 'admin' ? t('settings.accounts.roleAdmin') : t('settings.accounts.roleMember')" />
-            <span class="muted">{{ b.members.map((m) => m.displayName).join(', ') }}</span>
-          </div>
-        </li>
-      </ul>
-      <p class="hint">{{ t('settings.accounts.sharedHelp') }}</p>
-    </BaseCard>
+    <SharedMailboxesPanel />
   </div>
 
   <BaseDialog :open="relanceFor !== null" :title="t('settings.accounts.relanceTitle', { name: relanceFor?.label ?? '' })" :description="t('settings.accounts.relanceHelp')" @close="relanceFor = null">

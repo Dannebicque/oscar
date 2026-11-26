@@ -62,7 +62,7 @@ export default {
       { icon: 'check', title: 'Pour tout le monde', items: ['Clavier, lecteur d’écran, contrastes vérifiés pour chaque style et chaque palette', 'Trois styles (Moderne, Rétro, Néon), clair, sombre, contraste élevé', 'Français et anglais, ton d’Oscar réglable', 'Interface adaptée au mobile comme au bureau'] },
     ],
     notYet: 'Ce qui n’y est pas encore',
-    notYetItems: ['Google Agenda (seul CalDAV est pris en charge)', 'L’affichage HTML des mails : le texte seul est affiché', 'Un modèle d’IA fourni : par défaut, des règles locales sans modèle de langage ; un fournisseur externe peut être branché', 'Un écran pour créer les boîtes partagées et gérer leurs membres', 'L’application de bureau et l’installation en application web : écrites, pas encore éprouvées', 'Double authentification des comptes locaux', 'Application mobile native (le site web fonctionne sur mobile)', 'Chiffrement de la base elle-même (chiffrez le disque et les sauvegardes)'],
+    notYetItems: ['Google Agenda (seul CalDAV est pris en charge)', 'L’affichage HTML des mails : le texte seul est affiché', 'Un modèle d’IA fourni : par défaut, des règles locales sans modèle de langage ; un fournisseur externe peut être branché', 'L’application de bureau et l’installation en application web : écrites, pas encore éprouvées', 'Double authentification des comptes locaux', 'Application mobile native (le site web fonctionne sur mobile)', 'Chiffrement de la base elle-même (chiffrez le disque et les sauvegardes)'],
   },
   privacy: {
     h1: 'Vie privée et IA',

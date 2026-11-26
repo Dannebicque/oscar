@@ -209,8 +209,9 @@ const en: typeof fr = {
       invitation: 'Invitation: {title}.', connectionFailed: '{account}: reconnection needed.',
       meetingSoon: '“{title}” starts in {minutes} min. | “{title}” starts in {minutes} min. 1 recent exchange with {who} in Oscar. | “{title}” starts in {minutes} min. {n} recent exchanges with {who} in Oscar.',
       scheduledFailed: 'Not sent: “{subject}” could not be sent. Reopen it under Scheduled.',
+      sharedAdded: '{who} added you to the shared mailbox {subject}.',
       takenOver: '{who} took over “{subject}”.', memberReplied: '{who} replied to “{subject}”.',
-    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { meetingSoon: 'Meeting soon', scheduledFailed: 'Scheduled send failed', replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
+    }, markAll: 'Mark all as read', marked: 'All read.', empty: 'No alerts. All quiet.', unread: 'unread', kinds: { meetingSoon: 'Meeting soon', scheduledFailed: 'Scheduled send failed', replyReceived: 'Reply received', relanceDue: 'Reminder due', invitation: 'Invitation', connectionFailed: 'Connection', takenOver: 'Taken over', sharedAdded: 'Shared mailbox', memberReplied: 'Member reply' }, open: 'Open', bell: 'Alerts' },
   journal: {
     log: 'Log',
     messages: {
@@ -432,6 +433,16 @@ const en: typeof fr = {
       signature: 'Signature', signatureHelp: 'Added at the bottom of your messages. Empty: the default signature.',
       relanceBtn: 'Reminders', relanceLabel: 'Reminder', inherit: 'Same as my settings', inheritShort: 'general setting', bizOn: 'Business days', bizOff: 'Real hours', relanceTitle: 'Reminders for “{name}”', relanceHelp: 'This account can have its own delay. Without a choice, the general setting applies.', relanceSaved: 'Reminders for “{name}” saved.',
       mailAccounts: 'Mail accounts', addMail: 'Add a mail account', addCalendar: 'Add a calendar', noMail: 'No mail account yet. Add yours so I can read your mail.',
+      sharedBox: {
+        add: 'New shared mailbox', create: 'Create the mailbox', address: 'Common address', addressHint: 'An alias several people receive, for instance contact{\'@\'}my-domain.org. Not a personal address.',
+        name: 'Mailbox name', privacy: 'Members see the requests received at this address: sender, subject, date and state. Their personal mail stays private.',
+        members: 'Members of {address}', member: 'Account username or address', memberHint: 'The person must already have an account here. They will be told.', role: 'Role', addMember: 'Add member',
+        remove: 'Remove {name}', makeAdmin: 'Make {name} an administrator', makeMember: 'Remove {name} as administrator', autoFollow: 'Follow every request received', autoFollowHelp: 'Any mail arriving at this address creates a “new” request.',
+        ai: 'Allow AI on this mailbox', aiHelp: 'Off by default. It only suggests, never decides or sends.', leave: 'Leave the mailbox', delete: 'Delete the mailbox',
+        leaveTitle: 'Leave {address}?', leaveText: 'You will no longer see its requests. Your own mail stays with you.', removeTitle: 'Remove {name} from {address}?', removeText: 'This person will no longer see the mailbox requests. Their mail stays with them.',
+        deleteTitle: 'Delete {address}?', deleteText: 'Only possible while the mailbox has no request yet. No mail is deleted.',
+        created: 'Mailbox {address} created. Add your colleagues.', added: '{name} added to the mailbox.', removed: '{name} removed from the mailbox.', left: 'You left {address}.', deleted: 'Mailbox {address} deleted.',
+      },
       noCalendar: 'No calendar connected.', work: 'Work calendar', sharedBoxes: 'Shared mailboxes', noShared: 'You are not a member of any shared mailbox.', roleAdmin: 'Administrator', roleMember: 'Member',
       added: 'Account “{name}” added.', addFailed: 'I couldn’t add this account. Check the fields, then try again.', testFailed: 'Connection failed. Check the server, port, encryption and password.',
       removed: 'Account “{name}” removed.', removeFailed: 'I couldn’t remove this account. Try again.', removeTitle: 'Remove “{name}”?', removeText: 'Mails stay on the mail server. Oscar no longer keeps header copies or follow-ups linked to this account.',

@@ -65,7 +65,7 @@ const assistant = computed(() => {
 const today = computed(() => isoDay(now.value))
 const counters = computed(() => [
   { key: 'unread', n: mails.unread('personal'), to: '/mails', icon: 'mail' },
-  { key: 'shared', n: mails.unread('contact'), to: '/mails', icon: 'users' },
+  { key: 'shared', n: accounts.shared.reduce((n, b) => n + mails.unread(b.slug), 0), to: '/mails', icon: 'users' },
   { key: 'tasks', n: tasks.today.length, to: '/taches', icon: 'task' },
   { key: 'rdv', n: agenda.work.filter((e) => isoDay(new Date(e.start)) === today.value).length, to: '/agenda', icon: 'calendar' },
 ])

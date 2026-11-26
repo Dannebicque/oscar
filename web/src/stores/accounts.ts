@@ -44,11 +44,22 @@ export const useAccountsStore = defineStore('accounts', () => {
     const b = await api.accounts.shared.updateSender(id, p)
     shared.value = shared.value.map((x) => (x.id === id ? { ...x, ...b } : x))
   }
+  /** Après tout changement de boîte, on relit la liste : le serveur décide du rôle et des membres. */
+  async function changeShared<T>(action: () => Promise<T>): Promise<T> {
+    const out = await action()
+    shared.value = await api.accounts.shared.list()
+    return out
+  }
+  const createShared = (p: { address: string; name: string }) => changeShared(() => api.accounts.shared.create(p))
+  const updateShared = (id: string, p: { autoFollow?: boolean; aiEnabled?: boolean }) => changeShared(() => api.accounts.shared.update(id, p))
+  const addSharedMember = (id: string, username: string, role: 'member' | 'admin') => changeShared(() => api.accounts.shared.addMember(id, username, role))
+  const removeSharedMember = (id: string, username: string) => changeShared(() => api.accounts.shared.removeMember(id, username))
+  const removeShared = (id: string) => changeShared(() => api.accounts.shared.remove(id))
   const reloadIdentities = async () => { identities.value = await api.accounts.identities.list() }
   async function addIdentity(i: IdentityInput & { accountId: string }) { const n = await api.accounts.identities.create(i); await reloadIdentities(); return n }
   async function saveIdentity(id: string, i: IdentityInput) { const n = await api.accounts.identities.update(id, i); await reloadIdentities(); return n }
   async function makeDefaultIdentity(id: string) { await api.accounts.identities.setDefault(id); await reloadIdentities() }
   async function removeIdentity(id: string) { await api.accounts.identities.remove(id); await reloadIdentities() }
 
-  return { identities, senders, sharedSenderOf, updateSharedSender, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
+  return { createShared, updateShared, addSharedMember, removeSharedMember, removeShared, identities, senders, sharedSenderOf, updateSharedSender, defaultIdentity, identityOf, addIdentity, saveIdentity, makeDefaultIdentity, removeIdentity, mail, calendar, shared, loaded, load, addMail, updateMail, removeMail, testMail, addCalendar, removeCalendar }
 })

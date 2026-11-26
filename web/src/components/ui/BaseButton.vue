@@ -11,7 +11,8 @@ withDefaults(defineProps<{
   pressed?: boolean
   expanded?: boolean
   disabled?: boolean
-}>(), { variant: 'secondary', type: 'button' })
+// Sans valeur par défaut explicite, Vue met un booléen absent à false : chaque bouton serait annoncé comme une bascule.
+}>(), { variant: 'secondary', type: 'button', pressed: undefined, expanded: undefined })
 </script>
 
 <template>

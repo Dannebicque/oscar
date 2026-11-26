@@ -209,8 +209,9 @@ export default {
       invitation: 'Invitation : {title}.', connectionFailed: '{account} : reconnexion nécessaire.',
       meetingSoon: '« {title} » commence dans {minutes} min. | « {title} » commence dans {minutes} min. 1 échange récent avec {who} dans Oscar. | « {title} » commence dans {minutes} min. {n} échanges récents avec {who} dans Oscar.',
       scheduledFailed: 'Pas parti : « {subject} » n’a pas pu être envoyé. Rouvre-le dans Programmés.',
+      sharedAdded: '{who} t’a ajouté à la boîte partagée {subject}.',
       takenOver: '{who} a repris « {subject} ».', memberReplied: '{who} a répondu à « {subject} ».',
-    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { meetingSoon: 'Rendez-vous imminent', scheduledFailed: 'Envoi programmé en échec', replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
+    }, markAll: 'Tout marquer comme lu', marked: 'Tout est lu.', empty: 'Aucune alerte. Tout est calme.', unread: 'non lue', kinds: { meetingSoon: 'Rendez-vous imminent', scheduledFailed: 'Envoi programmé en échec', replyReceived: 'Réponse reçue', relanceDue: 'Relance due', invitation: 'Invitation', connectionFailed: 'Connexion', takenOver: 'Demande reprise', sharedAdded: 'Boîte partagée', memberReplied: 'Réponse d’un membre' }, open: 'Ouvrir', bell: 'Alertes' },
   journal: {
     log: 'Journal',
     messages: {
@@ -432,6 +433,16 @@ export default {
       signature: 'Signature', signatureHelp: 'Ajoutée en bas de tes messages. Vide : la signature par défaut.',
       relanceBtn: 'Relances', relanceLabel: 'Relance', inherit: 'Comme dans mes réglages', inheritShort: 'réglage général', bizOn: 'Jours ouvrés', bizOff: 'Heures réelles', relanceTitle: 'Relances du compte « {name} »', relanceHelp: 'Ce compte peut avoir son propre délai. Sans choix, le réglage général s’applique.', relanceSaved: 'Relances du compte « {name} » enregistrées.',
       mailAccounts: 'Comptes de messagerie', addMail: 'Ajouter un compte de messagerie', addCalendar: 'Ajouter un agenda', noMail: 'Aucun compte de messagerie pour l’instant. Ajoute le tien pour que je lise tes mails.',
+      sharedBox: {
+        add: 'Nouvelle boîte partagée', create: 'Créer la boîte', address: 'Adresse commune', addressHint: 'Un alias reçu par plusieurs personnes, par exemple contact{\'@\'}mon-domaine.fr. Pas une adresse personnelle.',
+        name: 'Nom de la boîte', privacy: 'Les membres voient les demandes reçues à cette adresse : expéditeur, objet, date et état. Leurs mails personnels restent privés.',
+        members: 'Membres de {address}', member: 'Identifiant ou adresse du compte', memberHint: 'La personne doit déjà avoir un compte ici. Elle sera prévenue.', role: 'Rôle', addMember: 'Ajouter le membre',
+        remove: 'Retirer {name}', makeAdmin: 'Rendre {name} administrateur', makeMember: 'Retirer l’administration à {name}', autoFollow: 'Suivre chaque demande reçue', autoFollowHelp: 'Tout mail arrivant à cette adresse crée une demande « nouvelle ».',
+        ai: 'Autoriser l’IA sur cette boîte', aiHelp: 'Coupée par défaut. Elle suggère seulement, et ne décide ni n’envoie.', leave: 'Quitter la boîte', delete: 'Supprimer la boîte',
+        leaveTitle: 'Quitter {address} ?', leaveText: 'Tu ne verras plus ses demandes. Tes propres mails restent chez toi.', removeTitle: 'Retirer {name} de {address} ?', removeText: 'Cette personne ne verra plus les demandes de la boîte. Ses mails restent chez elle.',
+        deleteTitle: 'Supprimer {address} ?', deleteText: 'Possible seulement si la boîte n’a encore aucune demande. Aucun mail n’est supprimé.',
+        created: 'Boîte {address} créée. Ajoute tes collègues.', added: '{name} ajouté à la boîte.', removed: '{name} retiré de la boîte.', left: 'Tu as quitté {address}.', deleted: 'Boîte {address} supprimée.',
+      },
       noCalendar: 'Aucun agenda connecté.', work: 'Agenda pro', sharedBoxes: 'Boîtes partagées', noShared: 'Tu n’es membre d’aucune boîte partagée.', roleAdmin: 'Administrateur', roleMember: 'Membre',
       added: 'Compte « {name} » ajouté.', addFailed: 'Je n’ai pas pu ajouter ce compte. Vérifie les champs, puis réessaie.', testFailed: 'Connexion impossible. Vérifie le serveur, le port, le chiffrement et le mot de passe.',
       removed: 'Compte « {name} » supprimé.', removeFailed: 'Je n’ai pas pu supprimer ce compte. Réessaie.', removeTitle: 'Supprimer « {name} » ?', removeText: 'Les mails restent sur le serveur de messagerie. Oscar n’en garde plus de copie d’en-têtes ni de suivis liés à ce compte.',

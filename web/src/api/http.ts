@@ -205,6 +205,11 @@ export function createHttpApi(baseUrl: string): Api {
       shared: {
         list: () => req('GET', '/api/shared-mailboxes'),
         updateSender: (id, p) => req('PATCH', `/api/shared-mailboxes/${encodeURIComponent(id)}`, p, { merge: true }),
+        create: (p) => req('POST', '/api/shared-mailboxes', p),
+        update: (id, p) => req('PATCH', `/api/shared-mailboxes/${encodeURIComponent(id)}`, p, { merge: true }),
+        addMember: (id, username, role) => req('POST', `/api/shared-mailboxes/${encodeURIComponent(id)}/members`, { username, role }),
+        async removeMember(id, username) { await req('DELETE', `/api/shared-mailboxes/${encodeURIComponent(id)}/members/${encodeURIComponent(username)}`) },
+        async remove(id) { await req('DELETE', `/api/shared-mailboxes/${encodeURIComponent(id)}`) },
       },
       identities: {
         list: () => req('GET', '/api/identities'),

@@ -55,6 +55,7 @@ Il ne protège pas contre la personne qui a un **accès au serveur** (base de do
 
 ## Ce qui n'est pas (encore) fait
 
+- **Ajout à une boîte partagée sans accord préalable** : un administrateur de boîte ajoute directement une personne (elle est prévenue et peut quitter). Les adresses des comptes et des messageries connectées sont protégées, mais un alias personnel qu'Oscar ne connaît pas pourrait être déclaré comme boîte partagée par quelqu'un d'autre : ses demandes (expéditeur, objet, date) seraient alors partagées.
 - **Pas d'audit de sécurité indépendant.** Le code est ouvert et testé, mais personne d'extérieur ne l'a audité.
 - **Pas de double authentification** pour les comptes locaux ; les comptes CAS profitent de celle de l'établissement.
 - **Pas de chiffrement de la base elle-même** (hormis les mots de passe et clés ci-dessus). Chiffre le disque du serveur et les sauvegardes.

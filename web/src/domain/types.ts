@@ -246,7 +246,7 @@ export interface Identity {
 }
 export type IdentityInput = Pick<Identity, 'name' | 'address' | 'replyTo' | 'signature'> & { signatureHtml?: string | null; accountId?: string }
 
-export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed' | 'meetingSoon'
+export type NotificationKind = 'replyReceived' | 'relanceDue' | 'invitation' | 'connectionFailed' | 'takenOver' | 'memberReplied' | 'scheduledFailed' | 'meetingSoon' | 'sharedAdded'
 export interface AppNotification {
   id: string
   kind: NotificationKind

@@ -17,7 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class AliasRouter
 {
-    public function __construct(private readonly EntityManagerInterface $em)
+    public function __construct(private readonly EntityManagerInterface $em, private readonly PersonalAddresses $personal)
     {
     }
 
@@ -46,7 +46,8 @@ final class AliasRouter
     /** @param list<string> $recipients */
     private function boxFor(User $owner, array $recipients): ?SharedMailbox
     {
-        $recipients = array_map('strtolower', $recipients);
+        // Même déclarée comme alias, une adresse à soi reste personnelle (compte connecté après la création de la boîte).
+        $recipients = array_diff(array_map('strtolower', $recipients), $this->personal->of($owner));
         foreach ($this->em->getRepository(SharedMailboxMember::class)->findBy(['user' => $owner]) as $member) {
             if (\in_array($member->getMailbox()->getAddress(), $recipients, true)) {
                 return $member->getMailbox();

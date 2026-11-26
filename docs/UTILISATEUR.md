@@ -48,6 +48,8 @@ Un suivi a un **sens** (à traiter / réponse attendue) et un **état** (nouveau
 
 ## Boîtes partagées (contact@…)
 
+Elles se gèrent dans **Réglages > Comptes et agendas**. Crée la boîte avec son adresse commune : tu en deviens administrateur, puis tu ajoutes tes collègues (ils doivent avoir un compte, et sont prévenus). Chacun peut **quitter** une boîte ; ses propres mails restent chez lui. Une adresse personnelle ne peut pas servir de boîte partagée. Une boîte ne se supprime que si elle n'a encore aucune demande.
+
 Quand une équipe partage une adresse, tous ses membres reçoivent chaque mail. **Personne n'est désigné responsable** : chaque demande est « nouvelle », « prise par X » ou « traitée par X », ce qui évite les doublons (« Claire s'en occupe »). Tu peux ajouter des notes internes, jamais envoyées. Tes mails personnels ne sont **jamais** visibles des autres membres. Tes réponses partent « De : contact@ » avec le nom et la signature de l'équipe.
 
 ## Agenda

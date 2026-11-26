@@ -62,7 +62,7 @@ export default {
       { icon: 'check', title: 'For everyone', items: ['Keyboard, screen reader, contrast verified for every style and palette', 'Three styles (Modern, Retro, Neon), light, dark, high contrast', 'French and English, adjustable tone', 'Interface that fits both phone and desktop'] },
     ],
     notYet: 'What is not there yet',
-    notYetItems: ['Google Calendar (only CalDAV is supported)', 'HTML display of mails: text only is shown', 'A bundled AI model: by default, local rules without a language model; an external provider can be plugged in', 'A screen to create shared mailboxes and manage their members', 'The desktop app and web-app installation: written, not yet proven', 'Two-factor authentication for local accounts', 'A native mobile app (the website works on mobile)', 'Encryption of the database itself (encrypt the disk and backups)'],
+    notYetItems: ['Google Calendar (only CalDAV is supported)', 'HTML display of mails: text only is shown', 'A bundled AI model: by default, local rules without a language model; an external provider can be plugged in', 'The desktop app and web-app installation: written, not yet proven', 'Two-factor authentication for local accounts', 'A native mobile app (the website works on mobile)', 'Encryption of the database itself (encrypt the disk and backups)'],
   },
   privacy: {
     h1: 'Privacy and AI',

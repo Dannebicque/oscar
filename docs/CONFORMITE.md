@@ -64,7 +64,7 @@ Légende : ✅ fait et testé · 🟡 partiel (ce qui manque est dit) · ❌ pas
 ### 4.5 Mail collaboratif
 | ID | P | État | Remarques |
 |---|---|---|---|
-| F-40 | S | ✅ | Boîte partagée avec membres et rôles (API). |
+| F-40 | S | ✅ | Boîte partagée avec membres et rôles, gérée dans Réglages > Comptes et agendas : créer (on en devient administrateur), ajouter par identifiant ou adresse (la personne est prévenue), rôles, quitter, supprimer une boîte sans demande ; toujours au moins un administrateur ; l'adresse d'un compte ou d'une messagerie personnelle est refusée et jamais routée. **Limite** : l'ajout ne demande pas l'accord de la personne (elle peut quitter), et un alias personnel non déclaré dans Oscar n'est pas reconnu comme personnel. |
 | F-41 | S | ✅ | Prise en charge, état, notes internes. |
 | F-42 | S | ✅ | « X rédige » (collision). |
 | F-43 | C | ❌ | Règles d'assignation automatique. |

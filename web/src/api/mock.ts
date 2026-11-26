@@ -5,6 +5,7 @@ import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSe
 import type {
   AdminUser, HealthReport, InstanceConfig, Identity,
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
+SharedMailboxInfo,
 } from '../domain/types'
 
 export const ME = 'David'
@@ -61,6 +62,10 @@ export function createMockApi(now: Date = new Date()): Api {
     id: 'sm1', slug: SHARED.id, address: SHARED.address, name: 'Contact', role: 'admin' as const, aiEnabled: false, identityId: 'shared:sm1', ...sharedSender,
     members: SHARED.members.map((n) => ({ username: n.toLowerCase(), displayName: n, role: n === ME ? ('admin' as const) : ('member' as const) })),
   })
+  let boxes: SharedMailboxInfo[] | null = null
+  const allBoxes = (): SharedMailboxInfo[] => (boxes ??= [sharedInfo()])
+  const boxOf = (id: string) => { const b = allBoxes().find((x) => x.id === id); if (!b) throw new ApiError(404, 'Boîte partagée inconnue.'); return b }
+  const oneAdminLeft = (b: SharedMailboxInfo, username: string) => b.members.filter((m) => m.role === 'admin').every((m) => m.username === username)
   let instanceConfig: InstanceConfig = { instanceName: 'Oscar', registration: 'open', supportEmail: '', legalUrl: '', privacyUrl: '', defaultAttachmentMb: 10, aiExternalAllowed: true, setupDone: true }
   let adminUsers: AdminUser[] = [
     { id: 'u1', name: 'David Annebicque', email: 'david@iut-troyes.fr', username: 'david', admin: true, disabled: false, local: false, createdAt: now.toISOString(), lastLoginAt: hoursAgo(1), mailAccounts: 1 },
@@ -311,8 +316,34 @@ export function createMockApi(now: Date = new Date()): Api {
         async remove(id) { const i = calendarAccounts.findIndex((a) => a.id === id); if (i >= 0) calendarAccounts.splice(i, 1) },
       },
       shared: {
-        async list() { return [sharedInfo()] },
-        async updateSender(_id, p) { sharedSender = { senderName: p.senderName?.trim() || null, signature: p.signature?.trim() ? p.signature : null }; return sharedInfo() },
+        async list() { return clone(allBoxes()) },
+        async updateSender(id, p) { return clone(Object.assign(boxOf(id), { senderName: p.senderName?.trim() || null, signature: p.signature?.trim() ? p.signature : null })) },
+        async create({ address, name }) {
+          const a = address.trim().toLowerCase()
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a) || !name.trim()) throw new ApiError(422, 'Adresse, nom ou identifiant invalide.')
+          if (allBoxes().some((b) => b.address === a)) throw new ApiError(409, 'Cette boîte partagée existe déjà.')
+          const id = `sm${allBoxes().length + 1}`
+          const box: SharedMailboxInfo = { id, slug: a.split('@')[0]!.replace(/[^a-z0-9]+/g, '-'), address: a, name: name.trim(), role: 'admin', autoFollow: true, aiEnabled: false, identityId: `shared:${id}`, senderName: null, signature: null, members: [{ username: ME.toLowerCase(), displayName: ME, role: 'admin' }] }
+          allBoxes().push(box)
+          return clone(box)
+        },
+        async update(id, p) { return clone(Object.assign(boxOf(id), p)) },
+        async addMember(id, username, role) {
+          const b = boxOf(id)
+          const u = username.trim().toLowerCase().split('@')[0]!
+          const known = SHARED.members.find((n) => n.toLowerCase() === u)
+          if (!known) throw new ApiError(422, 'Je ne trouve personne avec cet identifiant. La personne doit avoir un compte ici.')
+          if (role !== 'admin' && b.members.some((m) => m.username === u && m.role === 'admin') && oneAdminLeft(b, u)) throw new ApiError(409, 'Il faut au moins un administrateur.')
+          b.members = [...b.members.filter((m) => m.username !== u), { username: u, displayName: known, role }]
+          return clone(b)
+        },
+        async removeMember(id, username) {
+          const b = boxOf(id)
+          if (b.members.some((m) => m.username === username && m.role === 'admin') && oneAdminLeft(b, username)) throw new ApiError(409, 'Il faut au moins un administrateur. Nomme quelqu’un d’autre avant.')
+          b.members = b.members.filter((m) => m.username !== username)
+          if (username === ME.toLowerCase()) boxes = allBoxes().filter((x) => x.id !== id)
+        },
+        async remove(id) { boxOf(id); boxes = allBoxes().filter((x) => x.id !== id) },
       },
     },
     instance: {
