@@ -18,7 +18,7 @@ Cahier des charges v2 et maquette cliquable : projet claude.ai « Agenda » (doc
 
 ## UX et accessibilité
 - Le type ou l'état est toujours dit par une icône ET un texte, jamais par la couleur seule.
-- Éléments suggérés par l'IA : violet + pastille « Suggéré par l'IA ».
+- Tout ce qu'Oscar déduit, prépare ou propose : violet + pastille « Suggestion » ; « Suggéré par l'IA » seulement quand un modèle de langage a réellement produit le contenu (règle adaptée par le propriétaire).
 - Cibles tactiles ≥ 44 px, focus visible, aria-pressed / aria-expanded / aria-current, lien d'évitement.
 - Aucune chaîne en dur : tout passe par vue-i18n (`web/src/i18n`).
 
@@ -46,7 +46,7 @@ Voir `docs/MVP.md` : tableau exigence par exigence (✅ / 🟡 / ❌), à tenir 
 - Tests : `cd api && php bin/phpunit` (SQLite en mémoire ; `DATABASE_URL=postgresql://…` pour PostgreSQL), `cd web && npm test` (dont axe-core).
 - Le front parle à l'API par défaut ; `VITE_USE_MOCK=true` pour la démo hors ligne.
 - Composants du front : Reka UI (fenêtres, interrupteurs, choix, cases, notifications, pastilles de destinataires) et FullCalendar 6 (agenda), habillés par les jetons de thème ; ne pas réécrire à la main un widget interactif complexe. Seule exception : la liste de suggestions de `RecipientInput` (motif ARIA combobox écrit à la main, car Combobox + TagsInput de Reka réécrivait le texte tapé).
-- Design system : styles (Moderne/Rétro/Néon) × palettes × modes calculés par `web/src/themes/engine.ts`, contrastes WCAG vérifiés par test. Aspect partagé dans `web/src/styles/components.css` ; pas de CSS de carte/bandeau/ligne/pastille/bouton dans les vues, pas de couleur ni de police en dur (test `designSystem.test.ts`). Le violet est réservé à l'IA.
+- Design system : styles (Moderne/Rétro/Néon) × palettes × modes calculés par `web/src/themes/engine.ts`, contrastes WCAG vérifiés par test. Aspect partagé dans `web/src/styles/components.css` ; pas de CSS de carte/bandeau/ligne/pastille/bouton dans les vues, pas de couleur ni de police en dur (test `designSystem.test.ts`). Le violet est réservé aux déductions et aides d'Oscar (composant `SuggestBadge`, mention IA seulement si un modèle a répondu).
 - Backend : API Platform + Doctrine (PostgreSQL), Symfony Messenger/Scheduler, webklex/php-imap, Symfony Mailer, sabre/vobject (CalDAV), libsodium (coffre des identifiants).
 - Règles à ne pas casser : aucun envoi sans clic ; le suivi n'est créé que si le message est parti ; aucune clôture ni relance automatique ; l'IA ne reçoit jamais titres, lieux ni participants d'un agenda ; mails personnels jamais visibles des autres membres d'un alias.
 - Prochaine tranche : voir « Points de vigilance » de `docs/MVP.md` (CAS réel, CalDAV réel, image de production, Tauri).

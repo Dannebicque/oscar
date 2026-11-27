@@ -26,6 +26,7 @@ final class AiConfigController extends AbstractController
         private readonly CredentialVault $vault,
         private readonly AiProviderRegistry $registry,
         private readonly \App\Instance\InstanceConfig $instance,
+        private readonly \App\Instance\AiServer $server,
         #[Autowire('%kernel.environment%')] private readonly string $env,
     ) {
     }
@@ -35,9 +36,12 @@ final class AiConfigController extends AbstractController
     {
         $c = $this->em->getRepository(AiProviderConfig::class)->findOneBy(['owner' => $user]);
 
-        return new JsonResponse($c === null
+        // Où partent les textes en mode « IA de l'établissement » : chacun a le droit de le savoir. null : règles locales, rien ne sort.
+        $institution = ['institutionHost' => $this->server->host()];
+
+        return new JsonResponse(($c === null
             ? ['kind' => 'openai', 'baseUrl' => '', 'model' => '', 'hasKey' => false, 'configured' => false]
-            : ['kind' => $c->getKind(), 'baseUrl' => $c->getBaseUrl(), 'model' => $c->getModel(), 'hasKey' => $c->hasKey(), 'configured' => $c->isComplete()]);
+            : ['kind' => $c->getKind(), 'baseUrl' => $c->getBaseUrl(), 'model' => $c->getModel(), 'hasKey' => $c->hasKey(), 'configured' => $c->isComplete()]) + $institution);
     }
 
     /** `apiKey` : absent = on garde la clé actuelle ; chaîne vide = on la retire ; texte = nouvelle clé. */

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AiBadge from '../components/ui/AiBadge.vue'
+import SuggestBadge from '../components/ui/SuggestBadge.vue'
 import BaseIcon from '../components/ui/BaseIcon.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import SegmentedControl from '../components/ui/SegmentedControl.vue'
@@ -10,6 +10,7 @@ import { clock } from '../domain/clock'
 import { isoDay } from '../domain/dates'
 import { flagOf } from '../domain/suivi'
 import { useOscar } from '../oscar/useOscar'
+import { useAccountsStore } from '../stores/accounts'
 import { useAgendaStore } from '../stores/agenda'
 import { useSettingsStore } from '../stores/settings'
 import { useSuivisStore } from '../stores/suivis'
@@ -22,7 +23,8 @@ const suivis = useSuivisStore()
 const tasks = useTasksStore()
 const agenda = useAgendaStore()
 const settings = useSettingsStore()
-onMounted(() => Promise.all([suivis.load(), tasks.load(), agenda.load()]))
+const accounts = useAccountsStore()
+onMounted(() => Promise.all([suivis.load(), tasks.load(), agenda.load(), accounts.loaded ? Promise.resolve() : accounts.load().catch(() => undefined)]))
 
 type Slot = 'morning' | 'evening'
 const slot = ref<Slot>('morning')
@@ -54,11 +56,12 @@ const chipTone: Record<string, string> = { mailsToHandle: 'danger', events: 'inf
   </PageHeader>
   <article class="card recap" :aria-label="title">
     <header class="mailhead">
-      <p class="muted">{{ t('recap.sentTo', { time: slot === 'morning' ? settings.s.recapMorning : settings.s.recapEvening }) }}</p>
+      <p v-if="!settings.s.recapEmail" class="muted">{{ t('recap.sentOff') }}</p>
+      <p v-else-if="accounts.mail[0]" class="muted">{{ t('recap.sentTo', { address: accounts.mail[0].address, time: slot === 'morning' ? settings.s.recapMorning : settings.s.recapEvening }) }}</p>
       <h2 class="subject">{{ title }}</h2>
     </header>
     <div class="body">
-      <p class="sum"><AiBadge /> <span>{{ summary }}</span></p>
+      <p class="sum"><SuggestBadge /> <span>{{ summary }}</span></p>
       <section v-for="s in sections" :key="s.key" :aria-labelledby="`r-${s.key}`" class="sec">
         <h3 :id="`r-${s.key}`"><span class="count" :data-tone="chipTone[s.key]">{{ s.items.length }}</span>{{ t(`recap.${s.key}`) }}</h3>
         <ul v-if="s.items.length" class="lines">
@@ -78,10 +81,12 @@ const chipTone: Record<string, string> = { mailsToHandle: 'danger', events: 'inf
 
 <style scoped>
 .recap { padding: 0; overflow: hidden; }
+.sec { min-width: 0; }
+.line > .meta { overflow-wrap: anywhere; min-width: 0; }
 .mailhead { padding: var(--space-3) var(--space-5); border-bottom: var(--bw) solid var(--c-border); background: var(--c-surface-2); }
 .subject { font-size: var(--fs-lg); margin-top: var(--space-1); }
-.body { padding: var(--space-4) var(--space-5); display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
-.sum { grid-column: 1 / -1; display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
+.body { padding: var(--space-4) var(--space-5); display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); align-items: start; }
+.sum { grid-column: 1 / -1; flex-wrap: wrap; min-width: 0; display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--c-ai-soft); border: var(--bw) solid var(--c-ai); color: var(--c-text); }
 .sec h3 { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-md); }
 .count { min-width: 26px; padding: 0 var(--space-2); text-align: center; border-radius: 999px; font-size: var(--fs-sm); font-weight: 800; background: var(--c-neutral-soft); color: var(--c-text); }
 .count[data-tone='danger'] { background: var(--c-danger-soft); color: var(--c-danger); }

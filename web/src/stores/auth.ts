@@ -44,10 +44,10 @@ export const useAuthStore = defineStore('auth', () => {
   async function finishCas(code: string) { await adopt(await api.auth.exchange(code)) }
   /** Exporte les données de l'utilisateur (N-06) : mêmes points d'accès que l'application, aucun secret (mots de passe de messagerie jamais renvoyés). */
   async function exportData() {
-    const [suivis, tasks, mails, accounts, calendars, settings, notifications] = await Promise.all([
-      api.suivis.list(), api.tasks.list(), api.mails.list(), api.accounts.mail.list(), api.accounts.calendar.list(), api.settings.get(), api.system.notifications(),
+    const [suivis, tasks, mails, accounts, calendars, settings, notifications, slotHolds] = await Promise.all([
+      api.suivis.list(), api.tasks.list(), api.mails.list(), api.accounts.mail.list(), api.accounts.calendar.list(), api.settings.get(), api.system.notifications(), api.agenda.holds(),
     ])
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), profile: { name: session.name, username: session.username, email: session.email }, settings, accounts: { mail: accounts, calendar: calendars }, suivis, tasks, mailHeaders: mails, notifications }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), profile: { name: session.name, username: session.username, email: session.email }, settings, accounts: { mail: accounts, calendar: calendars }, suivis, tasks, mailHeaders: mails, notifications, slotHolds }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = 'oscar-mes-donnees.json'

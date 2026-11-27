@@ -126,4 +126,26 @@ final class SendMailTest extends ApiTestCase
         self::assertSame(201, $this->call('POST', '/api/mails/send', $this->token, $this->payload(['attachments' => [$file, $file]]))[0], '2,6 Mo sous 3 Mo');
         self::assertSame(413, $this->call('POST', '/api/mails/send', $this->token, $this->payload(['attachments' => [$file, $file, $file]]))[0], '3,9 Mo au-dessus de 3 Mo');
     }
+
+    /** F-16 : « répondu » se dit dès que la réponse est partie, et pas si l'envoi échoue. */
+    public function testTheOriginalMessageSaysItWasAnsweredOnlyOnceTheReplyLeft(): void
+    {
+        $original = \App\Entity\Mail::fromHeader($this->em->find(MailAccount::class, $this->account->getId()), new MailHeader('<orig@x>', null, [], 'Marc', 'marc@x.fr', [], 'Devis', new \DateTimeImmutable('-1 day'), false, 77, 'INBOX'));
+        $this->em->persist($original);
+        $this->em->flush();
+        $id = $original->getId();
+        $answered = function () use ($id): mixed {
+            $rows = $this->call('GET', '/api/mails', $this->token)[1];
+
+            return array_values(array_filter($rows, static fn (array $m) => $m['id'] === $id))[0]['answeredAt'] ?? null;
+        };
+
+        $this->smtp->fail = true;
+        $this->call('POST', '/api/mails/send', $this->token, $this->payload(['inReplyToMailId' => $id]));
+        self::assertNull($answered());
+
+        $this->smtp->fail = false;
+        self::assertSame(201, $this->call('POST', '/api/mails/send', $this->token, $this->payload(['inReplyToMailId' => $id]))[0]);
+        self::assertNotNull($answered());
+    }
 }

@@ -1,7 +1,6 @@
 import type {
   AdminUser, AuditEntry, HealthReport, InstanceConfig, InstanceInfo, Identity, IdentityInput, FolderInfo, MoveTarget, AppNotification, Attachment, CalEvent, InvitationResponse, MailInvitation, CalendarAccount, CalendarSource, ClaimAction, Connection, JournalEntry, LogEntry, Mail, MailAccount,
-  MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task,
-} from '../domain/types'
+  MailHints, NewCalendarAccount, NewMailAccount, NewSuivi, SharedMailboxInfo, Suivi, Task, SlotHold, AiUsage, AiServerState } from '../domain/types'
 
 export type SuiviPatch = Partial<
   Pick<Suivi, 'status' | 'noRelance' | 'relanceAt' | 'dueAt' | 'replyReceived' | 'responsible' | 'relanceCount'>
@@ -14,13 +13,16 @@ export class ApiError extends Error {
   }
 }
 
+/** Brouillon préparé par Oscar ; `ai` : écrit par un modèle de langage (et non par un texte type). */
+export interface Draft { body: string; ai: boolean }
+
 export interface SuivisApi {
   list(): Promise<Suivi[]>
   create(n: NewSuivi): Promise<Suivi>
   update(id: string, patch: SuiviPatch, journal?: JournalEntry): Promise<Suivi>
   close(id: string): Promise<void>
   /** Brouillon de relance par l'IA ; null si l'IA est coupée ou désactivée : le front garde son modèle local. */
-  draftRelance(id: string): Promise<string | null>
+  draftRelance(id: string): Promise<Draft | null>
 }
 
 export interface SendPayload {
@@ -38,6 +40,8 @@ export interface SendPayload {
   inReplyToMailId?: string
   /** Pièces jointes (5 Mo au total), contenu en base64. */
   attachments?: { name: string; type: string; content: string }[]
+  /** Créneaux à poser en provisoire dans Oscar, seulement si le message part (F-74). */
+  holds?: { start: string; end: string }[]
 }
 
 /** Mail programmé (F-73) : écrit, et envoyé à l'heure choisie par l'utilisateur. */
@@ -57,7 +61,7 @@ export interface MailApi {
   /** Suggestions de l'IA pour ce mail (tâche, événement, créneaux) ; vide si l'IA est coupée. */
   hints(id: string): Promise<MailHints>
   /** Brouillon de réponse préparé par Oscar (jamais envoyé) ; `slots` : créneaux choisis, déjà formatés. */
-  replyDraft(id: string, p: { tone: 'warm' | 'short'; slots: string[] }): Promise<string>
+  replyDraft(id: string, p: { tone: 'warm' | 'short'; slots: string[] }): Promise<Draft>
   /** Pièces jointes d'un mail : métadonnées seulement, lues à la demande. */
   attachments(id: string): Promise<Attachment[]>
   /** Télécharge une pièce jointe (jamais affichée dans l'application). */
@@ -71,9 +75,9 @@ export interface MailApi {
   /** Invitation d'agenda jointe au mail (F-25) et réponse déjà donnée. Lire ne change rien. */
   invitation(id: string): Promise<{ invitation: MailInvitation | null; response: InvitationResponse | null }>
   /** Répond à l'invitation (un clic de l'utilisateur) : la réponse part à l'organisateur ; accepté ou peut-être : l'événement entre dans l'agenda choisi. */
-  replyInvitation(id: string, p: { response: InvitationResponse; calendarId?: string }): Promise<{ added: boolean }>
+  replyInvitation(id: string, p: { response: InvitationResponse; calendarId?: string; message?: string; send?: boolean }): Promise<{ added: boolean; inCalendar?: boolean }>
   /** Suggestion de tâche à partir du texte en cours de rédaction (F-73) : à valider, rien n'est créé sans clic. */
-  composeHints(subject: string, body: string): Promise<{ task: { title: string; dueAt: string; quote: string } | null }>
+  composeHints(subject: string, body: string): Promise<{ task: { title: string; dueAt: string; quote: string } | null; ai?: boolean }>
   markRead(id: string): Promise<void>
   /** Archiver, corbeille, retour en boîte de réception : le serveur d'abord, jamais de suppression définitive. */
   move(id: string, folder: MoveTarget): Promise<void>
@@ -101,6 +105,9 @@ export interface TasksApi {
 }
 
 export interface AgendaApi {
+  holds(): Promise<SlotHold[]>
+  releaseHold(id: string): Promise<void>
+  releaseHoldGroup(groupId: string): Promise<void>
   sources(): Promise<CalendarSource[]>
   events(): Promise<CalEvent[]>
   create(e: Omit<CalEvent, 'id'>): Promise<CalEvent>
@@ -157,7 +164,10 @@ export interface SortRule { id: string; field: 'sender' | 'domain' | 'subject'; 
 
 export interface FollowRule { id: string; kind: 'sender' | 'domain'; value: string; enabled: boolean }
 
-export interface AiConfig { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; hasKey: boolean; configured: boolean }
+export interface AiConfig {
+  /** Serveur du modèle de l'établissement, s'il y en a un : là où partent les textes en mode « IA de l'établissement ». */
+  institutionHost?: string | null
+  kind: 'openai' | 'anthropic'; baseUrl: string; model: string; hasKey: boolean; configured: boolean }
 export interface AiConfigInput { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; /** absent : on garde la clé ; chaîne vide : on la retire. */ apiKey?: string }
 
 export interface SettingsApi {
@@ -250,6 +260,12 @@ export interface InstanceApi {
   /** Suppression définitive du compte et de ses données ; `confirm` = l'adresse du compte. */
   deleteUser(id: string, confirm: string): Promise<void>
   health(): Promise<HealthReport>
+  aiUsage(days: number): Promise<AiUsage>
+  /** Modèle de langage de l'établissement ; la clé n'est jamais renvoyée. */
+  aiServer(): Promise<AiServerState>
+  saveAiServer(s: { kind: 'openai' | 'anthropic'; baseUrl: string; model: string; apiKey?: string; hostedByUs: boolean }): Promise<AiServerState>
+  removeAiServer(): Promise<void>
+  testAiServer(): Promise<{ ok: boolean; message: string }>
   audit(): Promise<AuditEntry[]>
 }
 

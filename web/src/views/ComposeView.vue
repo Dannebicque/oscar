@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ApiError, api, session } from '../api'
 import type { MessageTemplate } from '../api/types'
 import OscarMark from '../components/OscarMark.vue'
-import AiBadge from '../components/ui/AiBadge.vue'
+import SuggestBadge from '../components/ui/SuggestBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import AttachmentDropzone from '../components/mail/AttachmentDropzone.vue'
 import BaseDialog from '../components/ui/BaseDialog.vue'
@@ -72,11 +72,16 @@ const submitted = ref(false)
 const sending = ref(false)
 /** Brouillon préparé par Oscar : ton et créneaux modifiables, régénérable ; rien ne part sans clic. */
 const aiDraft = ref(false)
+const draftByModel = ref(false)
+const taskByModel = ref(false)
 const aiTone = ref<'warm' | 'short'>('warm')
 const aiBusy = ref(false)
 const aiFailed = ref(false)
 const slotStarts = ref<string[]>(String(route.query.slots ?? '').split(',').filter(Boolean))
 const edited = ref(false)
+/** Créneaux proposés posés en provisoire dans Oscar (F-74) : décoché par défaut. */
+const holdOn = ref(false)
+const restoredHolds = ref<{ start: string; end: string }[]>([])
 const templates = ref<MessageTemplate[]>([])
 const tplChoice = ref('')
 const firstName = computed(() => (who.value && who.value !== '…' ? who.value.split(' ')[0] : ''))
@@ -100,6 +105,7 @@ watch([body, subject], () => {
   hintTimer = setTimeout(async () => {
     try {
       const r = await api.mails.composeHints(subject.value, body.value)
+      taskByModel.value = r.ai === true
       if (r.task?.dueAt !== taskHint.value?.dueAt || r.task?.title !== taskHint.value?.title) { taskHint.value = r.task; taskTitle.value = r.task?.title ?? ''; taskOn.value = false }
     } catch { taskHint.value = null }
   }, 900)
@@ -114,6 +120,7 @@ const original = computed(() => (route.query.reply ? mails.byId(String(route.que
 const originalSlots = computed(() => original.value?.hints.availability?.slots ?? [])
 const quote = computed(() => (original.value ? `\n\n> ${original.value.paragraphs.join('\n> ')}` : ''))
 const slotLabel = (x: { start: string; end: string }) => `${fmt.dateLong(x.start)}, ${fmt.time(x.start)} – ${fmt.time(x.end)}`
+const heldSlots = computed(() => (restoredHolds.value.length ? restoredHolds.value : originalSlots.value.filter((x) => slotStarts.value.includes(x.start)).map(({ start, end }) => ({ start, end }))))
 const toneOptions = computed(() => (['warm', 'short'] as const).map((v) => ({ value: v, label: t(`compose.ai.tone.${v}`) })))
 
 onMounted(async () => {
@@ -140,6 +147,8 @@ onMounted(async () => {
     if (back.followHours) delayHours.value = back.followHours
     files.value = (back.attachments ?? []).map((a) => new File([Uint8Array.from(atob(a.content), (c) => c.charCodeAt(0))], a.name, { type: a.type }))
     quoteOn.value = false
+    restoredHolds.value = back.holds ?? []
+    holdOn.value = restoredHolds.value.length > 0
     if (back.inReplyToMailId) void router.replace({ name: 'compose', query: { reply: back.inReplyToMailId } })
     return
   }
@@ -199,7 +208,9 @@ async function regenerate() {
   aiFailed.value = false
   try {
     const lines = slotStarts.value.map((st) => originalSlots.value.find((x) => x.start === st)).filter((x): x is { start: string; end: string } => !!x).map(slotLabel)
-    body.value = await api.mails.replyDraft(o.id, { tone: aiTone.value, slots: lines })
+    const draft = await api.mails.replyDraft(o.id, { tone: aiTone.value, slots: lines })
+    body.value = draft.body
+    draftByModel.value = draft.ai
     edited.value = false
   } catch { aiFailed.value = true } finally { aiBusy.value = false }
 }
@@ -220,6 +231,7 @@ async function buildPayload(): Promise<SendPayload> {
     attachments: await Promise.all(files.value.map(async (f) => ({ name: f.name, type: f.type || 'application/octet-stream', content: await readBase64(f) }))),
     followHours: follow.value ? delayHours.value : undefined, followSuggestedByAi: follow.value && aiPicked.value,
     inReplyToMailId: route.query.reply ? String(route.query.reply) : undefined,
+    ...(holdOn.value && heldSlots.value.length ? { holds: heldSlots.value } : {}),
     ...(identity.value ? { identityId: identity.value.id, accountId: identity.value.accountId } : {}),
   }
 }
@@ -320,7 +332,7 @@ async function schedule() {
 async function saveDraft() {
   try {
     // Le brouillon garde tout : copies, pièces jointes et identité d'envoi (rien n'est envoyé ni suivi).
-    const { followHours: _h, followSuggestedByAi: _a, ...rest } = await buildPayload()
+    const { followHours: _h, followSuggestedByAi: _a, holds: _s, ...rest } = await buildPayload()
     await mails.saveDraft({ ...rest, body: body.value, replaces: draftId.value ?? undefined })
     // Le brouillon enregistré remplace l'ancien : on repart du plus récent de la boîte « Brouillons ».
     draftId.value = mails.inFolder('personal', 'drafts').value.find((m) => m.subject === subject.value.trim())?.id ?? null
@@ -361,7 +373,7 @@ async function saveDraft() {
         <div v-if="aiDraft" class="aibar" role="group" :aria-label="t('oscar.name')">
           <span class="face" aria-hidden="true"><OscarMark /></span>
           <div class="aitext">
-            <p class="who">{{ t('oscar.name') }}<AiBadge /></p>
+            <p class="who">{{ t('oscar.name') }}<SuggestBadge :ai="draftByModel" /></p>
             <p>{{ say('draftReady') }}</p>
             <p v-if="aiFailed" class="error-text" role="alert">{{ t('compose.ai.failed') }}</p>
             <p v-else-if="aiBusy" class="muted" role="status">{{ t('compose.ai.busy') }}</p>
@@ -391,8 +403,13 @@ async function saveDraft() {
         <p class="hint">{{ t('agenda.freeBusy') }}</p>
       </section>
 
+      <section v-if="restoredHolds.length || (aiDraft && originalSlots.length)" class="card pad-sm flat holdopt" :aria-label="t('holds.title')">
+        <CheckboxField v-model="holdOn" :disabled="heldSlots.length === 0" :label="t('holds.compose', { n: heldSlots.length }, heldSlots.length)" />
+        <p class="hint">{{ t('holds.composeHelp') }}</p>
+      </section>
+
       <section v-if="taskHint" class="card pad-sm flat taskhint" :aria-label="t('compose.taskHint.title')">
-        <p class="th"><AiBadge /> <strong>{{ t('compose.taskHint.title') }}</strong></p>
+        <p class="th"><SuggestBadge :ai="taskByModel" /> <strong>{{ t('compose.taskHint.title') }}</strong></p>
         <p class="hint">{{ t('compose.taskHint.text', { quote: taskHint.quote }) }}</p>
         <CheckboxField v-model="taskOn" :label="t('compose.taskHint.create', { date: fmt.date(taskHint.dueAt) })" />
         <TextField v-if="taskOn" id="task-title" v-model="taskTitle" :label="t('compose.taskHint.label')" />
@@ -402,7 +419,7 @@ async function saveDraft() {
 
       <fieldset class="card pad-sm flat follow">
         <legend class="sr-only">{{ t('compose.follow') }}</legend>
-        <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <AiBadge v-if="aiPicked && follow" /></div>
+        <div class="check"><CheckboxField v-model="follow" :label="t('compose.follow')"><strong>{{ t('compose.follow') }}</strong></CheckboxField> <SuggestBadge v-if="aiPicked && follow" /></div>
         <p v-if="aiPicked && follow" class="hint">{{ say('followAi') }}</p>
         <template v-if="follow">
           <SelectField id="delay" v-model="delayHours" :label="t('compose.followDelay')" :options="delayOptions" />

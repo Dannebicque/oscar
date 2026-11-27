@@ -7,6 +7,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 /** Demande d'envoi (F-73). `follow` crée le suivi à l'envoi (case « Suivre la réponse »). */
 final class SendMailRequest
 {
+    /** Instant ISO 8601 avec fuseau, avec ou sans fractions de seconde. */
+    private const INSTANT = '/^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d(\.\d+)?)?(Z|[+-]\d\d:\d\d)$/D';
+
     /**
      * @param list<string> $to
      * @param list<string> $cc
@@ -29,6 +32,8 @@ final class SendMailRequest
         #[Assert\Count(max: 10)] public array $attachments = [],
         /** Identité d'expéditeur (nom, adresse « De », « Répondre à ») ; absente = identité par défaut du compte. */
         public ?string $identityId = null,
+        /** @var list<array{start: string, end: string}> créneaux à poser « en provisoire » dans Oscar si le message part (F-74) ; décoché par défaut */
+        #[Assert\Count(max: 8)] #[Assert\All([new Assert\Collection(fields: ['start' => new Assert\Regex(self::INSTANT), 'end' => new Assert\Regex(self::INSTANT)])])] public array $holds = [],
     ) {
     }
 }

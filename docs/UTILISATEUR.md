@@ -32,6 +32,14 @@ Un suivi a un **sens** (à traiter / réponse attendue) et un **état** (nouveau
 
 Il s'affiche tel que prévu, sur fond clair. Les images venues d'internet attendent que tu cliques sur « Afficher les images ». « Texte seul » montre la version sans mise en forme.
 
+## Répondre à une invitation
+
+« Accepter », « Peut-être » ou « Refuser » ouvrent ta réponse, déjà rédigée : tu la relis, tu la modifies si tu veux, puis « Envoyer la réponse ». Oscar signale ce qui occupe déjà la plage. « Ajouter sans répondre » inscrit l'événement sans prévenir l'organisateur. Si tu refuses après avoir accepté, retire toi-même l'événement de ton agenda.
+
+## Proposer des créneaux
+
+Avec « Répondre avec Oscar », tu peux cocher « Poser ces créneaux en provisoire » (décoché par défaut). S'ils sont posés, ils apparaissent en pointillés dans ton agenda, **dans Oscar seulement**, une fois le message parti. « Retenir » ajoute le créneau à ton agenda et libère les autres ; « Libérer » en retire un. Oscar te le dit quand la personne a répondu, quand le suivi est clos ou après 7 jours sans nouvelle. Un créneau passé disparaît tout seul.
+
 ## Écrire un mail
 
 - **De** : si tu as plusieurs identités (alias, fonction), choisis laquelle écrit. Elle est choisie d'office quand tu réponds à un mail adressé à l'un de tes alias ou à une boîte partagée. Les noms, adresses « Répondre à » et **signatures** (texte ou HTML) se règlent dans Réglages > Comptes et agendas.

@@ -5,8 +5,7 @@ import { ApiError, type Api, type ScheduledMail, type SendPayload, type ServerSe
 import type {
   AdminUser, HealthReport, InstanceConfig, Identity,
   AppNotification, CalEvent, CalendarAccount, CalendarSource, Connection, LogEntry, Mail, MailAccount, Suivi, Task,
-SharedMailboxInfo,
-} from '../domain/types'
+SharedMailboxInfo, SlotHold, AiUsage, AiServerState } from '../domain/types'
 
 export const ME = 'David'
 export const SHARED = { id: 'contact', address: 'contact@iut-troyes.fr', members: ['Claire', 'Marc', 'Léa', ME] }
@@ -77,6 +76,7 @@ export function createMockApi(now: Date = new Date()): Api {
     { id: 'a2', at: hoursAgo(26), actor: 'David Annebicque <david@iut-troyes.fr>', action: 'user.disabled', target: 'marc@iut-troyes.fr', details: {} },
   ]
   let scheduledMails: { row: ScheduledMail; payload: SendPayload }[] = []
+  let holds: SlotHold[] = []
   let mails: Mail[] = [
     m('m1', { from: { name: 'Sophie Laurent', address: 'sophie.laurent@univ-reims.fr' }, subject: 'Re : Planning des soutenances', at: hoursAgo(2), unread: true, suivi: 's1', paragraphs: ['Bonjour David,', 'Merci pour le planning. Peux-tu confirmer le nombre de participants avant mardi ? Nous préparons le jury jeudi à 10h.', 'Bien cordialement,', 'Sophie'], hints: { summary: 'Sophie demande de confirmer le nombre de participants avant mardi. Le jury se prépare jeudi à 10h.', event: { title: 'Préparation du jury', start: iso(6, 10), end: iso(6, 11), quote: 'jeudi à 10h' }, task: { title: 'Confirmer le nombre de participants', dueAt: day(4), quote: 'avant mardi' } } }),
     m('m5', { from: { name: 'Claire Roux', address: 'claire.roux@iut-troyes.fr' }, subject: 'Disponibilités pour la réunion pédagogique', at: hoursAgo(5), unread: true, paragraphs: ['Bonjour,', 'Pourrais-tu m’indiquer tes disponibilités la semaine du 30 novembre pour une réunion d’une heure ?', 'Merci !', 'Claire'], hints: { summary: 'Claire demande tes disponibilités la semaine du 30 novembre pour une réunion d’une heure.', availability: { slots: [0, 1, 2, 3, 4].map((i) => ({ start: iso(10 + i, 9 + i), end: iso(10 + i, 10 + i) })) } } }),
@@ -147,6 +147,7 @@ export function createMockApi(now: Date = new Date()): Api {
   const templates: import('./types').MessageTemplate[] = [{ id: 'tpl1', name: 'Accusé de réception', body: 'Bonjour {prenom},\n\nBien reçu, merci. Je reviens vers toi rapidement.' }]
   const rules: import('./types').FollowRule[] = [{ id: 'rule1', kind: 'domain', value: 'univ-reims.fr', enabled: true }]
   let aiCfg: import('./types').AiConfig = { kind: 'openai', baseUrl: '', model: '', hasKey: false, configured: false }
+  let aiServer: AiServerState = { configured: false, kind: 'openai', baseUrl: '', model: '', hasKey: false }
   let serverSettings: ServerSettings = {}
   const findMail = (id: string) => mails.find((x) => x.id === id)
   const replaceMail = (m: Mail) => { mails = mails.map((x) => (x.id === m.id ? m : x)) }
@@ -175,9 +176,10 @@ export function createMockApi(now: Date = new Date()): Api {
       async replyDraft(id, p) {
         const first = (findMail(id)?.from.name ?? '').split(' ')[0]
         const list = p.slots.map((l) => `- ${l}`).join('\n')
-        return p.tone === 'short'
+        const body = p.tone === 'short'
           ? `Bonjour ${first},\n\n${list ? `Disponible :\n${list}` : 'Bien reçu, je reviens vers toi vite.'}\n\nDavid`
           : `Bonjour ${first},\n\n${list ? `Voici mes disponibilités :\n${list}\n\nDis-moi ce qui te convient, je confirme aussitôt.` : 'Merci pour ton message. Je regarde cela et je reviens vers toi rapidement.'}\n\nCordialement,\nDavid`
+        return { body, ai: false }
       },
       async move(id, folder) { mails = mails.map((x) => (x.id === id ? { ...x, folder } : x)) },
       folders: {
@@ -232,7 +234,7 @@ export function createMockApi(now: Date = new Date()): Api {
       async replyInvitation(id, p) {
         const m = findMail(id)
         if (!m?.invitation) throw new ApiError(422, 'Ce message ne contient pas d’invitation que je sache lire.')
-        mails = mails.map((x) => (x.id === id ? { ...x, invitationResponse: p.response } : x))
+        if (p.send !== false) mails = mails.map((x) => (x.id === id ? { ...x, invitationResponse: p.response } : x))
         let added = false
         if (p.response !== 'declined' && p.calendarId && !events.some((e) => e.id === m.invitation!.uid)) {
           events.push({ id: m.invitation.uid, calendar: p.calendarId, title: m.invitation.title, start: m.invitation.start, end: m.invitation.end, location: m.invitation.location })
@@ -266,6 +268,9 @@ export function createMockApi(now: Date = new Date()): Api {
         if (m) replaceMail({ ...m, notes: [...m.notes, { id: uid('n'), author: ME, text, at: new Date().toISOString() }] })
       },
       async send(p) {
+        if (p.inReplyToMailId) mails = mails.map((x) => (x.id === p.inReplyToMailId ? { ...x, answeredAt: now.toISOString() } : x))
+        const groupId = uid('g')
+        holds = [...holds, ...(p.holds ?? []).map((h) => ({ id: uid('h'), groupId, ...h, contact: p.to[0], subject: p.subject, mailId: `<${groupId}@demo>`, repliedToMailId: p.inReplyToMailId ?? null, suiviId: null, createdAt: now.toISOString() }))]
         if (p.followHours === undefined) return { followDueAt: null }
         const due = day(Math.ceil(p.followHours / 24))
         suivis = [...suivis, base(uid('s'), { subject: p.subject.replace(/^(re|tr)\s*:\s*/i, ''), contact: p.to[0].split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), direction: 'waiting', status: 'waiting', dueAt: due, relanceAt: due, suggestedByAi: p.followSuggestedByAi ?? false, journal: [{ at: now.toISOString(), author: ME, action: 'created' }, { at: now.toISOString(), author: ME, action: 'sent' }] })]
@@ -281,6 +286,9 @@ export function createMockApi(now: Date = new Date()): Api {
     agenda: {
       async sources() { return clone(sources) },
       async events() { return clone(events) },
+      async holds() { return clone(holds.filter((h) => Date.parse(h.end) > now.getTime())) },
+      async releaseHold(id) { holds = holds.filter((h) => h.id !== id) },
+      async releaseHoldGroup(groupId) { holds = holds.filter((h) => h.groupId !== groupId) },
       async teamBusy(_m, from) { const d = (h: number, m: number) => { const x = new Date(from); x.setDate(x.getDate() + 2); x.setHours(h, m, 0, 0); return x.toISOString() }; return [{ member: 'Claire', start: d(10, 0), end: d(11, 30) }, { member: 'Marc', start: d(14, 0), end: d(15, 0) }] },
       async create(e) { const n = { ...e, id: uid('e') }; events = [...events, n]; return clone(n) },
     },
@@ -354,6 +362,18 @@ export function createMockApi(now: Date = new Date()): Api {
       async config() { return clone(instanceConfig) },
       async updateConfig(patch) { instanceConfig = { ...instanceConfig, ...patch }; return clone(instanceConfig) },
       async users() { return clone(adminUsers) },
+      async aiServer() { return clone(aiServer) },
+      async saveAiServer(s) {
+        if (!s.hostedByUs) throw new ApiError(422, 'Confirme que ce serveur est hébergé par l’établissement.', { field: 'hostedByUs' })
+        aiServer = { configured: true, kind: s.kind, baseUrl: s.baseUrl.replace(/\/$/, ''), model: s.model, hasKey: !!s.apiKey || aiServer.hasKey }
+        return clone(aiServer)
+      },
+      async removeAiServer() { aiServer = { configured: false, kind: 'openai', baseUrl: '', model: '', hasKey: false } },
+      async testAiServer() { return { ok: aiServer.configured, message: 'Le serveur répond.' } },
+      async aiUsage(days): Promise<AiUsage> {
+        const row = (model: number, rules: number, fallback: number) => ({ total: model + rules + fallback, model, rules, fallback, unknown: 0 })
+        return { days, externalAllowed: true, users: 4, activeUsers: 3, modes: { university: 3, external: 1, off: 0 }, totals: row(18, 64, 2), features: [{ feature: 'mail-hints', ...row(14, 55, 2) }, { feature: 'reply-draft', ...row(4, 9, 0) }], services: [{ service: 'anthropic', total: 20 }] }
+      },
       async invite(name, email) {
         if (adminUsers.some((u) => u.email === email)) throw new ApiError(409, 'Un compte existe déjà avec cette adresse.', { field: 'email' })
         adminUsers = [...adminUsers, { id: uid('u'), name, email, username: email, admin: false, disabled: false, local: true, createdAt: now.toISOString(), lastLoginAt: null, mailAccounts: 0 }]

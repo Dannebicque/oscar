@@ -5,6 +5,8 @@ import { ApiError, api } from '../api'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import Callout from '../components/ui/Callout.vue'
+import AdminAiServer from '../components/admin/AdminAiServer.vue'
+import AdminAiUsage from '../components/admin/AdminAiUsage.vue'
 import AdminAudit from '../components/admin/AdminAudit.vue'
 import AdminHealth from '../components/admin/AdminHealth.vue'
 import AdminUsers from '../components/admin/AdminUsers.vue'
@@ -24,9 +26,9 @@ import { useUiStore } from '../stores/ui'
 const { t } = useI18n()
 const ui = useUiStore()
 const instance = useInstanceStore()
-type Tab = 'settings' | 'users' | 'health' | 'audit'
+type Tab = 'settings' | 'users' | 'health' | 'ai' | 'audit'
 const tab = ref<Tab>('settings')
-const tabs = computed(() => (['settings', 'users', 'health', 'audit'] as Tab[]).map((v) => ({ value: v, label: t(`admin.tabs.${v}`) })))
+const tabs = computed(() => (['settings', 'users', 'health', 'ai', 'audit'] as Tab[]).map((v) => ({ value: v, label: t(`admin.tabs.${v}`) })))
 const loaded = ref(false)
 const busy = ref(false)
 const errors = ref<Record<string, string>>({})
@@ -71,6 +73,10 @@ async function save() {
   <div class="tabs"><SegmentedControl v-model="tab" :options="tabs" :label="t('admin.tabsLabel')" /></div>
   <AdminUsers v-if="tab === 'users'" class="admin" />
   <AdminHealth v-else-if="tab === 'health'" class="admin" />
+  <div v-else-if="tab === 'ai'" class="admin">
+    <AdminAiServer />
+    <AdminAiUsage />
+  </div>
   <AdminAudit v-else-if="tab === 'audit'" class="admin" />
   <form v-else-if="loaded" class="admin" novalidate @submit.prevent="save">
     <BaseCard class="stack" aria-labelledby="adm-id">

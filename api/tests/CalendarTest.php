@@ -67,6 +67,21 @@ final class CalendarTest extends ApiTestCase
         self::assertSame(1, $this->em->getRepository(CalendarEvent::class)->count([]));
     }
 
+    public function testWhatIsAddedToTheDemoCalendarSurvivesTheNextSync(): void
+    {
+        $david = $this->user('david');
+        $demo = (new \App\Entity\CalendarAccount())->setOwner($david)->setLabel('Démo')->setUrl('demo://iut')->setUsername('demo');
+        $this->em->persist($demo);
+        $added = (new CalendarEvent())->setOwner($david)->setCalendar($demo)->setTitle('Retenu')->setStart(new \DateTimeImmutable('+2 days'))->setEnd(new \DateTimeImmutable('+2 days +1 hour'));
+        $this->em->persist($added);
+        $this->em->flush();
+        $sync = static::getContainer()->get(CalendarSynchronizer::class);
+        $sync->sync($demo);
+        $sync->sync($demo);
+
+        self::assertCount(1, $this->em->getRepository(CalendarEvent::class)->findBy(['title' => 'Retenu']));
+    }
+
     public function testCreateValidationAndOwnership(): void
     {
         $acc = $this->account();
@@ -74,6 +89,8 @@ final class CalendarTest extends ApiTestCase
         self::assertSame(422, $this->call('POST', '/api/calendar-events', $t, ['calendarId' => $acc->getId(), 'title' => 'x', 'start' => '2026-11-26T11:00:00Z', 'end' => '2026-11-26T10:00:00Z'])[0], 'fin avant début');
         self::assertSame(422, $this->call('POST', '/api/calendar-events', $t, ['calendarId' => $acc->getId(), 'title' => '', 'start' => '2026-11-26T10:00:00Z', 'end' => '2026-11-26T11:00:00Z'])[0]);
         self::assertSame(422, $this->call('POST', '/api/calendar-events', $t, ['calendarId' => $acc->getId(), 'title' => 'x', 'start' => 'n’importe quoi', 'end' => '2026-11-26T11:00:00Z'])[0]);
+        // F-20 : un identifiant d'agenda mal formé est « inconnu », jamais une erreur 500.
+        self::assertSame(404, $this->call('POST', '/api/calendar-events', $t, ['calendarId' => 'iut', 'title' => 'x', 'start' => '2026-11-26T10:00:00Z', 'end' => '2026-11-26T11:00:00Z'])[0]);
         $other = $this->tokenFor($this->user('claire'));
         self::assertSame(404, $this->call('POST', '/api/calendar-events', $other, ['calendarId' => $acc->getId(), 'title' => 'x', 'start' => '2026-11-26T10:00:00Z', 'end' => '2026-11-26T11:00:00Z'])[0]);
         self::assertSame([], $this->call('GET', '/api/calendar-events', $other)[1]);

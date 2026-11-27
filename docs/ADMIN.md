@@ -81,3 +81,19 @@ Qui a changé quoi : réglages modifiés (les **noms** des réglages, jamais leu
 - Regarde **Santé** après chaque mise à jour et de temps en temps.
 - Garde ta **sauvegarde** à jour et essaie une restauration une fois : [INSTALL.md](INSTALL.md#sauvegarde-et-restauration).
 - Avant de fermer ou d'ouvrir les inscriptions, préviens tes utilisateurs.
+
+## Usage de l'IA
+
+Administration > IA donne, sur 7, 30 ou 90 jours : le nombre de demandes, celles répondues par un modèle, par les règles locales ou en repli (le fournisseur externe n'a pas répondu), la répartition par fonction et le mode choisi par les utilisateurs. Des nombres sur toute l'instance seulement : ni personne, ni mail, ni texte. Les jetons consommés et les coûts ne sont pas suivis (chaque utilisateur utilise sa propre clé).
+
+## IA de l'établissement
+
+Administration > IA > « IA de l'établissement » : type de service (compatible OpenAI, comme Ollama ou vLLM, ou Anthropic), adresse, nom du modèle, clé facultative. Il faut confirmer que le serveur est hébergé par l'établissement, puis « Tester la connexion ».
+
+- Dès l'enregistrement, le texte des mails ouverts par les utilisateurs en mode « IA de l'établissement » (**le mode par défaut**) lui est envoyé : préviens-les. Jamais leur agenda ni leurs pièces jointes.
+- Chaque utilisateur voit l'adresse du serveur dans ses réglages ; le changement est inscrit au journal d'audit.
+- La clé est chiffrée, jamais réaffichée, et oubliée si l'on change de serveur.
+- En production, `http://` n'est accepté que vers le réseau interne.
+- En cas de panne, Oscar revient aux règles locales (comptées en « replis » dans les indicateurs). Chaque appel peut attendre jusqu'à 25 s : prévois un modèle assez rapide.
+
+Sans serveur réglé, ce mode applique des règles locales, sans modèle de langage.

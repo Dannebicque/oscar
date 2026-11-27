@@ -6,7 +6,7 @@ import { useRelance } from '../../composables/useRelance'
 import type { Suivi } from '../../domain/types'
 import { useSuivisStore } from '../../stores/suivis'
 import { useUiStore } from '../../stores/ui'
-import AiBadge from '../ui/AiBadge.vue'
+import SuggestBadge from '../ui/SuggestBadge.vue'
 import OscarSays from '../ui/OscarSays.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
@@ -34,13 +34,15 @@ const first = (s: Suivi) => s.contact.split(' ')[0]
 function localDraft(s: Suivi) {
   return t('suivis.relanceDraft', { first: first(s), subject: s.subject, me: session.name })
 }
-/** Brouillon de l'IA si elle est active ; sinon le modèle local. L'utilisateur relit toujours avant d'envoyer. */
+const byModel = ref(false)
+/** Brouillon d'Oscar s'il est actif ; sinon le texte type. L'utilisateur relit toujours avant d'envoyer. */
 async function resetDraft() {
   const s = current.value
   body.value = s ? localDraft(s) : ''
+  byModel.value = false
   if (!s) return
-  const ai = await store.draftRelance(s.id).catch(() => null)
-  if (ai && current.value?.id === s.id && body.value === localDraft(s)) body.value = ai
+  const draft = await store.draftRelance(s.id).catch(() => null)
+  if (draft && current.value?.id === s.id && body.value === localDraft(s)) { body.value = draft.body; byModel.value = draft.ai }
 }
 watch(() => props.open, (o) => { if (o) { done.value = new Set(); resetDraft() } })
 watch(current, resetDraft)
@@ -70,9 +72,9 @@ async function act(kind: 'send' | 'snooze' | 'stop') {
 <template>
   <BaseDialog :open="open" :title="single ? t('mail.draft.title') : t('suivis.relanceMode')" @close="emit('close')">
     <template v-if="current">
-      <OscarSays situation="draftReady" :level="3" suggestion />
+      <OscarSays situation="draftReady" :level="3" suggestion :ai="byModel" />
       <p class="top">
-        <AiBadge />
+        <SuggestBadge :ai="byModel" />
         <span v-if="!single" class="muted" aria-live="polite">{{ t('suivis.relanceCounter', { i: index, n: total }) }}</span>
       </p>
       <p class="muted">{{ t('suivis.relanceTo', { who: current.contact }) }} · {{ t('suivis.relanceSubject', { subject: current.subject }) }}</p>

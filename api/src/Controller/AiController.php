@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 /** Suggestions de l'IA : elle propose et prépare, elle ne décide ni n'envoie (§5). */
 final class AiController extends AbstractController
 {
-    private const NONE = ['availability' => null, 'event' => null, 'task' => null, 'suggestFollow' => false, 'summary' => null];
+    private const NONE = ['availability' => null, 'event' => null, 'task' => null, 'suggestFollow' => false, 'summary' => null, 'fromModel' => []];
 
     public function __construct(private readonly EntityManagerInterface $em, private readonly AiProviderRegistry $registry, private readonly MailboxReaderFactory $factory)
     {
@@ -53,6 +53,10 @@ final class AiController extends AbstractController
         foreach ($qb->getQuery()->getResult() as $e) {
             $busy[] = ['start' => $e->getStart(), 'end' => $e->getEnd()];
         }
+        // Un créneau déjà proposé à quelqu'un (provisoire, F-74) n'est pas reproposé.
+        foreach ($this->em->getRepository(\App\Entity\SlotHold::class)->findBy(['owner' => $user]) as $h) {
+            $busy[] = ['start' => $h->getStart(), 'end' => $h->getEnd()];
+        }
         $a = $provider->analyse($mail->getSubject(), $body, $mail->getDate()->setTimezone(new \DateTimeZone((string) $settings['timezone'])), $busy);
         $out = $a->toArray();
         if (!$settings['aiSuggestTasks']) {
@@ -61,7 +65,9 @@ final class AiController extends AbstractController
         if (!$settings['aiSuggestFollow']) {
             $out['suggestFollow'] = false;
         }
-        $this->em->persist((new AiCall($provider->name(), 'mail-hints', sprintf('mail %s, objet de %d caractères, %d créneaux occupés', $mail->getId(), mb_strlen($mail->getSubject()), \count($busy)), $out))->setOwner($user));
+        // Rien n'est dit « venu du modèle » pour un champ retiré par les réglages.
+        $out['fromModel'] = array_values(array_filter($out['fromModel'], static fn (string $k) => !empty($out[$k])));
+        $this->em->persist((new AiCall($provider->name(), 'mail-hints', sprintf('mail %s, objet de %d caractères, %d créneaux occupés', $mail->getId(), mb_strlen($mail->getSubject()), \count($busy)), $out, $this->byModel($provider)))->setOwner($user));
         $this->em->flush();
 
         return new JsonResponse($out);
@@ -86,10 +92,10 @@ final class AiController extends AbstractController
             return new JsonResponse(['task' => null]);
         }
         $a = $provider->analyse($subject, $body, new \DateTimeImmutable('now', new \DateTimeZone((string) $settings['timezone'])), []);
-        $this->em->persist((new AiCall($provider->name(), 'compose-hints', sprintf('rédaction, objet de %d caractères', mb_strlen($subject)), ['task' => $a->task !== null]))->setOwner($user));
+        $this->em->persist((new AiCall($provider->name(), 'compose-hints', sprintf('rédaction, objet de %d caractères', mb_strlen($subject)), ['task' => $a->task !== null], $this->byModel($provider)))->setOwner($user));
         $this->em->flush();
 
-        return new JsonResponse(['task' => $a->task]);
+        return new JsonResponse(['task' => $a->task, 'ai' => \in_array('task', $a->fromModel, true)]);
     }
 
     /** Brouillon de réponse à un mail : l'utilisateur choisit le ton et les créneaux, relit, puis envoie lui-même. */
@@ -109,7 +115,7 @@ final class AiController extends AbstractController
         $tone = ($in['tone'] ?? 'warm') === 'short' ? 'short' : 'warm';
         $lines = array_values(array_filter(array_map(static fn ($l) => \is_string($l) ? mb_substr(trim($l), 0, 120) : '', (array) ($in['slots'] ?? [])), static fn ($l) => $l !== ''));
         $original = '';
-        if (str_starts_with($provider->name(), 'external')) {
+        if ($provider instanceof \App\Ai\ExternalAiProvider) {
             try {
                 $original = $this->factory->create($mail->getAccount())->fetchBody($mail->getFolder(), $mail->getUid()) ?? '';
             } catch (\Throwable) {
@@ -117,10 +123,10 @@ final class AiController extends AbstractController
             }
         }
         $body = $provider->draftReply($mail->getFromName() ?: $mail->getFromAddress(), $mail->getSubject(), $user->getDisplayName(), (string) $settings['locale'], $tone, \array_slice($lines, 0, 8), $original);
-        $this->em->persist((new AiCall($provider->name(), 'reply-draft', 'mail '.$mail->getId(), ['chars' => mb_strlen($body), 'slots' => \count($lines)]))->setOwner($user));
+        $this->em->persist((new AiCall($provider->name(), 'reply-draft', 'mail '.$mail->getId(), ['chars' => mb_strlen($body), 'slots' => \count($lines)], $this->byModel($provider)))->setOwner($user));
         $this->em->flush();
 
-        return new JsonResponse(['body' => $body, 'ai' => true]);
+        return new JsonResponse(['body' => $body, 'ai' => $this->byModel($provider)]);
     }
 
     #[Route('/api/suivis/{id}/relance-draft', methods: ['POST'])]
@@ -136,10 +142,16 @@ final class AiController extends AbstractController
             return new JsonResponse(['title' => 'Le brouillon par l’IA est désactivé dans Réglages.'], Response::HTTP_FORBIDDEN);
         }
         $body = $provider->draftRelance($s->getContact(), $s->getSubject(), $user->getDisplayName(), (string) $settings['locale']);
-        $this->em->persist((new AiCall($provider->name(), 'relance-draft', 'suivi '.$s->getId(), ['chars' => mb_strlen($body)]))->setOwner($user));
+        $this->em->persist((new AiCall($provider->name(), 'relance-draft', 'suivi '.$s->getId(), ['chars' => mb_strlen($body)], $this->byModel($provider)))->setOwner($user));
         $this->em->flush();
 
-        return new JsonResponse(['body' => $body, 'ai' => true]);
+        return new JsonResponse(['body' => $body, 'ai' => $this->byModel($provider)]);
+    }
+
+    /** « IA » seulement quand un modèle a réellement écrit : des règles locales ne sont pas de l'IA. */
+    private function byModel(\App\Ai\AiProvider $provider): bool
+    {
+        return $provider instanceof \App\Ai\ExternalAiProvider && $provider->answeredByModel();
     }
 
     /** @return array<string, scalar> */

@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Entity\Mail;
 use App\Entity\MailAccount;
+use App\Entity\SlotHold;
 use App\Entity\Suivi;
 use App\Entity\User;
 use App\Enum\SuiviDirection;
@@ -12,6 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Envoie un message puis, SEULEMENT s'il est parti, crée le suivi (F-50, F-73).
@@ -73,6 +75,12 @@ final class MailSender
 
         $saved = $this->saveToSent($account, $email);
 
+        // Parti : le message d'origine le dit tout de suite, sans attendre la synchro du dossier Envoyés.
+        if ($replyTo !== null) {
+            $replyTo->markAnswered($now);
+            $this->em->flush();
+        }
+
         if ($replyTo !== null && $replyTo->getSharedMailbox() !== null) {
             $this->recordTeamReply($user, $replyTo, $now);
         }
@@ -90,7 +98,36 @@ final class MailSender
             $this->em->flush();
         }
 
+        $this->holdSlots($user, $r, $messageId, $replyTo, $suivi, $now);
+
         return ['messageId' => $messageId, 'suivi' => $suivi, 'savedToSent' => $saved];
+    }
+
+    /** Créneaux proposés, posés en provisoire (F-74) : seulement maintenant que le message est parti. Liés au mail et au suivi. */
+    private function holdSlots(User $user, SendMailRequest $r, string $messageId, ?Mail $replyTo, ?Suivi $suivi, \DateTimeImmutable $now): void
+    {
+        if ($r->holds === []) {
+            return;
+        }
+        // Sans nouveau suivi, le créneau se rattache à celui de la demande à laquelle on répond, s'il y en a un.
+        $suivi ??= $replyTo === null ? null : $this->em->getRepository(Suivi::class)->findOneBy(['owner' => $user, 'mailId' => $replyTo->getMessageId()]);
+        $group = Uuid::v4()->toRfc4122();
+        $contact = $replyTo !== null && $replyTo->getFromName() !== '' ? $replyTo->getFromName() : $this->contactName($r->to[0]);
+        foreach ($r->holds as $h) {
+            try {
+                $start = new \DateTimeImmutable($h['start']);
+                $end = new \DateTimeImmutable($h['end']);
+            } catch (\Exception) {
+                continue;
+            }
+            // Gardées en UTC comme les événements ; un créneau déjà passé ou à l'envers n'a rien à réserver.
+            if ($end <= $start || $end <= $now) {
+                continue;
+            }
+            $utc = new \DateTimeZone('UTC');
+            $this->em->persist(new SlotHold($user, $group, $start->setTimezone($utc), $end->setTimezone($utc), mb_substr($contact, 0, 200), mb_substr($r->subject, 0, 500), $messageId, $replyTo?->getMessageId(), $suivi, $now));
+        }
+        $this->em->flush();
     }
 
     /** Réponse envoyée depuis une boîte partagée : journal de la demande et information des autres membres (F-68). */

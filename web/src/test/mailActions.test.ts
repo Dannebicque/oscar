@@ -1,5 +1,6 @@
+import { api } from '../api'
 import { flushPromises } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import MailReader from '../components/mail/MailReader.vue'
 import { useMailsStore } from '../stores/mails'
 import { useSettingsStore } from '../stores/settings'
@@ -106,12 +107,28 @@ describe('invitation d’agenda reçue par mail (F-25)', () => {
     expect(card.text()).toContain('Rien ne part sans ton clic')
     const { useAgendaStore } = await import('../stores/agenda')
     const before = useAgendaStore(pinia).events.length
+    const reply = vi.spyOn(api.mails, 'replyInvitation')
     await card.findAll('button').find((b) => b.text() === 'Accepter')!.trigger('click')
     await flushPromises()
+    // La fenêtre montre le message : rien n'est parti ni inscrit.
+    expect(reply).not.toHaveBeenCalled()
+    const message = document.body.querySelector<HTMLTextAreaElement>('#inv-message')!
+    expect(message.value).toContain('Je confirme ma présence à « Soutenance de stage : M. Lemoine »')
+    message.value = 'Bonjour, je viendrai.'
+    message.dispatchEvent(new Event('input'))
+    await flushPromises()
+    ;[...document.body.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Envoyer la réponse')!.click()
+    await flushPromises()
+    expect(reply).toHaveBeenCalledWith('m9', expect.objectContaining({ response: 'accepted', message: 'Bonjour, je viendrai.', send: true }))
     expect(s.byId('m9')!.invitationResponse).toBe('accepted')
     expect(useAgendaStore(pinia).events.length).toBe(before + 1)
     await wrapper.setProps({ mail: s.byId('m9')! })
     expect(wrapper.find('.invite').text()).toContain('Tu as accepté cette invitation')
+    // Répondu : plus de bouton pour refaire la même chose ; changer d'avis passe par « Modifier ma réponse ».
+    const buttons = () => wrapper.find('.invite').findAll('button').map((b) => b.text())
+    expect(buttons()).toEqual(['Modifier ma réponse'])
+    await wrapper.find('.invite').findAll('button')[0].trigger('click')
+    expect(buttons()).toEqual(['Garder ma réponse', 'Peut-être', 'Refuser'])
   })
 })
 
@@ -127,7 +144,7 @@ describe('suggestion de tâche pendant la rédaction (F-73)', () => {
     await flushPromises()
     const card = wrapper.find('.taskhint')
     expect(card.exists()).toBe(true)
-    expect(card.text()).toContain('Suggéré par l’IA')
+    expect(card.text()).toContain('Suggestion')
     const tasks = useTasksStore(pinia)
     await tasks.load()
     const before = tasks.items.length

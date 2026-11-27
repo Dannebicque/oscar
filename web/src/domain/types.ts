@@ -153,6 +153,8 @@ export interface MailHints {
   suggestFollow?: boolean
   /** Résumé de l'IA : les phrases qui portent la demande (absent pour un message court). */
   summary?: string | null
+  /** Champs réellement proposés par un modèle de langage ; le reste vient de règles. */
+  fromModel?: string[]
 }
 
 export interface MailInvitation {
@@ -175,6 +177,10 @@ export interface Mail {
   messageId?: string
   /** Identifiants des messages auxquels celui-ci répond (In-Reply-To, References) : rattache une réponse à son fil. */
   parents?: string[]
+  /** Message auquel celui-ci répond directement. */
+  inReplyTo?: string | null
+  /** Réponse envoyée depuis Oscar. */
+  answeredAt?: string | null
   /** 'personal' ou id d'une boîte partagée. */
   mailbox: string
   folder: MailFolder | CustomFolder
@@ -223,6 +229,37 @@ export interface CalendarSource {
   /** Agenda perso : exclu de « Prochain RDV » sauf réglage (F-71). */
   personal: boolean
 }
+/** Créneau en provisoire (F-74) : proposé dans une réponse partie, gardé dans Oscar seul tant qu'aucun n'est retenu. */
+export interface SlotHold {
+  id: string
+  /** Les créneaux d'une même réponse vont ensemble. */
+  groupId: string
+  start: string // ISO
+  end: string
+  contact: string
+  subject: string
+  /** Message-ID de la réponse envoyée, et du message auquel elle répondait. */
+  mailId: string
+  repliedToMailId: string | null
+  suiviId: string | null
+  createdAt: string
+}
+
+export interface AiServerState { configured: boolean; kind: 'openai' | 'anthropic'; baseUrl: string; model: string; hasKey: boolean }
+
+export interface AiUsageCounts { total: number; model: number; rules: number; fallback: number; unknown: number }
+/** Indicateurs d'usage de l'IA (administrateur) : des nombres, jamais un contenu ni une personne. */
+export interface AiUsage {
+  days: number
+  externalAllowed: boolean
+  users: number
+  activeUsers: number
+  modes: { university: number; external: number; off: number }
+  totals: AiUsageCounts
+  features: (AiUsageCounts & { feature: string })[]
+  services: { service: string; total: number }[]
+}
+
 export interface CalEvent {
   id: string
   calendar: string

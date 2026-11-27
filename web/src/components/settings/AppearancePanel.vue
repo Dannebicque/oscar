@@ -12,7 +12,7 @@ import RadioGroup from '../ui/RadioGroup.vue'
 import StatusChip from '../ui/StatusChip.vue'
 import SwitchField from '../ui/SwitchField.vue'
 import FlagChip from '../ui/FlagChip.vue'
-import AiBadge from '../ui/AiBadge.vue'
+import SuggestBadge from '../ui/SuggestBadge.vue'
 import ThemePreview from './ThemePreview.vue'
 
 /** Apparence : style (Moderne, Rétro, Néon) × palette × mode, accent libre corrigé pour rester lisible, densité, langue. */
@@ -84,7 +84,7 @@ function onHex(e: Event) {
 
     <div class="preview" role="group" :aria-label="t('settings.look.preview')">
       <p>{{ t('settings.look.previewText') }}</p>
-      <p class="cluster"><StatusChip status="inProgress" /><FlagChip flag="relanceDue" /><FlagChip flag="late" /><AiBadge /><StatusChip status="done" /></p>
+      <p class="cluster"><StatusChip status="inProgress" /><FlagChip flag="relanceDue" /><FlagChip flag="late" /><SuggestBadge /><StatusChip status="done" /></p>
       <p class="cluster"><BaseButton variant="primary" :label="t('settings.look.sampleAction')" /><BaseButton :label="t('settings.look.sampleSecondary')" /></p>
     </div>
   </div>

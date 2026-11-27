@@ -32,6 +32,8 @@ class AiCall implements OwnedInterface
         #[ORM\Column(length: 40)] private string $purpose,
         #[ORM\Column(length: 300)] private string $inputSummary,
         #[ORM\Column(type: Types::JSON)] private array $output,
+        /** Un modèle de langage a-t-il réellement répondu ? null : appel plus ancien, inconnu. */
+        #[ORM\Column(nullable: true)] private ?bool $byModel = null,
     ) {
         $this->id = Uuid::v7()->toRfc4122();
         $this->at = new \DateTimeImmutable();
@@ -46,4 +48,5 @@ class AiCall implements OwnedInterface
     public function getInputSummary(): string { return $this->inputSummary; }
     /** @return array<string, mixed> */
     public function getOutput(): array { return $this->output; }
+    public function getByModel(): ?bool { return $this->byModel; }
 }

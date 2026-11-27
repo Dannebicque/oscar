@@ -18,6 +18,8 @@ final class ExternalAiProvider implements AiProvider
 {
     private const MAX_BODY = 8000;
 
+    private bool $answered = false;
+
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly AiProvider $local,
@@ -25,16 +27,19 @@ final class ExternalAiProvider implements AiProvider
         private readonly string $baseUrl,
         private readonly string $model,
         #[\SensitiveParameter] private readonly ?string $apiKey,
+        /** `external` : choisi par la personne ; `institution` : réglé par l'administrateur. */
+        private readonly string $origin = 'external',
     ) {
     }
 
     public function name(): string
     {
-        return 'external:'.$this->kind;
+        return $this->origin.':'.$this->kind;
     }
 
     public function analyse(string $subject, string $body, \DateTimeImmutable $mailDate, array $busy): MailAnalysis
     {
+        $this->answered = false;
         $local = $this->local->analyse($subject, $body, $mailDate, $busy);
         try {
             $raw = $this->complete(
@@ -50,17 +55,26 @@ final class ExternalAiProvider implements AiProvider
             return $local;
         }
 
-        return new MailAnalysis(
-            $local->slots,
-            $this->event($j['event'] ?? null) ?? $local->event,
-            $this->task($j['task'] ?? null, $mailDate) ?? $local->task,
-            \is_bool($j['suggestFollow'] ?? null) ? ($j['suggestFollow'] && $local->slots === null) : $local->suggestFollow,
-            $this->text($j['summary'] ?? null, 400) ?? $local->summary,
-        );
+        $this->answered = true;
+        $event = $this->event($j['event'] ?? null);
+        $task = $this->task($j['task'] ?? null, $mailDate);
+        $summary = $this->text($j['summary'] ?? null, 400);
+        $follow = \is_bool($j['suggestFollow'] ?? null) ? ($j['suggestFollow'] && $local->slots === null) : null;
+        // Champ par champ : ce que le modèle n'a pas donné (ou mal) vient des règles locales, et ne se dit pas « IA ».
+        $fromModel = array_keys(array_filter(['event' => $event !== null, 'task' => $task !== null, 'summary' => $summary !== null, 'suggestFollow' => $follow !== null]));
+
+        return new MailAnalysis($local->slots, $event ?? $local->event, $task ?? $local->task, $follow ?? $local->suggestFollow, $summary ?? $local->summary, $fromModel);
+    }
+
+    /** Le modèle a-t-il répondu au dernier appel ? Faux s'il a fallu revenir aux règles locales. */
+    public function answeredByModel(): bool
+    {
+        return $this->answered;
     }
 
     public function draftReply(string $contact, string $subject, string $me, string $locale, string $tone, array $slotLines, string $original = ''): string
     {
+        $this->answered = false;
         $fallback = $this->local->draftReply($contact, $subject, $me, $locale, $tone, $slotLines);
         try {
             $text = $this->complete(
@@ -76,11 +90,14 @@ final class ExternalAiProvider implements AiProvider
         }
         $text = trim(preg_replace('/^```[a-z]*\n|\n```$/m', '', $text) ?? $text);
 
-        return $text === '' || mb_strlen($text) > 4000 ? $fallback : $text;
+        $this->answered = !($text === '' || mb_strlen($text) > 4000);
+
+        return $this->answered ? $text : $fallback;
     }
 
     public function draftRelance(string $contact, string $subject, string $me, string $locale): string
     {
+        $this->answered = false;
         $fallback = $this->local->draftRelance($contact, $subject, $me, $locale);
         try {
             $text = $this->complete(
@@ -93,13 +110,15 @@ final class ExternalAiProvider implements AiProvider
         }
         $text = trim(preg_replace('/^```[a-z]*\n|\n```$/m', '', $text) ?? $text);
 
-        return $text === '' || mb_strlen($text) > 3000 ? $fallback : $text;
+        $this->answered = !($text === '' || mb_strlen($text) > 3000);
+
+        return $this->answered ? $text : $fallback;
     }
 
     /** Un échange minimal pour vérifier l'adresse, le modèle et la clé. @throws \Throwable */
     public function ping(): void
     {
-        $this->complete('Réponds par le seul mot OK.', 'Test de connexion.', 8);
+        $this->complete('Réponds par le seul mot OK.', 'Test de connexion.', 64);
     }
 
     /** @throws \Throwable */
@@ -115,7 +134,10 @@ final class ExternalAiProvider implements AiProvider
             : ['model' => $this->model, 'max_tokens' => $maxTokens, 'temperature' => 0.2, 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $user]]];
         $r = $this->http->request('POST', $url, ['headers' => $headers, 'json' => $payload, 'timeout' => 25, 'max_redirects' => 0]);
         $data = $r->toArray();
-        $text = $anthropic ? ($data['content'][0]['text'] ?? null) : ($data['choices'][0]['message']['content'] ?? null);
+        // Anthropic rend une liste de blocs : le texte n'est pas forcément le premier (un modèle peut d'abord « réfléchir »).
+        $text = $anthropic
+            ? (array_values(array_filter((array) ($data['content'] ?? []), static fn ($b) => ($b['type'] ?? null) === 'text'))[0]['text'] ?? null)
+            : ($data['choices'][0]['message']['content'] ?? null);
         if (!\is_string($text)) {
             throw new \UnexpectedValueException('Réponse inattendue.');
         }

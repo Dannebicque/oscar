@@ -35,6 +35,10 @@ class Mail implements OwnedInterface
     #[ORM\Column(length: 12, nullable: true)]
     private ?string $invitationResponse = null;
 
+    /** Quand l'utilisateur y a répondu depuis Oscar (réponse réellement partie). Les réponses faites ailleurs se voient par le fil. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $answeredAt = null;
+
     /** Lu (drapeau IMAP \Seen). */
     #[ORM\Column(options: ['default' => true])]
     private bool $seen = true;
@@ -74,6 +78,8 @@ class Mail implements OwnedInterface
     }
 
     public function getId(): string { return $this->id; }
+    public function getAnsweredAt(): ?\DateTimeImmutable { return $this->answeredAt; }
+    public function markAnswered(\DateTimeImmutable $at): static { $this->answeredAt = $at; return $this; }
     public function isSeen(): bool { return $this->seen; }
     public function setSeen(bool $seen): static { $this->seen = $seen; return $this; }
     #[Ignore]

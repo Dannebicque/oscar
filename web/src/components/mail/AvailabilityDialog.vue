@@ -5,7 +5,7 @@ import { useFormat } from '../../composables/useFormat'
 import type { Mail } from '../../domain/types'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
-import AiBadge from '../ui/AiBadge.vue'
+import SuggestBadge from '../ui/SuggestBadge.vue'
 
 /**
  * Choix des créneaux pour une demande de disponibilités (F-74). L'IA ne lit que libre/occupé ; l'utilisateur coche, Oscar prépare
@@ -25,7 +25,7 @@ watch(() => props.open, (o) => { if (o) chosen.value = slots.value.slice(0, 2).m
 
 <template>
   <BaseDialog :open="open" :title="t('mail.ai.availAction')" @close="emit('close')">
-    <p class="top"><AiBadge /><span class="muted">{{ t('agenda.freeBusy') }}</span></p>
+    <p class="top"><SuggestBadge /><span class="muted">{{ t('agenda.freeBusy') }}</span></p>
     <p class="muted">{{ t('mail.ai.availPickHelp') }}</p>
     <fieldset>
       <legend>{{ t('mail.ai.availTitle') }}</legend>

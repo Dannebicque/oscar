@@ -5,6 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 cd "$ROOT"
 mkdir -p .dev
+# macOS : sans ceci, libpq consulte Kerberos à chaque connexion, ce qui fait planter les processus PHP dupliqués
+# (« réponse vide » au hasard avec plusieurs requêtes à la fois). La base de dev est locale : aucun chiffrement GSS à perdre.
+export PGGSSENCMODE=disable
 DB_URL='postgresql://oscar:oscar-dev@127.0.0.1:5433/oscar?serverVersion=17&charset=utf8'
 
 # Relancer ne doit pas empiler les processus : on arrête d'abord ceux d'une session précédente.

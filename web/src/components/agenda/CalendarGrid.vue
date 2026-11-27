@@ -8,8 +8,9 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import FullCalendar from '@fullcalendar/vue3'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { CalEvent, CalendarSource } from '../../domain/types'
+import type { CalEvent, CalendarSource, SlotHold } from '../../domain/types'
 import BaseIcon from '../ui/BaseIcon.vue'
+import { overlapping } from '../../domain/holds'
 
 /**
  * Grille de calendrier : FullCalendar (MIT, maintenu), habillé avec nos jetons de thème.
@@ -18,9 +19,10 @@ import BaseIcon from '../ui/BaseIcon.vue'
  */
 export type GridView = 'timeGridWeek' | 'timeGridDay' | 'dayGridMonth' | 'listWeek'
 
-const props = defineProps<{ events: CalEvent[]; sources: CalendarSource[]; view: GridView; conflicts: Set<string>; busy?: { member: string; start: string; end: string }[] }>()
+const props = defineProps<{ events: CalEvent[]; sources: CalendarSource[]; view: GridView; conflicts: Set<string>; busy?: { member: string; start: string; end: string }[]; holds?: SlotHold[] }>()
 const emit = defineEmits<{
   open: [id: string]
+  hold: [groupId: string]
   select: [range: { start: Date; end: Date }]
   dates: [info: { start: Date; end: Date; title: string; current: Date }]
 }>()
@@ -33,6 +35,11 @@ const items = computed<EventInput[]>(() => [
   ...(props.busy ?? []).map((b, i) => ({
     id: `busy-${i}`, title: t('agenda.busyOf', { who: b.member }), start: b.start, end: b.end, editable: false, classNames: ['ev-busy'],
     extendedProps: { location: null, source: t('agenda.team'), personal: false, conflict: false, busy: true },
+  })),
+  // Créneaux en provisoire (F-74) : en pointillés, avec leur libellé et leur icône.
+  ...(props.holds ?? []).map((h) => ({
+    id: `hold-${h.id}`, title: t('holds.proposedTo', { who: h.contact }), start: h.start, end: h.end, editable: false, classNames: ['ev-hold'],
+    extendedProps: { location: null, source: t('holds.chip'), personal: false, conflict: props.events.some((e) => !sourceOf(e.calendar)?.personal && overlapping(e, h)), hold: h.groupId },
   })),
   ...props.events.map((e) => ({
     id: e.id, title: e.title, start: e.start, end: e.end,
@@ -66,7 +73,10 @@ const options = computed(() => ({
   businessHours: { daysOfWeek: [1, 2, 3, 4, 5], startTime: '08:00', endTime: '18:00' },
   events: items.value,
   select: (a: DateSelectArg) => { emit('select', { start: a.start, end: a.end }); api()?.unselect() },
-  eventClick: (a: EventClickArg) => { if (!a.event.id.startsWith('busy-')) emit('open', a.event.id) },
+  eventClick: (a: EventClickArg) => {
+    if (a.event.extendedProps.hold) emit('hold', a.event.extendedProps.hold as string)
+    else if (!a.event.id.startsWith('busy-')) emit('open', a.event.id)
+  },
   datesSet: (a: { start: Date; end: Date; view: { title: string; currentStart: Date } }) =>
     emit('dates', { start: a.start, end: a.end, title: a.view.title, current: a.view.currentStart }),
 }))
@@ -88,7 +98,7 @@ defineExpose({
           <span class="ev-title">{{ arg.event.title }}</span>
           <span v-if="arg.event.extendedProps.location && arg.view.type !== 'dayGridMonth'" class="ev-meta">{{ arg.event.extendedProps.location }}</span>
           <span class="ev-meta ev-source">
-            <BaseIcon :name="arg.event.extendedProps.personal ? 'user' : 'calendar'" :size="12" />{{ arg.event.extendedProps.source }}
+            <BaseIcon :name="arg.event.extendedProps.hold ? 'clock' : arg.event.extendedProps.personal ? 'user' : 'calendar'" :size="12" />{{ arg.event.extendedProps.source }}
           </span>
           <span v-if="arg.event.extendedProps.conflict" class="ev-meta ev-warn" :title="t('agenda.conflict')"><BaseIcon name="alert" :size="12" /><span class="ev-warn-txt">{{ t('agenda.conflict') }}</span></span>
         </div>
@@ -133,6 +143,7 @@ defineExpose({
   --fc-event-bg-color: var(--c-cal2-soft); --fc-event-border-color: var(--c-cal2); --fc-event-text-color: var(--c-on-cal2-soft);
 }
 .grid-wrap .fc-event.ev-busy { background: repeating-linear-gradient(135deg, var(--c-surface-2) 0 6px, var(--c-surface) 6px 12px); border: 1px dashed var(--c-border-strong); color: var(--c-text-muted); }
+.grid-wrap .fc-event.ev-hold { background: var(--c-surface); border: 2px dashed var(--c-primary); box-shadow: none; --fc-event-text-color: var(--c-text); color: var(--c-text); }
 .grid-wrap .fc-event.ev-conflict { outline: 2px dashed var(--c-warn); outline-offset: -2px; }
 .grid-wrap .fc-event:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; z-index: 5; }
 .grid-wrap .ev { display: flex; flex-direction: column; gap: 1px; padding: 2px 4px; overflow: hidden; line-height: 1.25; font-size: var(--fs-sm); }

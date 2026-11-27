@@ -49,7 +49,7 @@
   }
   .row.hot { border-inline-start: 4px solid var(--c-accent); }
   .row.dim { opacity: 0.85; }
-  .rows { display: grid; gap: var(--gap); }
+  .rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); }
 
   /* ── Pastilles ──────────────────────────────────────────────── */
   .chip {
@@ -93,6 +93,6 @@
   .kbd { display: inline-block; min-width: 1.6em; padding: 0 6px; text-align: center; font: 600 0.8rem/1.6 var(--font-sans); background: var(--c-surface-2); border: var(--bw) solid var(--c-border-strong); border-bottom-width: 2px; border-radius: 6px; }
   .avatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; flex: none; }
   .divider { border: 0; border-top: var(--bw) solid var(--c-border); margin: 0; }
-  .stack { display: grid; gap: var(--space-4); align-content: start; }
+  .stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); align-content: start; }
   .cluster { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 }

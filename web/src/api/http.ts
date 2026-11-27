@@ -50,11 +50,12 @@ interface RawMail {
   subject: string
   date: string
   seen?: boolean
+  answeredAt?: string | null
 }
 const FOLDERS: Record<string, MailFolder> = { INBOX: 'inbox', Sent: 'sent', Drafts: 'drafts', Archive: 'archive', Trash: 'trash' }
 
 const toMail = (r: RawMail): Mail => ({
-  id: r.id, messageId: r.messageId, parents: [...(r.references ?? []), ...(r.inReplyTo ? [r.inReplyTo] : [])], mailbox: r.mailbox ?? 'personal',
+  id: r.id, messageId: r.messageId, parents: [...(r.references ?? []), ...(r.inReplyTo ? [r.inReplyTo] : [])], inReplyTo: r.inReplyTo ?? null, answeredAt: r.answeredAt ?? null, mailbox: r.mailbox ?? 'personal',
   folder: FOLDERS[r.folder] ?? `f:${r.folder}`, from: { name: r.fromName || r.fromAddress, address: r.fromAddress }, to: r.toAddresses.map((a) => ({ name: a, address: a })),
   subject: r.subject, paragraphs: [], at: r.date, unread: r.seen === false && r.folder !== 'Sent' && r.folder !== 'Drafts', attachments: [], suivi: null, claim: null, composing: null, notes: [], activity: [], hints: {},
 })
@@ -94,7 +95,7 @@ export function createHttpApi(baseUrl: string): Api {
       async update(id, patch) { return hydrateSuivi(await req<Partial<Suivi>>('PATCH', `/api/suivis/${encodeURIComponent(id)}`, patch, { merge: true })) },
       async close(id) { await req('POST', `/api/suivis/${encodeURIComponent(id)}/close`) },
       async draftRelance(id) {
-        try { return (await req<{ body: string }>('POST', `/api/suivis/${encodeURIComponent(id)}/relance-draft`, {})).body } catch (e) {
+        try { const r = await req<{ body: string; ai?: boolean }>('POST', `/api/suivis/${encodeURIComponent(id)}/relance-draft`, {}); return { body: r.body, ai: r.ai === true } } catch (e) {
           if (e instanceof ApiError && (e.status === 403 || e.status === 404)) return null
           throw e
         }
@@ -107,7 +108,7 @@ export function createHttpApi(baseUrl: string): Api {
         return { paragraphs: r.paragraphs, html: r.html ?? null, blockedImages: r.blockedImages ?? 0 }
       },
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
-      async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
+      async replyDraft(id, p) { const r = await req<{ body: string; ai?: boolean }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p); return { body: r.body, ai: r.ai === true } },
       async move(id, folder) {
         const target = folder.startsWith('f:') ? folder.slice(2) : ({ inbox: 'INBOX', archive: 'Archive', trash: 'Trash' } as Record<string, string>)[folder]
         await req('POST', `/api/mails/${encodeURIComponent(id)}/move`, { folder: target })
@@ -179,6 +180,9 @@ export function createHttpApi(baseUrl: string): Api {
       remove: async (id) => { await req('DELETE', `/api/tasks/${encodeURIComponent(id)}`) },
     },
     agenda: {
+      holds: () => req('GET', '/api/slot-holds'),
+      async releaseHold(id) { await req('DELETE', `/api/slot-holds/${encodeURIComponent(id)}`) },
+      async releaseHoldGroup(groupId) { await req('DELETE', `/api/slot-holds/group/${encodeURIComponent(groupId)}`) },
       async sources(): Promise<CalendarSource[]> {
         return (await req<CalendarAccount[]>('GET', '/api/calendar-accounts')).map((a) => ({ id: a.id, label: a.label, kind: a.kind, personal: a.personal }))
       },
@@ -230,6 +234,11 @@ export function createHttpApi(baseUrl: string): Api {
       config: () => req('GET', '/api/admin/config'),
       updateConfig: (patch) => req('PATCH', '/api/admin/config', patch),
       users: () => req('GET', '/api/admin/users'),
+      aiUsage: (days) => req('GET', `/api/admin/ai-usage?days=${days}`),
+      aiServer: () => req('GET', '/api/admin/ai-server'),
+      saveAiServer: (s) => req('PUT', '/api/admin/ai-server', s),
+      async removeAiServer() { await req('DELETE', '/api/admin/ai-server') },
+      testAiServer: () => req('POST', '/api/admin/ai-server/test', {}),
       invite: (name, email) => req('POST', '/api/admin/users', { name, email }),
       async setDisabled(id, disabled) { await req('POST', `/api/admin/users/${encodeURIComponent(id)}/${disabled ? 'disable' : 'enable'}`, {}) },
       resetLink: (id) => req('POST', `/api/admin/users/${encodeURIComponent(id)}/reset-link`, {}),

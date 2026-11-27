@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useFormat } from '../../composables/useFormat'
 import { useSuivisStore } from '../../stores/suivis'
@@ -7,6 +7,8 @@ import { useUiStore } from '../../stores/ui'
 import { useOscar } from '../../oscar/useOscar'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
+import HoldsPanel from '../agenda/HoldsPanel.vue'
+import { useAgendaStore } from '../../stores/agenda'
 import StatusChip from '../ui/StatusChip.vue'
 
 /** Fiche d'un suivi qui n'a pas de message à montrer : créé à la main, ou message pas (ou plus) synchronisé. */
@@ -18,6 +20,10 @@ const suivis = useSuivisStore()
 const ui = useUiStore()
 const { say } = useOscar()
 const suivi = computed(() => (props.suiviId ? suivis.byId(props.suiviId) : undefined))
+const agenda = useAgendaStore()
+const holds = computed(() => agenda.holds.filter((h) => h.suiviId === props.suiviId))
+// La page des suivis n'a pas forcément chargé l'agenda.
+watch(() => props.suiviId, (id) => { if (id) void (agenda.sources.length ? agenda.loadHolds() : agenda.load()) }, { immediate: true })
 
 async function done() {
   const s = suivi.value
@@ -39,6 +45,7 @@ async function done() {
         <dt>{{ t('suivis.dueLabel') }}</dt><dd>{{ suivi.dueAt ? fmt.date(suivi.dueAt) : '—' }}</dd>
         <dt>{{ t('suivis.relanceLabel') }}</dt><dd>{{ suivi.noRelance ? t('suivis.relanceStopped2') : suivi.relanceAt ? t('suivis.relanceOn', { date: fmt.date(suivi.relanceAt) }) : t('suivis.relanceNone') }}</dd>
       </dl>
+      <HoldsPanel v-if="holds.length" :holds="holds" />
       <template v-if="suivi.journal.length">
         <h3>{{ t('suivis.journal') }}</h3>
         <ol class="log">

@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../api'
 import CalendarGrid, { type GridView } from '../components/agenda/CalendarGrid.vue'
+import HoldsPanel from '../components/agenda/HoldsPanel.vue'
 import MeetingBrief from '../components/agenda/MeetingBrief.vue'
 import Callout from '../components/ui/Callout.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -16,6 +17,8 @@ import TextField from '../components/ui/TextField.vue'
 import ToneChip from '../components/ui/ToneChip.vue'
 import { useFormat } from '../composables/useFormat'
 import { conflictIds } from '../domain/agenda'
+import { overlapping } from '../domain/holds'
+import { useMailsStore } from '../stores/mails'
 import { isoDay } from '../domain/dates'
 import { useAgendaStore } from '../stores/agenda'
 import { useSuivisStore } from '../stores/suivis'
@@ -30,7 +33,8 @@ const ui = useUiStore()
 const tasks = useTasksStore()
 const suivis = useSuivisStore()
 const accounts = useAccountsStore()
-onMounted(() => Promise.all([store.load(), tasks.load(), suivis.load(), accounts.loaded ? Promise.resolve() : accounts.load().catch(() => undefined)]))
+const mails = useMailsStore()
+onMounted(() => Promise.all([store.load(), tasks.load(), suivis.load(), mails.items.length ? Promise.resolve() : mails.load(), accounts.loaded ? Promise.resolve() : accounts.load().catch(() => undefined)]))
 
 const narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches
 const view = ref<GridView>(narrow ? 'timeGridDay' : 'timeGridWeek')
@@ -75,6 +79,13 @@ const viewOptions = computed(() => ([['timeGridWeek', 'week'], ['timeGridDay', '
 const filtersOpen = ref(false)
 const conflicts = computed(() => conflictIds(store.events))
 
+/** Proposition désignée en cliquant un créneau en pointillés dans la grille. */
+const holdHit = ref<string | null>(null)
+function showHold(groupId: string) {
+  holdHit.value = groupId
+  document.querySelector(`[data-group="${groupId}"]`)?.scrollIntoView?.({ block: 'nearest' })
+}
+
 function setView(v: GridView) {
   view.value = v
   grid.value?.changeView(v)
@@ -108,6 +119,13 @@ function startCreate(range?: { start: Date; end: Date }) {
   }
   showNew.value = true
 }
+/** Le nouvel événement tombe sur un créneau proposé à quelqu'un : on le dit avant de créer. */
+const formClash = computed(() => {
+  const f = form.value
+  const start = new Date(`${f.day}T${f.start}`), end = new Date(`${f.day}T${f.end}`)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+  return store.holds.find((h) => overlapping(h, { start: start.toISOString(), end: end.toISOString() })) ?? null
+})
 async function create() {
   if (!form.value.title.trim() || !form.value.calendar) return
   const [y, mo, d] = form.value.day.split('-').map(Number)
@@ -160,8 +178,8 @@ async function create() {
         </Callout>
         <p v-if="store.loading" class="muted">{{ t('common.loading') }}</p>
         <CalendarGrid
-          ref="grid" :events="shownEvents" :busy="teamBusy" :sources="store.sources" :view="view" :conflicts="conflicts"
-          @open="openId = $event" @select="startCreate" @dates="setRange"
+          ref="grid" :events="shownEvents" :busy="teamBusy" :sources="store.sources" :view="view" :conflicts="conflicts" :holds="store.holds"
+          @hold="showHold" @open="openId = $event" @select="startCreate" @dates="setRange"
         />
         <p class="hint note">{{ t('agenda.legend') }} {{ t('agenda.freeBusy') }}</p>
       </div>
@@ -188,6 +206,11 @@ async function create() {
           </template>
         </section>
 
+        <section v-if="store.holds.length" class="card stack" aria-labelledby="hold-h">
+          <h2 id="hold-h">{{ t('holds.title') }}</h2>
+          <HoldsPanel :holds="store.holds" :highlight="holdHit" />
+        </section>
+
         <section class="card stack" aria-labelledby="due-h">
           <h2 id="due-h">{{ t('agenda.dues') }}</h2>
           <p v-if="dues.length === 0" class="muted">{{ t('agenda.noDues') }}</p>
@@ -207,6 +230,7 @@ async function create() {
         <TextField id="ev-s" v-model="form.start" type="time" :label="t('agenda.evStart')" />
         <TextField id="ev-e" v-model="form.end" type="time" :label="t('agenda.evEnd')" />
       </div>
+      <p v-if="formClash" class="callout" data-tone="warn" role="status">{{ t('holds.clashHold', { who: formClash.contact }) }}</p>
       <TextField id="ev-p" v-model="form.location" :label="t('agenda.evPlace')" />
       <SelectField id="ev-c" v-model="form.calendar" :label="t('agenda.evCalendar')" :options="store.sources.map((s) => ({ value: s.id, label: s.label }))" required />
     </form>
@@ -220,7 +244,8 @@ async function create() {
 <style scoped>
 .bar { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-3); }
 .nav { display: flex; gap: var(--space-1); }
-.when { font-size: var(--fs-md); flex: 1; min-width: 200px; text-transform: capitalize; }
+.when { font-size: var(--fs-md); flex: 1; min-width: 200px; }
+.when::first-letter { text-transform: uppercase; }
 .layout { display: grid; gap: var(--space-4); align-items: start; }
 .main { min-width: 0; }
 .nosource { margin-bottom: var(--space-4); }

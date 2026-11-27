@@ -19,7 +19,8 @@ const uid = `cb-${Math.random().toString(36).slice(2, 8)}`
 
 <style scoped>
 .cb-wrap { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target); }
-.cb-root { flex: none; width: 24px; height: 24px; margin: 10px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--c-text-muted); border-radius: 6px; background: var(--c-surface); color: var(--c-on-primary); cursor: pointer; }
+.cb-root::after { content: ''; position: absolute; inset: -12px; }
+.cb-root { position: relative; flex: none; width: 24px; height: 24px; margin: 10px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--c-text-muted); border-radius: 6px; background: var(--c-surface); color: var(--c-on-primary); cursor: pointer; }
 .cb-root[data-state='checked'] { background: var(--c-primary); border-color: var(--c-primary); }
 .cb-root[data-disabled] { opacity: 0.5; cursor: not-allowed; }
 .cb-label { cursor: pointer; }

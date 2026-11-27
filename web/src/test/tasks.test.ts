@@ -123,11 +123,11 @@ describe('page Tâches', () => {
     expect(useTasksStore(pinia).items.some((x) => x.title === 'Appeler la scolarité')).toBe(true)
   })
 
-  it('les tâches proposées par l’IA se confirment ou se rejettent, et portent « Suggéré par l’IA »', async () => {
+  it('les tâches proposées par Oscar se confirment ou se rejettent, et portent « Suggestion »', async () => {
     const { wrapper, pinia } = await mountApp(TasksView, '/taches')
     await flushPromises()
     const row = wrapper.findAll('li.task').find((r) => r.text().includes('Confirmer le nombre'))!
-    expect(row.text()).toContain('Suggéré par l’IA')
+    expect(row.text()).toContain('Suggestion')
     await row.findAll('button').find((b) => b.text() === 'Confirmer')!.trigger('click')
     await flushPromises()
     expect(useTasksStore(pinia).items.find((x) => x.id === 't3')?.toConfirm).toBe(false)

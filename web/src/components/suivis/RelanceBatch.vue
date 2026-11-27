@@ -9,7 +9,7 @@ import type { Suivi } from '../../domain/types'
 import { useSettingsStore } from '../../stores/settings'
 import { useSuivisStore } from '../../stores/suivis'
 import { useUiStore } from '../../stores/ui'
-import AiBadge from '../ui/AiBadge.vue'
+import SuggestBadge from '../ui/SuggestBadge.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseDialog from '../ui/BaseDialog.vue'
 import ToneChip from '../ui/ToneChip.vue'
@@ -68,11 +68,11 @@ watch(() => props.open, async (o) => {
   fill(rows.value)
   // Brouillons de l'IA pour les relances seules, quand elle est active ; le modèle local reste en place sinon ou en cas de panne.
   await Promise.all(rows.value.filter((r) => !isGroup(r)).map(async (r) => {
-    const text = await store.draftRelance(r.items[0].id).catch(() => null)
-    if (text && drafts[r.id] === localDraft(r.items)) { drafts[r.id] = text; ai[r.id] = true }
+    const draft = await store.draftRelance(r.items[0].id).catch(() => null)
+    if (draft && drafts[r.id] === localDraft(r.items)) { drafts[r.id] = draft.body; ai[r.id] = draft.ai }
   }))
 })
-const edit = (r: Row) => { ai[r.id] = false; ready[r.id] = false }
+const edit = (r: Row) => { delete ai[r.id]; ready[r.id] = false }
 
 /** Un message par sujet plutôt qu'un seul : la ligne se sépare en autant de lignes. */
 function split(r: Row) {
@@ -145,7 +145,7 @@ async function stop(r: Row) { for (const s of r.items) await store.stopRelance(s
           </template>
           <template v-else>
             <div class="field">
-              <label :for="`rb-${r.id}`" class="lbl">{{ t('suivis.relanceMessage') }} <AiBadge v-if="ai[r.id]" /></label>
+              <label :for="`rb-${r.id}`" class="lbl">{{ t('suivis.relanceMessage') }} <SuggestBadge v-if="ai[r.id] !== undefined" :ai="ai[r.id]" /></label>
               <textarea :id="`rb-${r.id}`" v-model="drafts[r.id]" class="input" :rows="isGroup(r) ? 8 : 5" @input="edit(r)" />
             </div>
             <p v-if="errors[r.id]" class="err" role="alert"><ToneChip tone="danger" icon="alert" :label="errors[r.id]" /></p>

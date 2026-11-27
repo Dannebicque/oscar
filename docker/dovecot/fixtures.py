@@ -48,6 +48,9 @@ LONG_MAIL = mail(frm="Direction des stages <stages@univ-reims.fr>", to=f"David <
                       "Peux-tu transmettre la liste des étudiants concernés avant vendredi ? Les conventions incomplètes seront renvoyées aux étudiants. "
                       "Une réunion de point d'étape aura lieu jeudi à 14h en salle B12.\n\nCordialement,\nLa Direction des stages", hours_ago=8)
 # Invitation d'agenda (F-25) : un message avec une pièce text/calendar (METHOD:REQUEST), dans trois jours à 14 h (Paris).
+DAYS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+
+
 def _invitation():
     start = (NOW + timedelta(days=3)).replace(hour=13, minute=0, second=0)  # 13:00 UTC = 14:00 à Paris (hiver)
     fmt = lambda d: d.strftime("%Y%m%dT%H%M%SZ")
@@ -56,7 +59,7 @@ def _invitation():
            "\r\nSUMMARY:Soutenance de stage : M. Lemoine\r\nLOCATION:Salle B12\r\nORGANIZER;CN=Claire Petit:mailto:claire.petit@entreprise.fr\r\n"
            "ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:david@" + DOMAIN + "\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n")
     m = mail(frm="Claire Petit <claire.petit@entreprise.fr>", to=f"David <david@{DOMAIN}>", subject="Invitation : Soutenance de stage de M. Lemoine",
-             body="Bonjour David,\n\nJe t'invite à la soutenance de stage de M. Lemoine, mardi à 14 h en salle B12.\n\nClaire", hours_ago=2)
+             body="Bonjour David,\n\nJe t'invite à la soutenance de stage de M. Lemoine, " + DAYS[start.weekday()] + " à 14 h en salle B12.\n\nClaire", hours_ago=2)
     m.add_attachment(ics.encode(), maintype="text", subtype="calendar", filename="invitation.ics", params={"method": "REQUEST", "charset": "UTF-8"})
     return m
 

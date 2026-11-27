@@ -5,7 +5,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import NewSuiviDialog from '../components/suivis/NewSuiviDialog.vue'
-import NextEventCard from '../components/suivis/NextEventCard.vue'
 import RelanceBatch from '../components/suivis/RelanceBatch.vue'
 import SuiviKpis, { type KpiId } from '../components/suivis/SuiviKpis.vue'
 import VacationBanner from '../components/ui/VacationBanner.vue'
@@ -92,15 +91,6 @@ const viewOptions = computed(() => [
   ...(store.scope === 'mine' ? [{ value: 'health' as View, label: t('suivis.health') }] : []),
 ])
 watch(() => store.scope, () => { kpi.value = null; kind.value = 'all'; if (view.value === 'health') view.value = 'priorities' })
-const rdvAhead = computed(() => all.value.filter((i) => i.kind === 'rdv' && i.flag === 'dueToday').length)
-const teamNew = computed(() => mails.items.filter((m) => m.claim?.state === 'new').length)
-/** Synthèse d'Oscar (maquette) : comptes locaux, aucun contenu de mail ne la nourrit. */
-const summary = computed((): { situation: 'summaryTeam' | 'summaryDay'; params: Record<string, string | number> } | null => {
-  if (store.scope === 'team') return teamNew.value ? { situation: 'summaryTeam' as const, params: { n: teamNew.value } } : null
-  const first = open_.value[0]
-  if (!first) return null
-  return { situation: 'summaryDay' as const, params: { rdv: t('suivis.summaryRdv', { n: rdvAhead.value }, rdvAhead.value), actions: t('suivis.summaryActions', { n: store.actionCount }, store.actionCount), first: first.title } }
-})
 const groupOpen = computed(() => apiMode === 'mock' && suggestion.value === 'open' && store.scope === 'mine')
 const recent = computed(() =>
   store.inScope.flatMap((s) => s.journal.map((j) => ({ ...j, subject: s.subject }))).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 5),
@@ -160,8 +150,6 @@ function suggest(accept: boolean) {
       <VacationBanner />
       <SuiviHealth v-if="view === 'health'" @list="view = 'priorities'" />
       <template v-else>
-      <NextEventCard v-if="store.scope === 'mine'" :now="now" />
-
       <Callout :level="2" v-if="store.scope === 'mine' && store.relances.length" tone="warn" icon="clock" :title="t('suivis.relancesTitle', { n: store.relances.length }, store.relances.length)">
         <p>{{ say('relancesMany', { n: store.relances.length }) }}</p>
         <template #actions><BaseButton variant="primary" :label="t('suivis.relancesStart')" @click="showRelances = true" /></template>
@@ -169,10 +157,7 @@ function suggest(accept: boolean) {
 
 
       <SuiviKpis v-model="kpi" :counts="kpiCounts" />
-      <OscarSays v-if="summary" :situation="summary.situation" :params="summary.params" suggestion>
-        <template #actions><RouterLink class="btn" to="/recap">{{ t('suivis.seeRecap') }}</RouterLink></template>
-      </OscarSays>
-      <p class="muted" aria-live="polite">{{ t('suivis.actionCount', { n: store.actionCount }, store.actionCount) }}</p>
+      <p v-if="view === 'priorities'" class="muted" aria-live="polite">{{ t('suivis.shownCount', { n: shown.length }, shown.length) }}</p>
 
       <template v-if="view === 'priorities'">
         <SegmentedControl v-model="kind" :options="kindOptions" :label="t('suivis.filterKind')" />

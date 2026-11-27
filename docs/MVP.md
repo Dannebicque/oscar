@@ -14,7 +14,7 @@ contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
 | F-02 | Contenu du récap | ✅ | Mails importants, événements du jour, tâches du jour et en retard, relances dues. Agenda perso exclu sauf réglage. |
 | F-03 | Diffusion par e-mail et accueil, canaux désactivables | 🟡 | E-mail ✅ ; l'écran « Récapitulatif » existe mais lit les données du front, il n'affiche pas encore le dernier récap envoyé. |
 | F-10 | Synchro IMAP multi-comptes, lecture, recherche, envoi SMTP | 🟡 | Synchro incrémentale par UID, lecture, envoi ✅. La recherche porte sur les en-têtes déjà chargés (pas de recherche plein texte serveur) ; **recherche avancée** : expéditeur, objet, période, pièce jointe, avec suivi, non lus, par panneau ou par opérateurs (`de:`, `objet:`, `apres:`, `avant:`, `pj`, `suivi`, `nonlu`). |
-| F-11 | Tâches proposées depuis un mail | 🟡 | Résumé extractif du message (carte « Résumé d'Oscar ») et brouillon de réponse (ton cordial ou court, créneaux cochés) ✅, jamais envoyés : l'utilisateur relit et clique. Fournisseur local à règles (dates en français « avant mardi », « jeudi à 10h »). Pas de modèle de langage branché : l'interface `AiProvider` l'attend. |
+| F-11 | Tâches proposées depuis un mail | 🟡 | Résumé du message et brouillon de réponse (ton, créneaux cochés) ✅, jamais envoyés. Par défaut, règles locales sans modèle de langage ; l'administrateur peut brancher le modèle de l'établissement, et chacun un fournisseur externe dans ses Réglages. Si un appel échoue, Oscar revient aux règles locales sans le dire. |
 | F-12 | Relance après 48 h, délai réglable | 🟡 | Délai réglable par utilisateur et par suivi (via l'échéance). Jours ouvrés appliqués. Pas par compte. |
 | F-16 | Webmail convaincant | 🟡 | Dossiers, liste, lecture (texte, et mise en forme dans un cadre isolé), répondre, filtres ✅. Archiver, déplacer, supprimer (corbeille), transférer ✅ et fil de discussion ✅. Pièces jointes ✅ (téléchargement et envoi jusqu'à 5 Mo). Brouillons enregistrés ✅. **Pas encore** : vidage de la corbeille. |
 | F-20 | Agenda CalDAV, lecture et création | ✅ | Récurrences développées ; création écrite d'abord sur le serveur. Affichage par FullCalendar 6 (MIT, maintenu) : semaine, jour, mois, liste, glisser pour créer, événements focalisables au clavier. Un événement existant se consulte mais ne se modifie ni ne se supprime pas encore. Testé contre des réponses CalDAV simulées, **pas contre un vrai serveur CalDAV**. Google : version 2. |
@@ -24,10 +24,10 @@ contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
 | F-58 | Journal non modifiable | ✅ | |
 | F-59, F-70 | Mes suivis, page Suivis (priorités, tableau) | ✅ | Tuiles de situation filtrantes, synthèse d'Oscar, activité récente en colonne, entrée de menu mise en avant (maquette « centre de suivi »). |
 | F-61 | Relances et retards dans récaps et to-do | 🟡 | Récaps ✅ ; pas de ligne dédiée dans la to-do. |
-| F-63 | Mode Relances, plafond quotidien | ✅ | Jamais d'envoi groupé. |
+| F-63 | Mode Relances, plafond quotidien | ✅ | Envoi une à une ; envoi groupé permis seulement si chaque relance a été relue et cochée, après une confirmation qui nomme les destinataires (règle adaptée). |
 | F-65 | Réponse reçue → « à traiter » + alerte, jamais de clôture auto | ✅ | |
 | F-71, F-72 | Prochain RDV, accueil (3 états) | ✅ | |
-| F-73 | Composition avec suivi à l'envoi | 🟡 | Suivi créé par le serveur seulement si le message part ✅. L'annuaire LDAP est une liste de démonstration : **LDAP non implémenté** (F-18, priorité S). |
+| F-73 | Composition avec suivi à l'envoi | 🟡 | Suivi créé par le serveur seulement si le message part ✅. Annuaire LDAP écrit (lecture seule), **jamais essayé contre un annuaire réel** ; sans configuration, l'autocomplétion garde une liste de démonstration. |
 | F-75 | Notifications | 🟡 | Dans l'application ✅ (regroupées, dédoublonnées). Notifications du bureau (Tauri) et e-mail : ❌. |
 | F-76 à F-79 | Mise en avant, barre d'état, journal, messages clairs | ✅ | Alerte seulement après 3 échecs, une fois par jour. |
 
@@ -36,7 +36,7 @@ contre l'API, Dovecot et le SMTP de test réels (`scripts/dev-up.sh`).
 Boîte partagée complète côté API et front (F-40 à F-45, F-60, F-66 à F-69) : une demande pour un même `Message-ID` reçu par plusieurs
 membres, « pris par X » sans responsable désigné, anti-doublon, reprise avec information de l'ancien, indicateur « X rédige »,
 notes internes, règle de création automatique désactivable, IA coupée par défaut sur une boîte partagée.
-Réponse assistée aux disponibilités (F-74) côté suggestion et brouillon, avec lecture libre/occupé uniquement.
+Réponse assistée aux disponibilités (F-74) côté suggestion et brouillon, avec lecture libre/occupé uniquement, et pose des créneaux en provisoire dans Oscar.
 
 ## Non fonctionnel
 
@@ -58,14 +58,14 @@ Réponse assistée aux disponibilités (F-74) côté suggestion et brouillon, av
 
 ## Hors du MVP actuel
 
-Application Tauri (le cahier la place dans le MVP : socle écrit dans `desktop/`, **jamais compilé**), PWA, connecteur Google Agenda, invitations iCalendar (F-25),
-partage d'agenda (F-26), règles de tri (F-15), signatures et modèles (F-19), LDAP (F-18), récap affiché sur l'accueil à partir du
-dernier envoi, Mercure (temps réel : l'application interroge le serveur chaque minute).
+Connecteur Google Agenda, Mercure (temps réel : l'application interroge le serveur chaque minute), modification et suppression d'un événement
+d'agenda, vidage de la corbeille, filtres par compte, projet et tag sur les suivis (F-59), récap affiché à partir du dernier envoi (F-03).
+Écrits mais jamais éprouvés en conditions réelles : application Tauri (`desktop/`), PWA, CAS, LDAP, CalDAV.
 
 ## Points de vigilance avant un vrai usage
 
 1. Tester le CAS et le LDAP de l'établissement (aucun accès ici).
 2. Poser un vrai serveur CalDAV (Radicale, Baïkal) dans l'environnement de test.
-3. Fournisseur d'IA : brancher Ollama ou un cloud derrière `AiProvider`, avec les garde-fous déjà testés (texte = donnée, libre/occupé seul).
-4. Écrire l'image de production et la documentation d'installation (N-11).
+3. Fournisseur d'IA : essayer un fournisseur réel dans la durée ; dire à l'écran quand Oscar est revenu aux règles locales.
+4. Éprouver l'image de production et la documentation d'installation (N-11).
 5. Les migrations ont été regénérées pour PostgreSQL (cible du cahier) ; aucune base de production n'existait.

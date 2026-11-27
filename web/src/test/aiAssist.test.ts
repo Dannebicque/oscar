@@ -6,7 +6,7 @@ import ComposeView from '../views/ComposeView.vue'
 import { mountApp } from './helpers'
 
 describe('Oscar résume et propose une réponse (F-11, F-64, F-74)', () => {
-  it('le lecteur affiche le résumé d’Oscar avec la pastille « Suggéré par l’IA »', async () => {
+  it('le lecteur affiche le résumé d’Oscar avec la pastille « Suggestion »', async () => {
     const { pinia } = await mountApp({ template: '<div/>' })
     const store = useMailsStore(pinia)
     await store.load()
@@ -17,7 +17,7 @@ describe('Oscar résume et propose une réponse (F-11, F-64, F-74)', () => {
     await flushPromises()
     expect(wrapper.find('.summary').exists()).toBe(true)
     expect(wrapper.find('.summary').text()).toContain('disponibilités')
-    expect(wrapper.find('.summary').text()).toContain('Suggéré par l’IA')
+    expect(wrapper.find('.summary').text()).toContain('Suggestion')
     expect(wrapper.text()).toContain('Réponse suggérée')
   })
 
@@ -31,7 +31,7 @@ describe('Oscar résume et propose une réponse (F-11, F-64, F-74)', () => {
     const body = (wrapper.find('#body').element as HTMLTextAreaElement).value
     expect(body).toContain('Bonjour Claire')
     expect(body).toContain('- ') // le créneau est listé
-    expect(wrapper.text()).toContain('Suggéré par l’IA')
+    expect(wrapper.text()).toContain('Suggestion')
     expect(wrapper.text()).toContain('rien ne part sans ton clic')
   })
 

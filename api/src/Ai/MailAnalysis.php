@@ -9,6 +9,8 @@ final readonly class MailAnalysis
      * @param ?list<array{start: string, end: string}>         $slots
      * @param ?array{title: string, start: string, end: string, quote: string} $event
      * @param ?array{title: string, dueAt: string, quote: string}              $task
+     * @param list<string>                                                     $fromModel champs réellement proposés par un modèle de langage ;
+     *                                                                                    le reste vient de règles et ne se dit pas « IA »
      */
     public function __construct(
         public ?array $slots = null,
@@ -16,6 +18,7 @@ final readonly class MailAnalysis
         public ?array $task = null,
         public bool $suggestFollow = false,
         public ?string $summary = null,
+        public array $fromModel = [],
     ) {
     }
 
@@ -30,6 +33,7 @@ final readonly class MailAnalysis
         return [
             'availability' => $this->slots === null ? null : ['slots' => $this->slots],
             'event' => $this->event, 'task' => $this->task, 'suggestFollow' => $this->suggestFollow, 'summary' => $this->summary,
+            'fromModel' => $this->fromModel,
         ];
     }
 }

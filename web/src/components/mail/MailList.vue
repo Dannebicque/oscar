@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMailsStore } from '../../stores/mails'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useFormat } from '../../composables/useFormat'
@@ -40,6 +41,7 @@ const visible = computed(() =>
     return matches(m, criteria.value)
   }),
 )
+const mailStore = useMailsStore()
 const suiviOf = (m: Mail) => (m.suivi ? suivis.byId(m.suivi) : undefined)
 const preview = (m: Mail) => m.paragraphs.find((p) => p.length > 20) ?? ''
 /** Traitement par lot : on coche des messages, puis une action s'applique à tous (avec annulation). */
@@ -110,7 +112,8 @@ defineExpose({ visible, clearSelection })
             </span>
             <span class="subject">{{ m.subject }}</span>
             <span v-if="preview(m)" class="snippet muted">{{ preview(m) }}</span>
-            <span v-if="m.attachments.length || (shared && m.claim) || suiviOf(m)" class="chips">
+            <span v-if="m.attachments.length || (shared && m.claim) || suiviOf(m) || mailStore.repliedAt(m)" class="chips">
+              <ToneChip v-if="mailStore.repliedAt(m)" tone="success" icon="reply" :label="t('mail.replied')" />
               <ToneChip v-if="m.attachments.length" tone="neutral" icon="paperclip" :label="t('mail.attachment')" />
               <template v-if="shared && m.claim">
                 <ToneChip v-if="m.claim.state === 'new'" tone="info" icon="star" :label="t('mail.claim.new')" />

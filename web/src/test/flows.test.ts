@@ -88,7 +88,7 @@ describe('Écrire (F-73)', () => {
     const { wrapper, router } = await mountApp(ComposeView, '/ecrire')
     const box = wrapper.find('[role="checkbox"]')
     expect(box.attributes('aria-checked')).toBe('true')
-    expect(wrapper.text()).toContain('Suggéré par l’IA')
+    expect(wrapper.text()).toContain('Suggestion')
     await addRecipient(wrapper, 'to', 'Sophie Laurent <sophie@x.fr>')
     await wrapper.find('#subject').setValue('Ma question')
     await wrapper.find('form').trigger('submit')

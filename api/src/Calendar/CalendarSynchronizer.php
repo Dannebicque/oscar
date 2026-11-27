@@ -40,7 +40,12 @@ final class CalendarSynchronizer
             }
             $row->setTitle($e->title)->setStart($e->start)->setEnd($e->end)->setLocation($e->location)->setAttendees($e->attendees);
         }
+        $demo = str_starts_with($account->getUrl(), 'demo://');
         foreach ($local as $uid => $l) {
+            // L'agenda de démonstration n'a pas de serveur pour garder ce qu'on y ajoute : on ne retire que ses propres événements.
+            if ($demo && !str_starts_with((string) $uid, 'demo-')) {
+                continue;
+            }
             // On ne supprime que dans la fenêtre synchronisée : l'historique plus ancien reste consultable.
             if (!isset($remote[$uid]) && $l->getEnd() > $from && $l->getStart() < $to) {
                 $this->em->remove($l);

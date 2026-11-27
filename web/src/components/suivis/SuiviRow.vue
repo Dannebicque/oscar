@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useFormat } from '../../composables/useFormat'
 import type { PriorityItem } from '../../domain/priorities'
-import AiBadge from '../ui/AiBadge.vue'
+import SuggestBadge from '../ui/SuggestBadge.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
 import FlagChip from '../ui/FlagChip.vue'
@@ -24,7 +24,7 @@ const ICON = { mail: 'mail', task: 'task', rdv: 'calendar' } as const
         <ToneChip tone="neutral" :icon="ICON[item.kind]" :label="t(`kinds.${item.kind}`)" />
         <FlagChip v-if="item.flag" :flag="item.flag" />
         <StatusChip v-if="item.status" :status="item.status" />
-        <AiBadge v-if="item.suggestedByAi" />
+        <SuggestBadge v-if="item.suggestedByAi" />
       </p>
       <h3>{{ item.title }}</h3>
       <p class="meta muted">

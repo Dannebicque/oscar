@@ -24,7 +24,7 @@ class AuditEntry
     /** @param array<string, scalar|list<string>> $details */
     public function __construct(
         #[ORM\Column(length: 160)] private string $actor,
-        /** config.changed | user.invited | user.disabled | user.enabled | user.deleted | user.admin | user.resetLink | setup.done */
+        /** config.changed | user.invited | user.disabled | user.enabled | user.deleted | user.admin | user.resetLink | setup.done | ai.server | ai.serverRemoved */
         #[ORM\Column(length: 40)] private string $action,
         #[ORM\Column(length: 180, nullable: true)] private ?string $target = null,
         #[ORM\Column(type: Types::JSON)] private array $details = [],

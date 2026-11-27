@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { api } from '../api'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccountsPanel from '../components/settings/AccountsPanel.vue'
@@ -11,7 +12,6 @@ import MyAccountPanel from '../components/settings/MyAccountPanel.vue'
 import AiProviderPanel from '../components/settings/AiProviderPanel.vue'
 import AppearancePanel from '../components/settings/AppearancePanel.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
-import AiBadge from '../components/ui/AiBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import PageHeader from '../components/ui/PageHeader.vue'
 import RadioGroup from '../components/ui/RadioGroup.vue'
@@ -54,7 +54,13 @@ const undoOpts = computed(() => ([0, 5, 10, 20, 30] as const).map((n) => ({ valu
 const leadOpts = computed(() => ([0, 5, 10, 15, 30] as const).map((n) => ({ value: n, label: n === 0 ? t('settings.meeting.off') : t('settings.meeting.minutes', { n }) })))
 const capOpts = [3, 5, 10].map((n) => ({ value: n as 3 | 5 | 10, label: String(n) }))
 const toneOpts = computed(() => (['light', 'neutral'] as const).map((k) => ({ value: k, label: t(`oscar.tones.${k}`), help: say('noMeeting', {}, k) })))
-const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((m) => ({ value: m, label: t(`settings.ai.${m}`), help: t(`settings.ai.${m}Help`) })))
+/** « IA de l'établissement » dit ce qu'il en est vraiment : un modèle à telle adresse, ou des règles locales. */
+const institutionHost = ref<string | null>(null)
+onMounted(async () => { try { institutionHost.value = (await api.settings.aiConfig()).institutionHost ?? null } catch { /* on garde le texte prudent */ } })
+const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((m) => ({
+  value: m, label: t(`settings.ai.${m}`),
+  help: m === 'university' && institutionHost.value ? t('settings.ai.universityModel', { host: institutionHost.value }) : t(`settings.ai.${m}Help`),
+})))
 </script>
 
 <template>
@@ -131,7 +137,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
       </section>
 
       <section id="set-ai" aria-labelledby="h-ai">
-        <h2 id="h-ai">{{ t('settings.nav.ai') }} <AiBadge /></h2>
+        <h2 id="h-ai">{{ t('settings.nav.ai') }}</h2>
         <div class="card stack">
           <RadioGroup v-model="s.aiMode" name="ai" :legend="t('settings.ai.mode')" :options="aiOpts" />
           <p v-if="s.aiMode === 'external'" class="notice warn" role="status">{{ t('settings.ai.externalNote') }}</p>
@@ -168,7 +174,7 @@ const aiOpts = computed(() => (['university', 'external', 'off'] as const).map((
 .toc a { display: flex; align-items: center; min-height: var(--target); padding: 0 var(--space-3); border-radius: var(--radius-md); text-decoration: none; color: var(--c-text); }
 .toc a:hover { background: var(--c-surface-2); }
 .toc a[aria-current='true'] { background: var(--c-primary-soft); color: var(--c-on-primary-soft); font-weight: 800; }
-.sections { display: grid; gap: var(--space-6); min-width: 0; }
+.sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); min-width: 0; }
 section { display: grid; gap: var(--space-3); scroll-margin-top: var(--space-4); }
 h2 { font-size: var(--fs-lg); display: flex; gap: var(--space-2); align-items: center; }
 h3 { font-size: var(--fs-md); }

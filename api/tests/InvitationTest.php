@@ -81,6 +81,7 @@ final class InvitationTest extends ApiTestCase
         self::assertCount(1, $this->em->getRepository(CalendarEvent::class)->findBy(['uid' => 'soutenance-1@iut']));
         [, $again] = $this->call('POST', '/api/mails/'.$this->mail->getId().'/invitation/reply', $this->token, ['response' => 'tentative', 'calendarId' => $this->cal->getId()]);
         self::assertFalse($again['added'], 'pas de doublon dans l’agenda');
+        self::assertTrue($again['inCalendar'], 'il reste inscrit : on ne dit pas que l’ajout a échoué');
         self::assertCount(1, $this->em->getRepository(CalendarEvent::class)->findBy(['uid' => 'soutenance-1@iut']));
         [, $s] = $this->call('GET', '/api/mails/'.$this->mail->getId().'/invitation', $this->token);
         self::assertSame('tentative', $s['response']);
@@ -96,6 +97,30 @@ final class InvitationTest extends ApiTestCase
         $other = $this->tokenFor($this->user('claire'));
         self::assertSame(404, $this->call('GET', '/api/mails/'.$this->mail->getId().'/invitation', $other)[0]);
         self::assertSame(422, $this->call('POST', '/api/mails/'.$this->mail->getId().'/invitation/reply', $this->token, ['response' => 'peut-etre'])[0]);
+    }
+
+    public function testTheReviewedMessageLeavesAndIsKeptInSent(): void
+    {
+        $smtp = static::getContainer()->get(FakeOutgoingMailer::class);
+        FakeReaderFactory::$appended = [];
+        [$st] = $this->call('POST', '/api/mails/'.$this->mail->getId().'/invitation/reply', $this->token, ['response' => 'accepted', 'calendarId' => $this->cal->getId(), 'message' => 'Bonjour Claire, je viendrai.']);
+        self::assertSame(200, $st);
+        self::assertSame('Bonjour Claire, je viendrai.', $smtp->sent[0]->getTextBody());
+        self::assertSame('Sent', FakeReaderFactory::$appended[0][0]);
+        self::assertSame(422, $this->call('POST', '/api/mails/'.$this->mail->getId().'/invitation/reply', $this->token, ['response' => 'accepted', 'message' => str_repeat('a', 5001)])[0]);
+    }
+
+    public function testAddingWithoutReplyingSendsNothingAndRecordsNoAnswer(): void
+    {
+        $smtp = static::getContainer()->get(FakeOutgoingMailer::class);
+        $url = '/api/mails/'.$this->mail->getId().'/invitation/reply';
+        self::assertSame(422, $this->call('POST', $url, $this->token, ['response' => 'accepted', 'send' => false])[0], 'sans agenda, rien à faire');
+        self::assertSame(422, $this->call('POST', $url, $this->token, ['response' => 'declined', 'send' => false, 'calendarId' => $this->cal->getId()])[0]);
+
+        [$st, $r] = $this->call('POST', $url, $this->token, ['response' => 'accepted', 'send' => false, 'calendarId' => $this->cal->getId()]);
+        self::assertSame([200, true], [$st, $r['added']]);
+        self::assertSame([], $smtp->sent);
+        self::assertNull($this->call('GET', '/api/mails/'.$this->mail->getId().'/invitation', $this->token)[1]['response']);
     }
 
     public function testAMailerOutageLeavesEverythingUntouched(): void

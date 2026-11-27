@@ -32,11 +32,11 @@ Il ne protège pas contre la personne qui a un **accès au serveur** (base de do
 
 ## Ce que voit l'IA
 
-- **Par défaut : l'IA de l'établissement** (règles locales ; aucun service externe).
-- **IA externe, si l'administrateur l'autorise et si l'utilisateur la configure** (un fournisseur compatible OpenAI ou Anthropic, avec sa propre clé) : c'est **le seul cas où du contenu quitte ton infrastructure**. Sont envoyés l'objet et le texte du mail analysé (tronqué à 8 000 caractères) ou le brouillon demandé. **Jamais** : les pièces jointes, rien de l'agenda (titres, lieux, participants : les créneaux libres sont calculés localement), les autres mails. La clé du fournisseur est chiffrée comme les mots de passe de messagerie.
+- **Par défaut : l'IA de l'établissement.** Tant que l'administrateur n'a branché aucun modèle : règles locales, rien ne sort. S'il en branche un (Administration > IA), l'objet et le texte (tronqué) des mails analysés par les utilisateurs de ce mode lui sont envoyés, jamais l'agenda ni les pièces jointes ; l'adresse du serveur est affichée à chacun, le changement est journalisé et l'administrateur doit confirmer que l'établissement l'héberge. Cette confirmation est déclarative : Oscar ne peut pas la vérifier.
+- **IA externe, si l'administrateur l'autorise et si l'utilisateur la configure** (un fournisseur compatible OpenAI ou Anthropic, avec sa propre clé) : c'est un cas où du contenu quitte ton infrastructure (l'autre : un modèle d'établissement que l'administrateur n'hébergerait pas lui-même). Sont envoyés l'objet et le texte du mail analysé (tronqué à 8 000 caractères) ou le brouillon demandé. **Jamais** : les pièces jointes, rien de l'agenda (titres, lieux, participants : les créneaux libres sont calculés localement), les autres mails. La clé du fournisseur est chiffrée comme les mots de passe de messagerie.
 - L'administrateur peut **interdire l'IA externe** pour toute l'instance (Administration > Réglages). Un utilisateur peut aussi couper l'IA, ou l'interdire pour une messagerie précise.
 - Le texte d'un mail est une **donnée**, jamais une consigne (protection contre l'injection de consignes). La sortie de l'IA est validée champ par champ : une valeur invalide est ignorée. Une panne du fournisseur ne bloque rien.
-- **L'IA ne décide ni n'envoie jamais** : tout ce qu'elle propose attend un clic, avec la pastille « Suggéré par l'IA ».
+- **L'IA ne décide ni n'envoie jamais** : tout ce qu'elle propose attend un clic, avec une pastille violette : « Suggestion » pour les règles, « Suggéré par l'IA » quand un modèle a répondu.
 - Chaque appel est consigné (résumé) et consultable.
 
 ## Protections en place

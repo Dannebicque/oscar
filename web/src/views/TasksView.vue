@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TaskDialog from '../components/tasks/TaskDialog.vue'
-import AiBadge from '../components/ui/AiBadge.vue'
+import SuggestBadge from '../components/ui/SuggestBadge.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import BaseCard from '../components/ui/BaseCard.vue'
 import BaseDialog from '../components/ui/BaseDialog.vue'
@@ -150,7 +150,7 @@ async function reject(task: Task) { await store.reject(task.id); ui.notify(t('ta
               :label="task.done ? t('tasks.markUndone', { title: task.title }) : t('tasks.markDone', { title: task.title })" @update:model-value="(v) => setDone(task, v)"
             />
             <button type="button" class="open" :class="{ done: task.done }" :aria-label="t('tasks.open', { title: task.title })" :aria-pressed="task.id === selectedId" @click="select(task)">
-              <span class="line"><strong>{{ task.title }}</strong><AiBadge v-if="task.toConfirm" /></span>
+              <span class="line"><strong>{{ task.title }}</strong><SuggestBadge v-if="task.toConfirm" /></span>
               <span class="meta">
                 <ToneChip :tone="PRIO_TONE[task.priority]" :icon="PRIO_ICON[task.priority]" :label="t(`tasks.priority.${task.priority}`)" />
                 <ToneChip v-if="task.dueAt" :tone="task.dueAt < today && !task.done ? 'danger' : 'neutral'" icon="calendar" :label="fmt.date(task.dueAt)" />
@@ -200,11 +200,12 @@ async function reject(task: Task) { await store.reject(task.id); ui.notify(t('ta
 
 <style scoped>
 .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 320px; gap: var(--space-5); align-items: start; }
+.layout > * { min-width: 0; }
 .side { position: sticky; top: 0; }
 .quick { display: flex; gap: var(--space-2); }
 .chips { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .chips legend { width: 100%; font-weight: 600; margin-bottom: var(--space-1); padding: 0; }
-.list { display: grid; gap: var(--space-4); min-width: 0; }
+.list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; }
 .group h2 { font-size: var(--fs-md); margin-bottom: var(--space-2); }
 .n { color: var(--c-text-muted); font-weight: 400; }
 .task.confirm { border-color: var(--c-ai); background: var(--c-ai-soft); }

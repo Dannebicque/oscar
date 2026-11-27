@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /** Création d'un événement : écrit d'abord sur le serveur CalDAV, ne garde rien en local si le serveur refuse. */
@@ -23,7 +24,9 @@ final class CalendarEventController extends AbstractController
     public function create(Request $r, #[CurrentUser] User $user, EntityManagerInterface $em, CalendarProvider $provider, ValidatorInterface $validator): JsonResponse
     {
         $in = $r->toArray();
-        $account = $em->find(CalendarAccount::class, (string) ($in['calendarId'] ?? ''));
+        $calendarId = (string) ($in['calendarId'] ?? '');
+        // Un identifiant mal formé n'est pas une panne : PostgreSQL le refuserait par une erreur 500.
+        $account = Uuid::isValid($calendarId) ? $em->find(CalendarAccount::class, $calendarId) : null;
         if ($account === null || $account->getOwner()?->getId() !== $user->getId()) {
             return new JsonResponse(['title' => 'Agenda inconnu.'], Response::HTTP_NOT_FOUND);
         }

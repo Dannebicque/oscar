@@ -3,9 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { api, ApiError } from '../api'
 import type { ScheduledMail, SendPayload } from '../api/types'
 import type { ClaimAction, FolderInfo, Mail, MailFolder, MoveTarget, Suivi } from '../domain/types'
+import { bareId, plainSubject } from '../domain/mailIds'
+import { useAgendaStore } from './agenda'
 import { useSuivisStore } from './suivis'
 
-const norm = (id: string) => id.trim().replace(/^<|>$/g, '').toLowerCase()
 
 export const useMailsStore = defineStore('mails', () => {
   const items = ref<Mail[]>([])
@@ -22,12 +23,11 @@ export const useMailsStore = defineStore('mails', () => {
   const unread = (mailbox: string) => items.value.filter((m) => m.mailbox === mailbox && m.folder === 'inbox' && m.unread).length
   const byId = (id: string) => items.value.find((m) => m.id === id)
   /** Retrouve un mail par son id ou par son Message-ID (c'est ce que stocke un suivi). */
-  // Un Message-ID s'écrit avec ou sans chevrons selon qui l'a noté (envoi, synchro) : on compare toujours normalisé.
-  const find = (ref: string | null | undefined) => (ref ? items.value.find((m) => m.id === ref || norm(m.messageId ?? '') === norm(ref)) : undefined)
+  const find = (ref: string | null | undefined) => (ref ? items.value.find((m) => m.id === ref || bareId(m.messageId ?? '') === bareId(ref)) : undefined)
   const refOf = (m: Mail) => m.messageId ?? m.id
   /** Fil de la conversation : tous les messages reliés à celui-ci par Message-ID / In-Reply-To / References, du plus ancien au plus récent (un même Message-ID reçu dans deux boîtes ne compte qu'une fois). */
   function threadOf(mail: Mail): Mail[] {
-    const idsOf = (m: Mail) => [refOf(m), ...(m.parents ?? [])].map(norm)
+    const idsOf = (m: Mail) => [refOf(m), ...(m.parents ?? [])].map(bareId)
     const ids = new Set<string>(idsOf(mail))
     let grew = true
     while (grew) {
@@ -39,7 +39,7 @@ export const useMailsStore = defineStore('mails', () => {
     }
     const seen = new Map<string, Mail>()
     for (const m of items.value) {
-      const key = norm(refOf(m))
+      const key = bareId(refOf(m))
       if (!ids.has(key) || m.folder === 'trash' || m.folder === 'drafts') continue
       if (!seen.has(key) || m.id === mail.id) seen.set(key, m)
     }
@@ -50,6 +50,17 @@ export const useMailsStore = defineStore('mails', () => {
     const m = find(ref)
     return m ? (threadOf(m).at(-1) ?? m) : undefined
   }
+  /** Mes réponses, par message auquel elles répondent : couvre aussi celles écrites depuis un autre logiciel (dossier Envoyés). */
+  const myReplies = computed(() => {
+    const by = new Map<string, string>()
+    for (const m of items.value) {
+      if (m.folder === 'sent' && m.inReplyTo && (by.get(bareId(m.inReplyTo)) ?? '') < m.at) by.set(bareId(m.inReplyTo), m.at)
+    }
+    return by
+  })
+  /** Quand j'ai répondu à ce message reçu ; `null` : pas de réponse connue. */
+  const repliedAt = (m: Mail): string | null => (m.folder === 'sent' || m.folder === 'drafts' ? null : m.answeredAt ?? myReplies.value.get(bareId(refOf(m))) ?? null)
+
   const forSuivi = (suiviId: string) => items.value.find((m) => m.suivi === suiviId)
 
   /**
@@ -97,8 +108,8 @@ export const useMailsStore = defineStore('mails', () => {
   /** Rattache chaque mail à son suivi par Message-ID, puis par le fil (F-44), et recopie l'état d'équipe (API). */
   function link() {
     const suivis = useSuivisStore().items
-    const index = new Map(suivis.filter((s) => s.mailId).map((s) => [norm(s.mailId!), s]))
-    const suiviOf = (m: Mail): Suivi | undefined => index.get(norm(refOf(m))) ?? (m.parents ?? []).map((p) => index.get(norm(p))).find(Boolean)
+    const index = new Map(suivis.filter((s) => s.mailId).map((s) => [bareId(s.mailId!), s]))
+    const suiviOf = (m: Mail): Suivi | undefined => index.get(bareId(refOf(m))) ?? (m.parents ?? []).map((p) => index.get(bareId(p))).find(Boolean)
     items.value = items.value.map((m) => {
       const s = m.suivi ? suivis.find((x) => x.id === m.suivi) : suiviOf(m)
       const linked = { ...m, suivi: m.suivi ?? s?.id ?? null }
@@ -139,9 +150,10 @@ export const useMailsStore = defineStore('mails', () => {
     invitationLoaded.value = new Set([...invitationLoaded.value, id])
     try { const r = await api.mails.invitation(id); patch(id, { invitation: r.invitation, invitationResponse: r.response }) } catch { /* pas d'invitation affichée */ }
   }
-  async function respondInvitation(id: string, response: 'accepted' | 'tentative' | 'declined', calendarId?: string) {
-    const r = await api.mails.replyInvitation(id, { response, calendarId })
-    patch(id, { invitationResponse: response })
+  /** `send: false` : seulement inscrire dans l'agenda ; aucune réponse n'est alors notée. */
+  async function respondInvitation(id: string, response: 'accepted' | 'tentative' | 'declined', calendarId?: string, opts: { message?: string; send?: boolean } = {}) {
+    const r = await api.mails.replyInvitation(id, { response, calendarId, ...opts })
+    if (opts.send !== false) patch(id, { invitationResponse: response })
     return r
   }
 
@@ -215,7 +227,7 @@ export const useMailsStore = defineStore('mails', () => {
     const m = byId(id)
     if (!m) return undefined
     const s = await useSuivisStore().create({
-      subject: m.subject.replace(/^(re|tr)\s*:\s*/i, ''), contact: m.from.name, direction: 'toHandle', dueAt: opts.dueAt,
+      subject: plainSubject(m.subject), contact: m.from.name, direction: 'toHandle', dueAt: opts.dueAt,
       mailId: refOf(m), mailbox: m.mailbox, suggestedByAi: opts.suggestedByAi ?? false, reason: opts.reason ?? null,
     })
     patch(id, { suivi: s.id })
@@ -262,7 +274,7 @@ export const useMailsStore = defineStore('mails', () => {
   /** Envoi (F-73) : le suivi est créé par le serveur, seulement si le message est parti. */
   async function send(p: SendPayload) {
     const r = await api.mails.send(p)
-    await Promise.all([useSuivisStore().load(), load()])
+    await Promise.all([useSuivisStore().load(), load(), p.holds?.length ? useAgendaStore().loadHolds() : undefined])
     return r
   }
 
@@ -271,5 +283,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { gone, openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, showImages, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { gone, openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, repliedAt, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, showImages, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })
