@@ -42,6 +42,7 @@ final class SortRuleTest extends ApiTestCase
             public array $moves = [];
             public function __construct(private array $all) {}
             public function fetchAfter(string $folder, int $afterUid): array { return $folder === 'INBOX' ? array_values(array_filter($this->all, fn ($x) => $x->uid > $afterUid)) : []; }
+            public function fetchContent(string $folder, int $uid): ?\App\Mail\MailContent { return null; }
             public function fetchBody(string $folder, int $uid): ?string { return null; }
             public function attachments(string $folder, int $uid): array { return []; }
             public function attachment(string $folder, int $uid, int $index): ?array { return null; }

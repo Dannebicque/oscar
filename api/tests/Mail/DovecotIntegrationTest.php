@@ -61,6 +61,21 @@ final class DovecotIntegrationTest extends TestCase
         $this->reader->uids('Dossier-qui-n-existe-pas');
     }
 
+    public function testReadsTheFormattedMessageWithItsInlineImage(): void
+    {
+        $letters = array_values(array_filter($this->reader->fetchAfter('INBOX', 0), static fn (MailHeader $h) => $h->subject === 'Lettre d\'information de novembre'));
+        self::assertNotSame([], $letters, 'recharger les mails de test : python3 docker/dovecot/seed.py --reset');
+        $content = $this->reader->fetchContent('INBOX', $letters[0]->uid);
+
+        self::assertStringContainsString('portes ouvertes', $content->text);
+        self::assertStringContainsString('<table', (string) $content->html);
+        self::assertSame('image/png', $content->inline['logo@iut']['type'] ?? null);
+        $out = (new \App\Mail\MailHtml())->render((string) $content->html, $content->inline);
+        self::assertStringContainsString('src="data:image/png;base64,', $out['html']);
+        self::assertSame(1, $out['blockedImages']);
+        self::assertStringNotContainsString('<script', $out['html']);
+    }
+
     public function testFixtureScenarios(): void
     {
         $inbox = $this->reader->fetchAfter('INBOX', 0);

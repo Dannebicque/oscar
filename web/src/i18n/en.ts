@@ -112,6 +112,7 @@ const en: typeof fr = {
     reply: 'Reply', replyAll: 'Reply all', forward: 'Forward', archive: 'Archive', move: 'Move', delete: 'Delete',
     actionDone: '{action}: “{subject}”. (mockup: nothing is actually moved)',
     bodyLoading: 'Loading the message…', bodyError: 'I couldn’t read this message.', bodyGone: 'This message is no longer on your mail server: deleted or moved elsewhere. It will leave the list at the next sync.', bodyEmpty: 'This message has no text.',
+    html: { blocked: '1 remote image is not loaded. Showing it may tell the sender you are reading the message. | {n} remote images are not loaded. Showing them may tell the sender you are reading the message.', showImages: 'Show images', textOnly: 'Text only', frameTitle: 'Formatted message: {subject}' },
     compact: 'Compact mode',
     suivi: 'Follow-up', banner: {
       reply: 'Reply received', replyText: '{who} replied. Close the request, or keep it open if something remains.',

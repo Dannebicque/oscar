@@ -45,7 +45,7 @@ Il ne protège pas contre la personne qui a un **accès au serveur** (base de do
 |---|---|
 | Mots de passe | Au moins 10 caractères, hachés ; cinq essais de connexion par quart d'heure ; message identique que le compte existe ou non ; sessions fermées après un changement de mot de passe. |
 | Accès réseau sortant | Les serveurs de messagerie, d'agenda et d'IA saisis par un utilisateur sont contrôlés : adresses privées, locales ou réservées refusées en production (anti-SSRF). |
-| Contenu des mails | **Jamais de HTML de mail affiché** : texte brut seulement (pas de script, pas de pixel espion). Les pièces jointes ne s'ouvrent pas dans l'application, elles se téléchargent. |
+| Contenu des mails | **Le HTML reçu n'est jamais affiché tel quel** : l'API le reconstruit à partir d'une liste blanche, puis il s'affiche dans un cadre sans script. Les images distantes ne se chargent que si tu le demandes (l'expéditeur peut alors savoir que tu lis, et voit ton adresse réseau) ; les pixels espions ne se chargent jamais. Les pièces jointes ne s'ouvrent pas dans l'application, elles se téléchargent (sauf les images insérées dans le corps du message). |
 | Signatures HTML | Reconstruites à partir d'une liste blanche (pas de script, de formulaire, de cadre, de lien javascript ; images en https seulement). L'aperçu est dans un cadre isolé. |
 | En-têtes HTTP | Politique de contenu stricte (`default-src 'self'`), interdiction d'être mis en cadre, `nosniff`, politique de référent. |
 | Données | Chaque utilisateur ne voit que les siennes (isolation vérifiée par test) ; une boîte partagée ne montre rien des mails personnels de ses membres. |

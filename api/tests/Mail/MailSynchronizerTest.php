@@ -65,6 +65,7 @@ final class MailSynchronizerTest extends KernelTestCase
                 return array_values(array_filter($this->all, static fn (MailHeader $h) => $h->folder === $folder && $h->uid > $afterUid));
             }
 
+            public function fetchContent(string $folder, int $uid): ?\App\Mail\MailContent { return null; }
             public function fetchBody(string $folder, int $uid): ?string
             {
                 return null;
@@ -161,6 +162,7 @@ final class MailSynchronizerTest extends KernelTestCase
             public function invitation(string $folder, int $uid): ?string { return null; }
             public function attachments(string $folder, int $uid): array { return []; }
             public function attachment(string $folder, int $uid, int $index): ?array { return null; }
+            public function fetchContent(string $folder, int $uid): ?\App\Mail\MailContent { return null; }
             public function fetchBody(string $folder, int $uid): ?string { return null; }
             public function fetchAfter(string $folder, int $afterUid): array
             {

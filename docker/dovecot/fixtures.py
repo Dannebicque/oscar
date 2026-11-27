@@ -1,4 +1,5 @@
 """Mails de test. Scénarios du cahier des charges : réponse (F-52), réponse automatique ignorée, alias (F-44)."""
+import base64
 from email.message import EmailMessage
 from email.utils import format_datetime, make_msgid
 from datetime import datetime, timedelta, timezone
@@ -61,6 +62,23 @@ def _invitation():
 
 
 INVITATION = _invitation()
+# Lettre mise en forme (F-16) : tableau, image jointe au corps (cid:), image distante et pixel espion, script que rien ne doit exécuter.
+def _newsletter():
+    pixel = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGNk+M9ACmAiSfWohhGlAQBBPgEfKq0rVwAAAABJRU5ErkJggg==")
+    m = mail(frm="Service communication <communication@univ-reims.fr>", to=f"David <david@{DOMAIN}>", subject="Lettre d'information de novembre",
+             body="Journée portes ouvertes le samedi 6 février.\n\nProgramme sur le site.", hours_ago=26)
+    m.add_alternative('<html><body bgcolor="#f4f4f4"><script>document.title="x"</script>'
+                      '<table width="600" align="center" cellpadding="16" style="background-color:#ffffff;font-family:Arial,sans-serif"><tr><td>'
+                      '<img src="cid:logo@iut" alt="IUT" width="48" height="48"><h1 style="color:#0b4f6c">Journée portes ouvertes</h1>'
+                      '<p>Samedi <b>6 février</b>, de 9h à 17h.</p><p><a href="https://www.univ-reims.fr/">Voir le programme</a></p>'
+                      '<img src="https://images.example.org/bandeau.png" alt="Bandeau" width="560" height="120">'
+                      '<img src="https://suivi.example.org/ouvert.gif" width="1" height="1">'
+                      '</td></tr></table></body></html>', subtype="html")
+    m.get_payload()[1].add_related(pixel, maintype="image", subtype="png", cid="<logo@iut>")
+    return m
+
+
+NEWSLETTER = _newsletter()
 # Alias contact@ : le MÊME message (même Message-ID) arrive chez les quatre membres. Une seule demande (F-44).
 ALIAS_ID = "<inscription-camille-1@gmail.com>"
 ALIAS = mail(frm="Camille Roux <camille.roux@gmail.com>", to=f"contact@{DOMAIN}", subject="Question d'inscription",
@@ -72,4 +90,5 @@ ALIAS_USERS = ["david", "claire", "marc", "lea"]
 PLAN = [
     ("david", "Sent", SENT), ("david", "INBOX", REPLY), ("david", "Sent", AUTO_SENT), ("david", "INBOX", AUTO_REPLY), ("david", "INBOX", TASK_MAIL),
     ("david", "INBOX", AVAIL_MAIL), ("david", "INBOX", LONG_MAIL), ("david", "INBOX", INVITATION),
+    ("david", "INBOX", NEWSLETTER),
 ] + [(u, "INBOX", ALIAS) for u in ALIAS_USERS]

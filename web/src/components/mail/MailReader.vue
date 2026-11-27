@@ -30,6 +30,7 @@ import AttachmentsMenu from './AttachmentsMenu.vue'
 import Callout from '../ui/Callout.vue'
 import ConfirmTrashDialog from './ConfirmTrashDialog.vue'
 import MoveDialog from './MoveDialog.vue'
+import MailBodyText from './MailBodyText.vue'
 import { isCustom, pathOf, prettyPath } from '../../domain/folders'
 import ClaimPanel from './ClaimPanel.vue'
 import SuiviBanner from './SuiviBanner.vue'
@@ -254,11 +255,11 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
         </section>
 
         <div class="body">
-          <p v-for="(p, i) in mail.paragraphs" :key="i">{{ p }}</p>
+          <MailBodyText :key="mail.id" :mail="mail" />
           <p v-if="bodyLoading" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
           <p v-else-if="bodyFailed" class="error-text" role="alert">{{ t('mail.bodyError') }} <BaseButton :label="t('common.retry')" @click="mails.loadBody(mail.id)" /></p>
           <p v-else-if="mails.gone.has(mail.id)" class="callout" data-tone="neutral">{{ t('mail.bodyGone') }}</p>
-          <p v-else-if="mail.paragraphs.length === 0" class="muted">{{ t('mail.bodyEmpty') }}</p>
+          <p v-else-if="!mail.paragraphs.length && !mail.html" class="muted">{{ t('mail.bodyEmpty') }}</p>
           <AttachmentsMenu v-if="mail.attachments.length" :items="mail.attachments" @download="download" />
         </div>
 
@@ -319,7 +320,8 @@ const canDraft = computed(() => aiOn.value && props.mail.folder === 'inbox' && p
 .toolbar { display: flex; flex-wrap: wrap; row-gap: var(--space-1); gap: var(--space-1); align-items: center; padding-bottom: var(--space-3); border-bottom: var(--bw) solid var(--c-border); }
 .toolbar :deep(.btn) { min-height: 40px; }
 .sep { width: 1px; align-self: stretch; background: var(--c-border); margin: 4px var(--space-1); }
-.body { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
+/* minmax(0, 1fr) : un message très large défile dans son cadre sans élargir le lecteur. */
+.body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--c-surface); border: var(--bw-card) solid var(--c-border); border-radius: var(--radius-lg); }
 .invite { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--c-surface); border: var(--bw-card) solid var(--c-primary); }
 .ih { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-md); color: var(--c-accent); }
 .it { font-size: var(--fs-lg); font-weight: 800; margin: 0; }

@@ -182,6 +182,11 @@ export interface Mail {
   to: Person[]
   subject: string
   paragraphs: string[]
+  /** Mise en forme reconstruite par l'API (jamais le HTML d'origine) ; `null` : message en texte (F-16). */
+  html?: string | null
+  /** Images distantes laissées de côté, et si on les a demandées pour ce message. */
+  blockedImages?: number
+  remoteImages?: boolean
   at: string // ISO
   unread: boolean
   attachments: Attachment[]

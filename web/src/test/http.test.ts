@@ -50,7 +50,7 @@ describe('client HTTP', () => {
   it('lit le corps et les suggestions à la demande', async () => {
     stubFetch({ 'GET /api/mails/u1/body': { paragraphs: ['Bonjour'] }, 'GET /api/mails/u1/hints': { task: { title: 'x', dueAt: '2026-11-24', quote: 'avant mardi' }, suggestFollow: true } })
     const api = createHttpApi('http://api')
-    expect(await api.mails.body('u1')).toEqual(['Bonjour'])
+    expect(await api.mails.body('u1')).toEqual({ paragraphs: ['Bonjour'], html: null, blockedImages: 0 })
     expect((await api.mails.hints('u1')).task?.quote).toBe('avant mardi')
   })
   it('complète les champs que l’API omet quand ils sont vides', async () => {
@@ -179,7 +179,7 @@ describe('chargements parallèles d’un mail (régression : le corps disparaiss
   it('le corps, les suggestions et l’état « lu » qui arrivent dans le désordre ne s’écrasent pas', async () => {
     const { pinia } = await mountApp({ template: '<div/>' })
     const deferred = <T,>() => { let resolve!: (v: T) => void; const promise = new Promise<T>((r) => (resolve = r)); return { promise, resolve } }
-    const body = deferred<string[]>()
+    const body = deferred<{ paragraphs: string[]; html: null; blockedImages: number }>()
     const hints = deferred<Record<string, unknown>>()
     const read = deferred<void>()
     const base = createMockApi()
@@ -187,7 +187,7 @@ describe('chargements parallèles d’un mail (régression : le corps disparaiss
     const mails = useMailsStore(pinia)
     await mails.load()
     const all = Promise.all([mails.loadBody('x'), mails.loadHints('x'), mails.markRead('x')])
-    body.resolve(['Voici le texte du message.'])   // le corps arrive d'abord et s'affiche
+    body.resolve({ paragraphs: ['Voici le texte du message.'], html: null, blockedImages: 0 })   // le corps arrive d'abord et s'affiche
     await flushPromises()
     expect(mails.byId('x')?.paragraphs).toEqual(['Voici le texte du message.'])
     hints.resolve({ suggestFollow: true })          // puis les suggestions, avec leur propre copie : elles ne doivent pas effacer le corps
@@ -202,7 +202,7 @@ describe('chargements parallèles d’un mail (régression : le corps disparaiss
   it('un ordre inverse donne le même résultat', async () => {
     const { pinia } = await mountApp({ template: '<div/>' })
     const deferred = <T,>() => { let resolve!: (v: T) => void; const promise = new Promise<T>((r) => (resolve = r)); return { promise, resolve } }
-    const body = deferred<string[]>()
+    const body = deferred<{ paragraphs: string[]; html: null; blockedImages: number }>()
     const hints = deferred<Record<string, unknown>>()
     const base = createMockApi()
     resetApi({ ...base, mails: { ...base.mails, async list() { return [{ ...(await base.mails.list())[0], id: 'y', paragraphs: [], hints: {}, suivi: null }] }, body: () => body.promise, hints: () => hints.promise as never } })
@@ -211,7 +211,7 @@ describe('chargements parallèles d’un mail (régression : le corps disparaiss
     const all = Promise.all([mails.loadBody('y'), mails.loadHints('y')])
     hints.resolve({ suggestFollow: false })
     await flushPromises()
-    body.resolve(['Texte'])
+    body.resolve({ paragraphs: ['Texte'], html: null, blockedImages: 0 })
     await all
     expect(mails.byId('y')?.paragraphs).toEqual(['Texte'])
     expect(mails.byId('y')?.hints).toEqual({ suggestFollow: false })

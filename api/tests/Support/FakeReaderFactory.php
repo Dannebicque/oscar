@@ -24,6 +24,9 @@ final class FakeReaderFactory extends MailboxReaderFactory
     /** @var ?list<int> UID présents sur le serveur simulé ; null = ne répond pas (rien ne doit être retiré) */
     public static ?array $serverUids = null;
     public static ?string $body = 'Corps simulé';
+    public static ?string $html = null;
+    /** @var array<string, array{type: string, content: string}> */
+    public static array $inline = [];
     /** @var list<int> UID non lus annoncés par le serveur simulé */
     public static array $unseen = [];
     /** @var list<array{string, int, bool}> */
@@ -92,6 +95,10 @@ final class FakeReaderFactory extends MailboxReaderFactory
                 FakeReaderFactory::$seenCalls[] = [$folder, $uid, $seen];
             }
             public function fetchBody(string $folder, int $uid): ?string { return FakeReaderFactory::$body; }
+            public function fetchContent(string $folder, int $uid): ?\App\Mail\MailContent
+            {
+                return FakeReaderFactory::$body === null && FakeReaderFactory::$html === null ? null : new \App\Mail\MailContent(FakeReaderFactory::$body ?? '', FakeReaderFactory::$html, FakeReaderFactory::$inline);
+            }
             public function append(string $folder, string $rawMessage, array $flags = ['\\Seen']): void
             {
                 if (FakeReaderFactory::$appendFails) {

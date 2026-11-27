@@ -102,7 +102,10 @@ export function createHttpApi(baseUrl: string): Api {
     },
     mails: {
       async list() { return (await listAll<RawMail>(req, '/api/mails')).map(toMail) },
-      async body(id) { return (await req<{ paragraphs: string[] }>('GET', `/api/mails/${encodeURIComponent(id)}/body`)).paragraphs },
+      async body(id, images) {
+        const r = await req<{ paragraphs: string[]; html?: string | null; blockedImages?: number }>('GET', `/api/mails/${encodeURIComponent(id)}/body${images ? '?images=1' : ''}`)
+        return { paragraphs: r.paragraphs, html: r.html ?? null, blockedImages: r.blockedImages ?? 0 }
+      },
       async hints(id) { return req('GET', `/api/mails/${encodeURIComponent(id)}/hints`) },
       async replyDraft(id, p) { return (await req<{ body: string }>('POST', `/api/mails/${encodeURIComponent(id)}/reply-draft`, p)).body },
       async move(id, folder) {

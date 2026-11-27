@@ -43,6 +43,8 @@ export interface SendPayload {
 /** Mail programmé (F-73) : écrit, et envoyé à l'heure choisie par l'utilisateur. */
 export interface ScheduledMail { id: string; subject: string; to: string[]; sendAt: string; status: 'pending' | 'sending' | 'failed'; attachments: number }
 
+export interface MailBody { paragraphs: string[]; html: string | null; blockedImages: number }
+
 export interface MailApi {
   /** Programme l'envoi à l'heure choisie (clic explicite) ; rien ne part avant. */
   schedule(p: SendPayload, sendAt: string): Promise<ScheduledMail>
@@ -50,8 +52,8 @@ export interface MailApi {
   /** Annule un mail programmé et rend le message pour le rouvrir dans l'éditeur. */
   cancelScheduled(id: string): Promise<SendPayload>
   list(): Promise<Mail[]>
-  /** Corps en texte brut, lu à la demande (jamais de HTML). */
-  body(id: string): Promise<string[]>
+  /** Corps lu à la demande : le texte, et la mise en forme assainie s'il y en a une. `images` : garder les images distantes. */
+  body(id: string, images?: boolean): Promise<MailBody>
   /** Suggestions de l'IA pour ce mail (tâche, événement, créneaux) ; vide si l'IA est coupée. */
   hints(id: string): Promise<MailHints>
   /** Brouillon de réponse préparé par Oscar (jamais envoyé) ; `slots` : créneaux choisis, déjà formatés. */

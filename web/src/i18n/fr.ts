@@ -112,6 +112,7 @@ export default {
     reply: 'Répondre', replyAll: 'Répondre à tous', forward: 'Transférer', archive: 'Archiver', move: 'Déplacer', delete: 'Supprimer',
     actionDone: '{action} : « {subject} ». (maquette : rien n’est réellement déplacé)',
     bodyLoading: 'Chargement du message…', bodyError: 'Je n’ai pas pu lire ce message.', bodyGone: 'Ce message n’est plus sur ton serveur de messagerie : supprimé ou déplacé ailleurs. Il quittera la liste à la prochaine synchronisation.', bodyEmpty: 'Ce message n’a pas de texte.',
+    html: { blocked: '1 image distante n’est pas chargée. L’afficher peut signaler à l’expéditeur que tu lis son message. | {n} images distantes ne sont pas chargées. Les afficher peut signaler à l’expéditeur que tu lis son message.', showImages: 'Afficher les images', textOnly: 'Texte seul', frameTitle: 'Message mis en forme : {subject}' },
     compact: 'Mode compact',
     suivi: 'Suivi', banner: {
       reply: 'Réponse reçue', replyText: '{who} a répondu. Tu clos la demande ou tu la gardes ouverte s’il reste une action.',

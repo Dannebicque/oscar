@@ -47,7 +47,7 @@ describe('recharger la liste ne vide pas le message ouvert (F-16)', () => {
     const mails = useMailsStore()
     const header = mail('a', 'x@x.fr', 'inbox', '2026-11-20T09:00:00Z')
     vi.spyOn(api.mails, 'list').mockImplementation(async () => [{ ...header }])
-    vi.spyOn(api.mails, 'body').mockResolvedValue(['Bonjour David,'])
+    vi.spyOn(api.mails, 'body').mockResolvedValue({ paragraphs: ['Bonjour David,'], html: null, blockedImages: 0 })
     await mails.load()
     await mails.loadBody('a')
     await mails.load()

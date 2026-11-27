@@ -170,7 +170,7 @@ export function createMockApi(now: Date = new Date()): Api {
     },
     mails: {
       async list() { return clone(mails) },
-      async body(id) { return clone(findMail(id)?.paragraphs ?? []) },
+      async body(id) { const m = findMail(id); return { paragraphs: clone(m?.paragraphs ?? []), html: m?.html ?? null, blockedImages: m?.blockedImages ?? 0 } },
       async hints(id) { return clone(findMail(id)?.hints ?? {}) },
       async replyDraft(id, p) {
         const first = (findMail(id)?.from.name ?? '').split(' ')[0]

@@ -51,6 +51,7 @@ final class TeamTest extends ApiTestCase
         $reader = new class([$h]) implements MailboxReader {
             public function __construct(private array $all) {}
             public function fetchAfter(string $folder, int $afterUid): array { return $folder === 'INBOX' ? array_values(array_filter($this->all, fn ($h) => $h->uid > $afterUid)) : []; }
+            public function fetchContent(string $folder, int $uid): ?\App\Mail\MailContent { return null; }
             public function fetchBody(string $folder, int $uid): ?string { return null; }
             public function invitation(string $folder, int $uid): ?string { return null; }
             public function attachments(string $folder, int $uid): array { return []; }

@@ -64,6 +64,9 @@ export const useMailsStore = defineStore('mails', () => {
       return {
         ...m,
         paragraphs: m.paragraphs.length ? m.paragraphs : old.paragraphs,
+        html: m.html ?? old.html,
+        blockedImages: m.blockedImages ?? old.blockedImages,
+        remoteImages: m.remoteImages ?? old.remoteImages,
         attachments: m.attachments.length ? m.attachments : old.attachments,
         hints: Object.keys(m.hints).length ? m.hints : old.hints,
         invitation: m.invitation ?? old.invitation,
@@ -108,11 +111,16 @@ export const useMailsStore = defineStore('mails', () => {
   /** Corps lu à la demande ; les données simulées l'ont déjà. */
   async function loadBody(id: string) {
     const m = byId(id)
-    if (!m || m.paragraphs.length || loadingBody.value.has(id)) return
+    if (!m || m.paragraphs.length || m.html || loadingBody.value.has(id)) return
+    await fetchBody(id, false)
+  }
+  /** « Afficher les images » : un clic, pour ce message seulement, rien n'est mémorisé sur le serveur. */
+  const showImages = (id: string) => fetchBody(id, true)
+  async function fetchBody(id: string, images: boolean) {
     loadingBody.value = new Set([...loadingBody.value, id])
     bodyError.value.delete(id)
     try {
-      patch(id, { paragraphs: await api.mails.body(id) })
+      patch(id, { ...(await api.mails.body(id, images)), remoteImages: images })
     } catch (e) {
       if (e instanceof ApiError && e.status === 410) gone.value = new Set([...gone.value, id])
       else bodyError.value = new Set([...bodyError.value, id])
@@ -263,5 +271,5 @@ export const useMailsStore = defineStore('mails', () => {
     return e instanceof ApiError && e.status === 409 ? e.message : null
   }
 
-  return { gone, openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
+  return { gone, openTarget, folders, loadFolders, createFolder, renameFolder, removeFolder, openFolder, scheduled, loadScheduled, schedule, cancelScheduled, items, loading, error, loadingBody, bodyError, inFolder, unread, byId, find, refOf, threadOf, forSuivi, load, loadInvitation, respondInvitation, saveDraft, loadAttachments, moveTo, loadBody, showImages, loadHints, link, markRead, take, release, handle, reopen, takeOver, addNote, follow, send, conflictMessage }
 })

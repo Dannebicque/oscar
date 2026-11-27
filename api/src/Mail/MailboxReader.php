@@ -10,11 +10,11 @@ interface MailboxReader
      */
     public function fetchAfter(string $folder, int $afterUid): array;
 
-    /**
-     * Corps en TEXTE BRUT d'un message, lu à la demande. Jamais de HTML : un mail est une donnée non fiable
-     * (contenus actifs, pixels espions) ; l'affichage HTML isolé viendra plus tard (§3).
-     */
+    /** Corps en TEXTE BRUT d'un message, lu à la demande (rédaction, IA). */
     public function fetchBody(string $folder, int $uid): ?string;
+
+    /** Texte, HTML brut et images du corps, en une seule lecture. Le HTML ne s'affiche qu'après MailHtml (F-16). null : rien à montrer. */
+    public function fetchContent(string $folder, int $uid): ?MailContent;
 
     /** @return list<array{name: string, size: int, type: string}> pièces jointes (métadonnées seulement) */
     public function attachments(string $folder, int $uid): array;

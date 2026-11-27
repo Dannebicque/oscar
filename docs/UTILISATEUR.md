@@ -28,6 +28,10 @@ Un suivi a un **sens** (à traiter / réponse attendue) et un **état** (nouveau
 - **Bilan** : taux de réponse, délai médian, demandes qui attendent depuis longtemps, état par contact. Pour comprendre où se perdent les réponses ; il ne relance personne.
 - **Relire les relances** : toutes les relances dues sur un écran, chacune avec son brouillon. Une relance ne part que si tu la relis et la coches « prête », ou avec son propre bouton « Envoyer ». Envoyer plusieurs d'un clic demande une confirmation qui nomme les destinataires. Plusieurs relances au même destinataire sont regroupées en un seul message (tu peux les séparer).
 
+## Lire un mail mis en forme
+
+Il s'affiche tel que prévu, sur fond clair. Les images venues d'internet attendent que tu cliques sur « Afficher les images ». « Texte seul » montre la version sans mise en forme.
+
 ## Écrire un mail
 
 - **De** : si tu as plusieurs identités (alias, fonction), choisis laquelle écrit. Elle est choisie d'office quand tu réponds à un mail adressé à l'un de tes alias ou à une boîte partagée. Les noms, adresses « Répondre à » et **signatures** (texte ou HTML) se règlent dans Réglages > Comptes et agendas.

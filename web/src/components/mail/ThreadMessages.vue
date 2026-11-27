@@ -7,6 +7,7 @@ import { useFormat } from '../../composables/useFormat'
 import { useMailsStore } from '../../stores/mails'
 import Avatar from '../ui/Avatar.vue'
 import BaseIcon from '../ui/BaseIcon.vue'
+import MailBodyText from './MailBodyText.vue'
 
 /** Messages précédents de la conversation, repliés ; le plus proche du message ouvert l'est déjà (ex. le mail d'origine d'une réponse). */
 const props = defineProps<{ mail: Mail }>()
@@ -40,11 +41,11 @@ const who = (m: Mail) => (m.folder === 'sent' ? t('mail.thread.me') : m.from.nam
           <BaseIcon :name="isOpen(m) ? 'chevronUp' : 'chevronDown'" :size="16" />
         </button>
         <div v-if="isOpen(m)" :id="`th-${m.id}`" class="text">
-          <p v-for="(p, i) in m.paragraphs" :key="i">{{ p }}</p>
+          <MailBodyText :mail="m" />
           <p v-if="mails.loadingBody.has(m.id)" class="muted" role="status">{{ t('mail.bodyLoading') }}</p>
           <p v-else-if="mails.gone.has(m.id)" class="muted">{{ t('mail.bodyGone') }}</p>
           <p v-else-if="mails.bodyError.has(m.id)" class="error-text" role="alert">{{ t('mail.bodyError') }}</p>
-          <p v-else-if="!m.paragraphs.length" class="muted">{{ t('mail.bodyEmpty') }}</p>
+          <p v-else-if="!m.paragraphs.length && !m.html" class="muted">{{ t('mail.bodyEmpty') }}</p>
         </div>
       </li>
     </ul>
@@ -59,5 +60,5 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2)
 .msg.mine { border-inline-start: 4px solid var(--c-accent); }
 .line { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: var(--space-2) var(--space-3); background: none; border: 0; text-align: start; color: inherit; font: inherit; cursor: pointer; }
 .when { margin-inline-start: auto; font-size: var(--fs-sm); }
-.text { display: grid; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); }
+.text { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); }
 </style>

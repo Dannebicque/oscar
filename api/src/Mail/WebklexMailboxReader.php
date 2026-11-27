@@ -189,17 +189,36 @@ final class WebklexMailboxReader implements MailboxReader, MailboxAppender, Mail
 
     public function fetchBody(string $folder, int $uid): ?string
     {
-        $box = $this->client()->getFolderByPath($folder);
-        $m = $box?->messages()->whereUid((string) $uid)->leaveUnread()->setFetchBody(true)->get()->first();
+        $text = $this->fetchContent($folder, $uid)?->text;
+
+        return $text === null || $text === '' ? null : $text;
+    }
+
+    public function fetchContent(string $folder, int $uid): ?MailContent
+    {
+        $m = $this->message($folder, $uid);
         if ($m === null) {
             return null;
         }
+        $html = trim((string) $m->getHTMLBody());
         $text = trim((string) $m->getTextBody());
         if ($text === '') {
-            $text = trim(html_entity_decode(strip_tags((string) preg_replace('#<(script|style)\b.*?</\1>#is', '', (string) $m->getHTMLBody())), ENT_QUOTES | ENT_HTML5));
+            $text = trim(html_entity_decode(strip_tags((string) preg_replace('#<(script|style)\b.*?</\1>#is', '', $html)), ENT_QUOTES | ENT_HTML5));
+        }
+        if ($text === '' && $html === '') {
+            return null;
+        }
+        $inline = [];
+        if (stripos($html, 'cid:') !== false) {
+            foreach ($m->getAttachments() as $a) {
+                $id = trim((string) $a->getId(), '<> ');
+                if ($id !== '' && str_starts_with(strtolower((string) $a->getMimeType()), 'image/')) {
+                    $inline[$id] = ['type' => (string) $a->getMimeType(), 'content' => (string) $a->getContent()];
+                }
+            }
         }
 
-        return $text === '' ? null : $text;
+        return new MailContent($text, $html === '' ? null : $html, $inline);
     }
 
     private function client(): \Webklex\PHPIMAP\Client
